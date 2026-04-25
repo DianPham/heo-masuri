@@ -44,7 +44,7 @@ export function Pig({
         setTimeout(() => {
           setBlinking(false);
           scheduleBlink();
-        }, 140);
+        }, 200);
       }, delay);
     }
 
@@ -55,7 +55,7 @@ export function Pig({
   }, [animate]);
 
   return (
-    // Gentle float idle: 2 px up and back, 3.6 s loop
+    // Float idle: 6 px up + subtle scale swell, 2.8 s loop
     <motion.svg
       width={size}
       height={size}
@@ -63,10 +63,14 @@ export function Pig({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      animate={animate ? { y: [0, -2, 0] } : undefined}
+      animate={
+        animate
+          ? { y: [0, -6, 0], scale: [1, 1.04, 1] }
+          : undefined
+      }
       transition={
         animate
-          ? { duration: 3.6, repeat: Infinity, ease: "easeInOut" }
+          ? { duration: 2.8, repeat: Infinity, ease: "easeInOut" }
           : undefined
       }
     >
