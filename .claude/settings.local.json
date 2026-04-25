@@ -8,7 +8,14 @@
       "Bash(cp \"app/\\(heo\\)/layout.tsx\" \"app/heo/layout.tsx\")",
       "Bash(cp \"app/\\(heo\\)/page.tsx\" \"app/heo/page.tsx\")",
       "Bash(cp \"app/\\(heo\\)/settings/page.tsx\" \"app/heo/settings/page.tsx\")",
-      "Bash(cp \"app/\\(heo\\)/angry/page.tsx\" \"app/heo/angry/page.tsx\")"
+      "Bash(cp \"app/\\(heo\\)/angry/page.tsx\" \"app/heo/angry/page.tsx\")",
+      "Bash(node -e ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(taskkill /F /IM node.exe)",
+      "PowerShell(Stop-Process -Force)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useAnimationControls } from "motion/react";
-import { useEffect, useRef } from "react";
+import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 export type PigPose = "neutral" | "sleepy" | "heart-eyes" | "sad" | "sparkle";
 
@@ -9,49 +9,53 @@ interface PigProps {
   pose?: PigPose;
   size?: number;
   className?: string;
+  /** Set false to freeze (no breathing, no blink) — use for icons and static art */
   animate?: boolean;
 }
 
-// Shared palette
+// ── Palette (matches CSS token values) ──────────────────────
 const BODY   = "#FFC9D5"; // --rose-200
 const SNOUT  = "#E97A95"; // --rose-400
 const CHEEK  = "#F8A8BC"; // --rose-300
 const STROKE = "#3A2129"; // --ink
 const WHITE  = "#FFFFFF";
+const GOLD   = "#E8B86D"; // --gold
+const TEAR   = "#A8C4E0"; // soft blue
 
-export function Pig({ pose = "neutral", size = 80, className = "", animate = true }: PigProps) {
-  const controls = useAnimationControls();
+const SW = 1.5; // global stroke-width
+
+export function Pig({
+  pose = "neutral",
+  size = 80,
+  className = "",
+  animate = true,
+}: PigProps) {
+  // Blink state — closed eyes render for 140 ms every 4–6 s
+  const [blinking, setBlinking] = useState(false);
   const blinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Idle breathing + blink cycle
   useEffect(() => {
     if (!animate) return;
 
-    controls.start({
-      scaleY: [1, 1.025, 1],
-      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-    });
-
     function scheduleBlink() {
-      const delay = 4000 + Math.random() * 2000;
+      const delay = 4000 + Math.random() * 2500;
       blinkTimer.current = setTimeout(() => {
-        controls.start({
-          scaleY: [1, 0.1, 1],
-          transition: { duration: 0.15, ease: "easeInOut" },
-        });
-        scheduleBlink();
+        setBlinking(true);
+        setTimeout(() => {
+          setBlinking(false);
+          scheduleBlink();
+        }, 140);
       }, delay);
     }
-    scheduleBlink();
 
+    scheduleBlink();
     return () => {
       if (blinkTimer.current) clearTimeout(blinkTimer.current);
     };
-  }, [animate, controls]);
-
-  const sw = 1.5; // stroke width
+  }, [animate]);
 
   return (
+    // Gentle float idle: 2 px up and back, 3.6 s loop
     <motion.svg
       width={size}
       height={size}
@@ -59,138 +63,166 @@ export function Pig({ pose = "neutral", size = 80, className = "", animate = tru
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      animate={animate ? controls : undefined}
-      style={{ transformOrigin: "bottom center" }}
+      animate={animate ? { y: [0, -2, 0] } : undefined}
+      transition={
+        animate
+          ? { duration: 3.6, repeat: Infinity, ease: "easeInOut" }
+          : undefined
+      }
     >
-      {/* ── Body ── */}
-      <ellipse cx="40" cy="46" rx="28" ry="26" fill={BODY} stroke={STROKE} strokeWidth={sw} />
-
-      {/* ── Cheeks ── */}
-      <ellipse cx="20" cy="50" rx="7" ry="5" fill={CHEEK} opacity="0.6" />
-      <ellipse cx="60" cy="50" rx="7" ry="5" fill={CHEEK} opacity="0.6" />
-
-      {/* ── Snout ── */}
-      <ellipse cx="40" cy="56" rx="10" ry="7" fill={SNOUT} stroke={STROKE} strokeWidth={sw} />
-      {/* Nostrils */}
-      <ellipse cx="36.5" cy="57" rx="2" ry="2.5" fill={STROKE} />
-      <ellipse cx="43.5" cy="57" rx="2" ry="2.5" fill={STROKE} />
-
-      {/* ── Ears ── */}
-      <ellipse cx="18" cy="24" rx="8" ry="10" fill={BODY} stroke={STROKE} strokeWidth={sw} />
-      <ellipse cx="18" cy="24" rx="4.5" ry="6" fill={SNOUT} />
-      <ellipse cx="62" cy="24" rx="8" ry="10" fill={BODY} stroke={STROKE} strokeWidth={sw} />
-      <ellipse cx="62" cy="24" rx="4.5" ry="6" fill={SNOUT} />
+      {/* ── Ears (rendered before head so head overlaps the base) ── */}
+      <EarPair />
 
       {/* ── Head ── */}
-      <ellipse cx="40" cy="38" rx="22" ry="20" fill={BODY} stroke={STROKE} strokeWidth={sw} />
+      <circle
+        cx="40" cy="47" r="28"
+        fill={BODY} stroke={STROKE} strokeWidth={SW}
+      />
 
-      {/* ── Eyes — vary by pose ── */}
-      <PigEyes pose={pose} />
+      {/* ── Cheeks ── */}
+      <ellipse cx="21" cy="53" rx="8"   ry="5.5" fill={CHEEK} opacity="0.55" />
+      <ellipse cx="59" cy="53" rx="8"   ry="5.5" fill={CHEEK} opacity="0.55" />
 
-      {/* ── Pose-specific overlays ── */}
-      {pose === "sleepy" && <SleepyOverlay />}
-      {pose === "sparkle" && <SparkleOverlay />}
-      {pose === "sad" && <SadOverlay />}
+      {/* ── Snout ── */}
+      <ellipse
+        cx="40" cy="58" rx="13" ry="9"
+        fill={SNOUT} stroke={STROKE} strokeWidth={SW}
+      />
+      {/* Nostrils */}
+      <ellipse cx="35"   cy="59" rx="2.5" ry="3"   fill={STROKE} />
+      <ellipse cx="45"   cy="59" rx="2.5" ry="3"   fill={STROKE} />
+
+      {/* ── Eyes + pose-specific overlays ── */}
+      <PigFace pose={pose} blinking={blinking} />
     </motion.svg>
   );
 }
 
-function PigEyes({ pose }: { pose: PigPose }) {
-  if (pose === "heart-eyes") {
-    return (
-      <>
-        {/* Left heart eye */}
-        <HeartEye cx={31} cy={36} />
-        {/* Right heart eye */}
-        <HeartEye cx={49} cy={36} />
-      </>
-    );
-  }
-  if (pose === "sleepy") {
-    return (
-      <>
-        {/* Droopy closed eyes */}
-        <path d="M27 36 Q31 33 35 36" stroke={STROKE} strokeWidth="1.8" strokeLinecap="round" fill="none" />
-        <path d="M45 36 Q49 33 53 36" stroke={STROKE} strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      </>
-    );
-  }
-  if (pose === "sad") {
-    return (
-      <>
-        {/* Sad × eyes */}
-        <line x1="28" y1="33" x2="34" y2="39" stroke={STROKE} strokeWidth="2" strokeLinecap="round" />
-        <line x1="34" y1="33" x2="28" y2="39" stroke={STROKE} strokeWidth="2" strokeLinecap="round" />
-        <line x1="46" y1="33" x2="52" y2="39" stroke={STROKE} strokeWidth="2" strokeLinecap="round" />
-        <line x1="52" y1="33" x2="46" y2="39" stroke={STROKE} strokeWidth="2" strokeLinecap="round" />
-      </>
-    );
-  }
-  // neutral + sparkle: simple dot eyes
+// ── Ear pair ────────────────────────────────────────────────
+function EarPair() {
   return (
     <>
-      <circle cx="31" cy="36" r="3.5" fill={STROKE} />
-      <circle cx="49" cy="36" r="3.5" fill={STROKE} />
-      {/* Shine */}
-      <circle cx="32.5" cy="34.5" r="1.2" fill={WHITE} />
-      <circle cx="50.5" cy="34.5" r="1.2" fill={WHITE} />
-    </>
-  );
-}
-
-function HeartEye({ cx, cy }: { cx: number; cy: number }) {
-  // Small heart shape centered on cx,cy
-  return (
-    <g transform={`translate(${cx - 5}, ${cy - 5})`}>
-      <path
-        d="M5 8.5 C5 8.5 0 5 0 2.5 C0 1.1 1.1 0 2.5 0 C3.3 0 4 0.4 4.5 1 C5 0.4 5.7 0 6.5 0 C8 0 9 1.1 9 2.5 C9 5 5 8.5 5 8.5Z"
-        fill="#D14D6F"
-        stroke="none"
+      {/* Left ear */}
+      <ellipse
+        cx="17" cy="23" rx="8.5" ry="11.5"
+        fill={BODY} stroke={STROKE} strokeWidth={SW}
       />
-    </g>
-  );
-}
+      <ellipse cx="17" cy="23" rx="4.5" ry="7" fill={SNOUT} />
 
-function SleepyOverlay() {
-  return (
-    <>
-      {/* Z Z Z bubbles */}
-      <text x="58" y="22" fontSize="8" fill={STROKE} opacity="0.5" fontFamily="serif">z</text>
-      <text x="64" y="16" fontSize="6" fill={STROKE} opacity="0.4" fontFamily="serif">z</text>
-    </>
-  );
-}
-
-function SparkleOverlay() {
-  return (
-    <>
-      {/* 4-pointed star sparkles around the pig */}
-      <Sparkle cx={12} cy={14} r={4} />
-      <Sparkle cx={68} cy={18} r={3} />
-      <Sparkle cx={72} cy={54} r={3.5} />
-      <Sparkle cx={10} cy={60} r={3} />
-    </>
-  );
-}
-
-function Sparkle({ cx, cy, r }: { cx: number; cy: number; r: number }) {
-  return (
-    <g transform={`translate(${cx}, ${cy})`}>
-      <path
-        d={`M0 ${-r} L${r * 0.3} ${-r * 0.3} L${r} 0 L${r * 0.3} ${r * 0.3} L0 ${r} L${-r * 0.3} ${r * 0.3} L${-r} 0 L${-r * 0.3} ${-r * 0.3}Z`}
-        fill="#E8B86D"
-        opacity="0.9"
+      {/* Right ear */}
+      <ellipse
+        cx="63" cy="23" rx="8.5" ry="11.5"
+        fill={BODY} stroke={STROKE} strokeWidth={SW}
       />
-    </g>
+      <ellipse cx="63" cy="23" rx="4.5" ry="7" fill={SNOUT} />
+    </>
   );
 }
 
-function SadOverlay() {
+// ── Face content (eyes + pose overlays) ─────────────────────
+function PigFace({ pose, blinking }: { pose: PigPose; blinking: boolean }) {
+  switch (pose) {
+
+    case "sleepy":
+      return (
+        <>
+          {/* Droopy half-closed eyes */}
+          <path d="M25 42 Q29 39 33 42" stroke={STROKE} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          <path d="M47 42 Q51 39 55 42" stroke={STROKE} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          {/* ZZZ bubbles */}
+          <text x="57" y="21" fontSize="9"   fill={STROKE} opacity="0.45" fontFamily="Georgia,serif" fontStyle="italic">z</text>
+          <text x="63" y="14" fontSize="7"   fill={STROKE} opacity="0.30" fontFamily="Georgia,serif" fontStyle="italic">z</text>
+          <text x="68" y="9"  fontSize="5.5" fill={STROKE} opacity="0.20" fontFamily="Georgia,serif" fontStyle="italic">z</text>
+        </>
+      );
+
+    case "heart-eyes":
+      return (
+        <>
+          <PigHeart cx={29} cy={41} size={10} />
+          <PigHeart cx={51} cy={41} size={10} />
+        </>
+      );
+
+    case "sad":
+      return (
+        <>
+          {/* Worried brows — inner corner raised */}
+          <path d="M23 34 Q27 31.5 32 33" stroke={STROKE} strokeWidth="1.8" strokeLinecap="round" fill="none" />
+          <path d="M48 33 Q53 31.5 57 34" stroke={STROKE} strokeWidth="1.8" strokeLinecap="round" fill="none" />
+          {/* Droopy eyes — corners turned down */}
+          <path d="M25 41 Q29 44 33 41" stroke={STROKE} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          <path d="M47 41 Q51 44 55 41" stroke={STROKE} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          {/* Single teardrop under left eye */}
+          <path d="M28 46 Q30 50 28 53 Q26 50 28 46Z" fill={TEAR} opacity="0.8" />
+        </>
+      );
+
+    case "sparkle":
+      return (
+        <>
+          {/* Bright dot eyes */}
+          <circle cx="29" cy="41" r="4.5" fill={STROKE} />
+          <circle cx="51" cy="41" r="4.5" fill={STROKE} />
+          <circle cx="31"   cy="39" r="1.8" fill={WHITE} />
+          <circle cx="53"   cy="39" r="1.8" fill={WHITE} />
+          {/* 4-point star sparkles at corners */}
+          <FourPointStar cx={8}  cy={16} r={4.5} />
+          <FourPointStar cx={72} cy={13} r={3.5} />
+          <FourPointStar cx={74} cy={54} r={3.5} />
+          <FourPointStar cx={6}  cy={60} r={3}   />
+        </>
+      );
+
+    default: // "neutral" — can blink
+      return blinking ? (
+        <>
+          <path d="M25 41 Q29 38 33 41" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M47 41 Q51 38 55 41" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        </>
+      ) : (
+        <>
+          <circle cx="29" cy="41" r="4.5" fill={STROKE} />
+          <circle cx="51" cy="41" r="4.5" fill={STROKE} />
+          {/* Shine dots */}
+          <circle cx="31"   cy="39" r="1.8" fill={WHITE} />
+          <circle cx="53"   cy="39" r="1.8" fill={WHITE} />
+        </>
+      );
+  }
+}
+
+// ── Heart eye (for heart-eyes pose) ─────────────────────────
+// A clean heart path scaled and positioned by cx/cy/size.
+function PigHeart({ cx, cy, size = 10 }: { cx: number; cy: number; size?: number }) {
+  // Heart path drawn in a 10×9 box, top-left at origin.
+  // We translate so the visual centre lands on (cx, cy).
+  const s = size / 10;
+  const tx = cx - size * 0.5;
+  const ty = cy - size * 0.52;
   return (
-    <>
-      {/* Tear drops */}
-      <ellipse cx="29" cy="44" rx="1.5" ry="2.5" fill="#7289da" opacity="0.7" />
-      <ellipse cx="51" cy="44" rx="1.5" ry="2.5" fill="#7289da" opacity="0.7" />
-    </>
+    <path
+      transform={`translate(${tx},${ty}) scale(${s})`}
+      d="M5 8.8 C5 8.8 0 5.2 0 2.6 C0 1.2 1.1 0 2.5 0 C3.3 0 4.0 0.45 4.5 1.05 C5.0 0.45 5.7 0 6.5 0 C7.9 0 9 1.2 9 2.6 C9 5.2 5 8.8 5 8.8 Z"
+      fill="#D14D6F"
+    />
+  );
+}
+
+// ── 4-point star sparkle ─────────────────────────────────────
+function FourPointStar({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const ri = r * 0.38; // inner radius
+  // 4 points at 0°, 90°, 180°, 270° with narrow inner points between them
+  const pts = [0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => {
+    const rad = (deg * Math.PI) / 180;
+    const dist = i % 2 === 0 ? r : ri;
+    return `${cx + dist * Math.sin(rad)},${cy - dist * Math.cos(rad)}`;
+  });
+  return (
+    <polygon
+      points={pts.join(" ")}
+      fill={GOLD}
+      opacity="0.92"
+    />
   );
 }
