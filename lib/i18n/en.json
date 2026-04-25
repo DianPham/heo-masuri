@@ -67,6 +67,7 @@
   "settings": {
     "notifications": "Notifications",
     "missing": "Missing",
+    "missingSubLabel": "When Masuri sees the message",
     "thinkingHugKiss": "Hearts / Hug / Kiss",
     "angryBuzz": "Heo not okay",
     "quietHours": "Quiet hours",

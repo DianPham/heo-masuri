@@ -67,6 +67,7 @@
   "settings": {
     "notifications": "Thông báo",
     "missing": "Nhớ",
+    "missingSubLabel": "Khi Masuri thấy tin nhắn",
     "thinkingHugKiss": "Tim / Ôm / Hôn",
     "angryBuzz": "Heo không ổn",
     "quietHours": "Giờ yên tĩnh",
