@@ -27,12 +27,20 @@ export const metadata: Metadata = {
   title: "Heo & Masuri",
   description: "Một nơi nhỏ chỉ dành cho hai người 🐷",
   manifest: "/manifest.json",
+  // iOS Safari ignores manifest.json display:standalone — these tags are required.
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
     title: "H&M",
+    statusBarStyle: "default",
   },
-  robots: { index: false, follow: false },
+  icons: {
+    // Explicitly declared so Next.js emits the apple-touch-icon link tag.
+    apple: "/apple-touch-icon.png",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -40,6 +48,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // viewport-fit=cover is required for iPhone notch / home-indicator safe areas.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
@@ -55,9 +65,6 @@ export default async function RootLayout({
       lang={locale}
       className={`${fraunces.variable} ${plusJakartaSans.variable} ${caveat.variable}`}
     >
-      <head>
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-      </head>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

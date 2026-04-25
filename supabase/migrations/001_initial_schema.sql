@@ -111,3 +111,18 @@ create policy "anon read reunion_dates"
 
 -- angry_buzzes, push_subscriptions, notification_prefs: NO anon access.
 -- All writes to all tables happen via API routes using service_role key.
+
+-- ============================================================
+-- Schema + table grants for anon role
+-- Required when "Automatically expose new tables" is DISABLED
+-- (which is the recommended setting for this project).
+-- ============================================================
+
+grant usage on schema public to anon;
+
+grant select on public.users              to anon;
+grant select on public.missing_signals    to anon;
+grant select on public.thinking_pings     to anon;
+grant select on public.reunion_dates      to anon;
+
+-- angry_buzzes, push_subscriptions, notification_prefs: NO grant to anon.
