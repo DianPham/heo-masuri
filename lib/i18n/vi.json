@@ -1,0 +1,127 @@
+{
+  "softGate": {
+    "title": "Bạn là ai vậy?",
+    "subtitle": "Chọn nhân vật của bạn nha",
+    "heo": "Heo 🐷",
+    "masuri": "Masuri"
+  },
+  "missing": {
+    "button": "Nhớ Masuri",
+    "tap": "Nhấn",
+    "hold": "Nhấn giữ",
+    "longHold": "Nhấn giữ thật lâu",
+    "sent": "Đã gửi 💕 Masuri sẽ thấy ngay",
+    "ackedJustNow": "Masuri vừa thấy nè 🥰",
+    "countToday": "Đây là lần thứ {count} hôm nay",
+    "todayCount": "Hôm nay: {count} lần",
+    "sending": "Đang gửi...",
+    "queuedOffline": "Đã lưu lại, sẽ gửi khi có mạng"
+  },
+  "thinking": {
+    "thinking": "Nhớ Masuri",
+    "hug": "Ôm",
+    "kiss": "Hôn",
+    "thinkingReceived": "{name} đang nhớ tới bạn 💕",
+    "hugReceived": "{name} gửi cho bạn một cái ôm 🤗",
+    "kissReceived": "{name} gửi cho bạn một nụ hôn 💋"
+  },
+  "angry": {
+    "title": "Heo đang không ổn",
+    "subtitle": "Không sao đâu, Masuri sẽ hiểu",
+    "needSpace": "Heo cần không gian",
+    "needPresence": "Heo cần Masuri ở đây",
+    "needVent": "Heo chỉ muốn xả",
+    "needFix": "Heo cần Masuri sửa cái gì đó",
+    "contextPlaceholder": "Masuri có thể làm gì để Heo dễ chịu hơn? (không bắt buộc)",
+    "submit": "Gửi",
+    "back": "Quay lại",
+    "sent": "Đã gửi cho Masuri",
+    "waitingReply": "Đang chờ Masuri trả lời...",
+    "okayNow": "Heo ổn rồi 🌸",
+    "resolved": "Cảm ơn vì đã chia sẻ 💕",
+    "danReplied": "Masuri đã trả lời:",
+    "replies": {
+      "sorry": "Xin lỗi em 🙏",
+      "on_my_way": "Anh đang đến 🏃",
+      "talk_in_10": "10 phút nữa mình nói chuyện nhé 💬",
+      "heard_you": "Anh nghe em rồi 💕"
+    },
+    "needLabels": {
+      "space": "cần không gian",
+      "presence": "cần Masuri ở đây",
+      "vent": "chỉ muốn xả",
+      "fix": "cần Masuri sửa cái gì đó"
+    }
+  },
+  "countdown": {
+    "days": "ngày",
+    "daysLeft": "ngày nữa",
+    "today": "Hôm nay là ngày đó! 🌸",
+    "passed": "Tạo countdown mới",
+    "progressLabel": "Đã qua {percent}% thời gian chờ"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "settings": "Cài đặt"
+  },
+  "settings": {
+    "notifications": "Thông báo",
+    "missing": "Nhớ",
+    "thinkingHugKiss": "Tim / Ôm / Hôn",
+    "angryBuzz": "Heo không ổn",
+    "quietHours": "Giờ yên tĩnh",
+    "quietFrom": "Từ",
+    "quietTo": "Đến",
+    "language": "Ngôn ngữ",
+    "vietnamese": "Tiếng Việt",
+    "english": "English",
+    "other": "Khác",
+    "notMe": "Không phải tôi",
+    "dangerZone": "Vùng nguy hiểm",
+    "deleteAll": "Xóa tất cả dữ liệu",
+    "deleteConfirmPrompt": "Nhập \"XÓA HẾT\" để xác nhận",
+    "deleteConfirmWord": "XÓA HẾT",
+    "deleteConfirmButton": "Xóa hết",
+    "deleteCancel": "Hủy",
+    "deleteSuccess": "Đã xóa hết 🌙",
+    "saved": "Đã lưu"
+  },
+  "reunion": {
+    "title": "Countdown tiếp theo",
+    "label": "Nhãn",
+    "labelEn": "Nhãn tiếng Anh (không bắt buộc)",
+    "targetDate": "Ngày gặp lại",
+    "save": "Lưu",
+    "noCountdown": "Chưa có countdown nào",
+    "createNew": "Tạo countdown mới"
+  },
+  "errors": {
+    "network": "Có gì đó sai sai... thử lại nhé",
+    "generic": "Có lỗi xảy ra, thử lại nhé",
+    "noMissings": "Heo chưa nhớ gì cả... có lẽ bạn nên nhắn cho cô ấy 💕"
+  },
+  "push": {
+    "prePromptTitle": "Bật thông báo",
+    "prePromptBody": "Bật thông báo để Masuri có thể gửi tim cho Heo nha 💕",
+    "enable": "Bật",
+    "later": "Để sau",
+    "installBanner": "Để nhận thông báo, hãy thêm vào màn hình chính",
+    "installStep1": "Nhấn nút chia sẻ",
+    "installStep2": "Chọn \"Thêm vào màn hình chính\""
+  },
+  "ack": {
+    "title": "Đã thấy rồi 💕",
+    "body": "Heo sẽ biết bạn đã thấy rồi nha",
+    "goHome": "Về trang chủ"
+  },
+  "reply": {
+    "title": "Đã gửi cho Heo 💕",
+    "body": "Heo sẽ thấy câu trả lời của bạn ngay",
+    "goHome": "Về trang chủ"
+  },
+  "notFound": {
+    "title": "Trang này không tồn tại 🐷",
+    "body": "Heo không tìm thấy trang bạn đang tìm...",
+    "goHome": "Về trang chủ"
+  }
+}

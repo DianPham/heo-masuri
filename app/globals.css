@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  /* Pinks — warm, dusty, adult */
+  --color-rose-50: #FFF5F7;
+  --color-rose-100: #FFE4EA;
+  --color-rose-200: #FFC9D5;
+  --color-rose-300: #F8A8BC;
+  --color-rose-400: #E97A95;
+  --color-rose-500: #D14D6F;
+  --color-rose-600: #A8324F;
+
+  /* Warm neutrals */
+  --color-cream: #FFF9F5;
+  --color-paper: #FAF1EA;
+  --color-ink: #3A2129;
+  --color-ink-soft: #6B4453;
+
+  /* Functional */
+  --color-gold: #E8B86D;
+  --color-sage: #9CAF88;
+
+  /* Typography */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-accent: "Caveat", cursive;
+}
+
+:root {
+  --shadow: 0 8px 24px -8px rgba(168, 50, 79, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  min-height: 100dvh;
+  background-color: #FFF5F7;
+  color: #3A2129;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS safe area */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --no-git --use-npm)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(mkdir -p app/heo/settings app/heo/angry/id_placeholder app/masuri/settings app/masuri/reunion)",
+      "Bash(cp \"app/\\(heo\\)/layout.tsx\" \"app/heo/layout.tsx\")",
+      "Bash(cp \"app/\\(heo\\)/page.tsx\" \"app/heo/page.tsx\")",
+      "Bash(cp \"app/\\(heo\\)/settings/page.tsx\" \"app/heo/settings/page.tsx\")",
+      "Bash(cp \"app/\\(heo\\)/angry/page.tsx\" \"app/heo/angry/page.tsx\")"
+    ]
+  }
+}

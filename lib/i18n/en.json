@@ -1,0 +1,127 @@
+{
+  "softGate": {
+    "title": "Who are you?",
+    "subtitle": "Pick your character",
+    "heo": "Heo 🐷",
+    "masuri": "Masuri"
+  },
+  "missing": {
+    "button": "Missing Masuri",
+    "tap": "Tap",
+    "hold": "Hold",
+    "longHold": "Long hold",
+    "sent": "Sent 💕 Masuri will see it",
+    "ackedJustNow": "Masuri just saw it 🥰",
+    "countToday": "This is time #{count} today",
+    "todayCount": "Today: {count} times",
+    "sending": "Sending...",
+    "queuedOffline": "Saved, will send when back online"
+  },
+  "thinking": {
+    "thinking": "Missing Masuri",
+    "hug": "Hug",
+    "kiss": "Kiss",
+    "thinkingReceived": "{name} is thinking of you 💕",
+    "hugReceived": "{name} sent you a hug 🤗",
+    "kissReceived": "{name} sent you a kiss 💋"
+  },
+  "angry": {
+    "title": "Heo is not okay",
+    "subtitle": "It's okay, Masuri will understand",
+    "needSpace": "Heo needs space",
+    "needPresence": "Heo needs Masuri here",
+    "needVent": "Heo just wants to vent",
+    "needFix": "Heo needs Masuri to fix something",
+    "contextPlaceholder": "What can Masuri do to help? (optional)",
+    "submit": "Send",
+    "back": "Back",
+    "sent": "Sent to Masuri",
+    "waitingReply": "Waiting for Masuri to reply...",
+    "okayNow": "Heo is okay now 🌸",
+    "resolved": "Thank you for sharing 💕",
+    "danReplied": "Masuri replied:",
+    "replies": {
+      "sorry": "I'm sorry 🙏",
+      "on_my_way": "I'm on my way 🏃",
+      "talk_in_10": "Let's talk in 10 min 💬",
+      "heard_you": "I hear you 💕"
+    },
+    "needLabels": {
+      "space": "needs space",
+      "presence": "needs Masuri here",
+      "vent": "just wants to vent",
+      "fix": "needs Masuri to fix something"
+    }
+  },
+  "countdown": {
+    "days": "days",
+    "daysLeft": "more days",
+    "today": "Today is the day! 🌸",
+    "passed": "Create new countdown",
+    "progressLabel": "{percent}% of the wait has passed"
+  },
+  "nav": {
+    "home": "Home",
+    "settings": "Settings"
+  },
+  "settings": {
+    "notifications": "Notifications",
+    "missing": "Missing",
+    "thinkingHugKiss": "Hearts / Hug / Kiss",
+    "angryBuzz": "Heo not okay",
+    "quietHours": "Quiet hours",
+    "quietFrom": "From",
+    "quietTo": "To",
+    "language": "Language",
+    "vietnamese": "Tiếng Việt",
+    "english": "English",
+    "other": "Other",
+    "notMe": "Not me",
+    "dangerZone": "Danger zone",
+    "deleteAll": "Delete all data",
+    "deleteConfirmPrompt": "Type \"DELETE-EVERYTHING\" to confirm",
+    "deleteConfirmWord": "DELETE-EVERYTHING",
+    "deleteConfirmButton": "Delete everything",
+    "deleteCancel": "Cancel",
+    "deleteSuccess": "All data deleted 🌙",
+    "saved": "Saved"
+  },
+  "reunion": {
+    "title": "Next countdown",
+    "label": "Label (Vietnamese)",
+    "labelEn": "Label (English, optional)",
+    "targetDate": "Reunion date",
+    "save": "Save",
+    "noCountdown": "No countdown yet",
+    "createNew": "Create new countdown"
+  },
+  "errors": {
+    "network": "Something went wrong... try again",
+    "generic": "An error occurred, please try again",
+    "noMissings": "Heo hasn't missed anyone yet... maybe send her a message 💕"
+  },
+  "push": {
+    "prePromptTitle": "Enable notifications",
+    "prePromptBody": "Enable notifications so Masuri can send hearts to Heo 💕",
+    "enable": "Enable",
+    "later": "Later",
+    "installBanner": "To receive notifications, add to home screen",
+    "installStep1": "Tap the share button",
+    "installStep2": "Select \"Add to Home Screen\""
+  },
+  "ack": {
+    "title": "Seen 💕",
+    "body": "Heo will know you saw it",
+    "goHome": "Go home"
+  },
+  "reply": {
+    "title": "Sent to Heo 💕",
+    "body": "Heo will see your reply right away",
+    "goHome": "Go home"
+  },
+  "notFound": {
+    "title": "Page not found 🐷",
+    "body": "The pig couldn't find the page you're looking for...",
+    "goHome": "Go home"
+  }
+}
