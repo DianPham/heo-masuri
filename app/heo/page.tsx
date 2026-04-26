@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { createServerClient } from "@/lib/supabase/server";
 import { startOfDayVN, endOfDayVN, daysUntil, progressPercent } from "@/lib/tz";
 import { getLocale } from "next-intl/server";
+import Link from "next/link";
 import { MissingButton } from "@/components/buttons/MissingButton";
 import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 import { Countdown } from "@/components/countdown/Countdown";
@@ -63,6 +64,12 @@ export default async function HeoHome() {
           {locale === "vi" ? "Gửi nhanh" : "Quick send"}
         </p>
         <ThinkingButtons who="heo" locale={locale} />
+        <Link
+          href="/heo/angry"
+          className="mt-2 font-body text-xs text-ink-soft/35 hover:text-ink-soft/60 transition-colors"
+        >
+          {locale === "vi" ? "Heo đang không ổn..." : "Heo is not okay..."}
+        </Link>
       </div>
     </div>
   );
