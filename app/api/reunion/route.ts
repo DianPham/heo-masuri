@@ -39,5 +39,12 @@ export async function PUT(req: NextRequest) {
     .single();
 
   if (error || !data) return NextResponse.json({ error: "DB error" }, { status: 500 });
+
+  await supabase.channel("couple").send({
+    type: "broadcast",
+    event: "reunion:updated",
+    payload: { target_date: data.target_date },
+  });
+
   return NextResponse.json(data);
 }
