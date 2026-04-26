@@ -18,7 +18,7 @@ export function ReunionForm({ current }: ReunionFormProps) {
   const [saving, setSaving]       = useState(false);
   const [saved, setSaved]         = useState(false);
   const [deleting, setDeleting]   = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   async function handleDelete() {
     if (!confirm("Xóa countdown này?")) return;
