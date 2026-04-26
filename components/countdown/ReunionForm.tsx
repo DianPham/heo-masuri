@@ -93,9 +93,13 @@ export function ReunionForm({ current }: ReunionFormProps) {
         <input
           type="date"
           value={targetDate}
-          onChange={e => setTargetDate(e.target.value)}
           min={today}
           required
+          onChange={e => {
+            const val = e.target.value;
+            if (val && val < today) return;
+            setTargetDate(val);
+          }}
           className={inputClass}
         />
       </div>
