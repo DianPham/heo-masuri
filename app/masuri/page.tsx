@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getLocale } from "next-intl/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { daysUntil, progressPercent } from "@/lib/tz";

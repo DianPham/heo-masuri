@@ -16,6 +16,17 @@ export async function GET() {
   return NextResponse.json(data);
 }
 
+export async function DELETE() {
+  const cookieStore = await cookies();
+  if (cookieStore.get("who")?.value !== "masuri") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const supabase = createServerClient();
+  await supabase.from("reunion_dates").update({ is_current: false }).eq("is_current", true);
+  return NextResponse.json({ ok: true });
+}
+
 export async function PUT(req: NextRequest) {
   const cookieStore = await cookies();
   if (cookieStore.get("who")?.value !== "masuri") {

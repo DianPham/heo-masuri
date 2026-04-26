@@ -17,6 +17,19 @@ export function ReunionForm({ current }: ReunionFormProps) {
   const [targetDate, setTargetDate] = useState(current?.target_date ?? "");
   const [saving, setSaving]       = useState(false);
   const [saved, setSaved]         = useState(false);
+  const [deleting, setDeleting]   = useState(false);
+
+  async function handleDelete() {
+    if (!confirm("Xóa countdown này?")) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/reunion", { method: "DELETE" });
+      router.push("/masuri");
+      router.refresh();
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,6 +107,18 @@ export function ReunionForm({ current }: ReunionFormProps) {
       >
         {saved ? "✓ " + t("save") : saving ? "..." : t("save")}
       </motion.button>
+
+      {current && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="font-body text-xs text-ink-soft/50 hover:text-rose-500 transition-colors disabled:opacity-40 text-center"
+        >
+          {deleting ? "..." : "Xóa countdown"}
+        </button>
+      )}
+
     </form>
   );
 }
