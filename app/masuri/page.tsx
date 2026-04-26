@@ -1,39 +1,27 @@
+import { getLocale } from "next-intl/server";
 import { Pig } from "@/components/theme/Pig";
+import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 
-// Placeholder — replaced at Checkpoint 4 (thinking/hug/kiss)
-// and Checkpoint 6 (countdown).
-export default function MasuriHome() {
+export default async function MasuriHome() {
+  const locale = await getLocale();
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-96px)] px-8">
-      <div className="flex flex-col items-center gap-6 text-center w-full">
-        <Pig pose="sparkle" size={120} />
+    <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-96px)] px-8 gap-8">
+      <Pig pose="sparkle" size={120} />
 
-        <div className="space-y-2">
-          <h1
-            className="font-display text-4xl text-ink italic"
-            style={{ fontVariationSettings: "'opsz' 72" }}
-          >
-            Chào Masuri 💕
-          </h1>
-          <p className="font-body text-ink-soft text-sm leading-relaxed">
-            Đang chuẩn bị mọi thứ cho em...
-          </p>
-        </div>
-
-        {/* Upcoming features — visible once built at later checkpoints */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {["Nhớ Heo", "Đếm ngược", "Ôm & Hôn", "Sửa countdown"].map(
-            (label) => (
-              <span
-                key={label}
-                className="px-3.5 py-1.5 rounded-full bg-rose-100 text-ink-soft text-xs font-body font-medium opacity-70"
-              >
-                {label}
-              </span>
-            )
-          )}
-        </div>
+      <div className="space-y-1 text-center">
+        <h1
+          className="font-display text-4xl text-ink italic"
+          style={{ fontVariationSettings: "'opsz' 72" }}
+        >
+          Chào Masuri 💕
+        </h1>
+        <p className="font-body text-ink-soft text-sm">
+          {locale === "vi" ? "Gửi yêu thương đến Heo nào" : "Send your love to Heo"}
+        </p>
       </div>
+
+      <ThinkingButtons who="masuri" locale={locale} />
     </div>
   );
 }

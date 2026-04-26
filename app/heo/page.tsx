@@ -1,8 +1,11 @@
 import { createServerClient } from "@/lib/supabase/server";
 import { startOfDayVN, endOfDayVN } from "@/lib/tz";
+import { getLocale } from "next-intl/server";
 import { MissingButton } from "@/components/buttons/MissingButton";
+import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 
 export default async function HeoHome() {
+  const locale = await getLocale();
   let countToday = 0;
 
   try {
@@ -27,8 +30,16 @@ export default async function HeoHome() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-96px)] px-8">
-      <MissingButton initialCountToday={countToday} />
+    <div className="flex flex-col items-center px-8 min-h-[calc(100dvh-96px)]">
+      <div className="flex-1 flex items-center justify-center w-full">
+        <MissingButton initialCountToday={countToday} />
+      </div>
+      <div className="pb-10 w-full flex flex-col items-center gap-3">
+        <p className="font-body text-xs text-ink-soft/60 uppercase tracking-widest">
+          {locale === "vi" ? "Gửi nhanh" : "Quick send"}
+        </p>
+        <ThinkingButtons who="heo" locale={locale} />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { BottomNav } from "@/components/nav/BottomNav";
 import { RealtimeProvider } from "@/components/realtime/RealtimeProvider";
+import { ThinkingIncoming } from "@/components/realtime/ThinkingIncoming";
 
 export default function HeoLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function HeoLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-dvh bg-rose-50 flex flex-col">
         <main className="flex-1 overflow-y-auto pb-24">{children}</main>
         <BottomNav who="heo" />
+        <ThinkingIncoming who="heo" />
       </div>
     </RealtimeProvider>
   );
