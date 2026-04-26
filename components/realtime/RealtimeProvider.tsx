@@ -11,7 +11,7 @@ export type RealtimeEvent =
   | { event: "angry:new"; payload: { id: string; need_type: string } }
   | { event: "angry:reply"; payload: { id: string; reply: string } }
   | { event: "angry:resolved"; payload: { id: string } }
-  | { event: "reunion:updated"; payload: { target_date: string } };
+  | { event: "reunion:updated"; payload: { target_date: string | null } };
 
 type Listener = (e: RealtimeEvent) => void;
 

@@ -18,6 +18,7 @@ export function ReunionForm({ current }: ReunionFormProps) {
   const [saving, setSaving]       = useState(false);
   const [saved, setSaved]         = useState(false);
   const [deleting, setDeleting]   = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
 
   async function handleDelete() {
     if (!confirm("Xóa countdown này?")) return;
@@ -33,7 +34,7 @@ export function ReunionForm({ current }: ReunionFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!label.trim() || !targetDate) return;
+    if (!label.trim() || !targetDate || targetDate < today) return;
     setSaving(true);
     try {
       const res = await fetch("/api/reunion", {
@@ -93,6 +94,7 @@ export function ReunionForm({ current }: ReunionFormProps) {
           type="date"
           value={targetDate}
           onChange={e => setTargetDate(e.target.value)}
+          min={today}
           required
           className={inputClass}
         />

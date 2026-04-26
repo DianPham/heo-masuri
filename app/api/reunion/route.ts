@@ -24,6 +24,13 @@ export async function DELETE() {
 
   const supabase = createServerClient();
   await supabase.from("reunion_dates").update({ is_current: false }).eq("is_current", true);
+
+  await supabase.channel("couple").send({
+    type: "broadcast",
+    event: "reunion:updated",
+    payload: { target_date: null },
+  });
+
   return NextResponse.json({ ok: true });
 }
 
