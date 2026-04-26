@@ -1,14 +1,5 @@
-/// <reference lib="webworker" />
-declare const self: ServiceWorkerGlobalScope;
-
 self.addEventListener("push", (event) => {
-  const data = (event.data?.json() ?? {}) as {
-    title?: string;
-    body?: string;
-    url?: string;
-    tag?: string;
-  };
-
+  const data = event.data?.json() ?? {};
   event.waitUntil(
     self.registration.showNotification(data.title ?? "Heo & Masuri 💕", {
       body: data.body ?? "",
@@ -22,14 +13,14 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data?.url as string) ?? "/";
+  const url = event.notification.data?.url ?? "/";
   event.waitUntil(
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clients) => {
         for (const client of clients) {
           if ("navigate" in client) {
-            return (client as WindowClient).navigate(url).then(() => client.focus());
+            return client.navigate(url).then(() => client.focus());
           }
         }
         return self.clients.openWindow(url);
