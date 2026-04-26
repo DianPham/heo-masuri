@@ -8,14 +8,13 @@ import { FloatingHeart } from "@/components/theme/Heart";
 import { useRealtime } from "@/components/realtime/RealtimeProvider";
 import type { RealtimeEvent } from "@/components/realtime/RealtimeProvider";
 
-const HOLD_2 = 400;   // ms → intensity 2
-const HOLD_3 = 1500;  // ms → intensity 3
-const DEBOUNCE = 500; // ms minimum between sends
+const HOLD_2  = 400;   // ms → intensity 2
+const HOLD_3  = 1500;  // ms → intensity 3
+const DEBOUNCE = 500;  // ms minimum between sends
+const RING_C  = 427.3; // circumference of r=68 circle
 
-// Ring at r=68, C = 2π×68 ≈ 427.3
-const RING_C = 427.3;
-
-type Phase = "idle" | "pressing" | "sending" | "sent" | "acked";
+type Phase  = "idle" | "pressing" | "sending";
+type Status = "idle" | "sent" | "acked";
 
 interface SpawnedHeart {
   id: number;
@@ -28,30 +27,37 @@ interface SpawnedHeart {
 export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: number }) {
   const t = useTranslations("missing");
 
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [phase,      setPhase]      = useState<Phase>("idle");
+  const [status,     setStatus]     = useState<Status>("idle");
   const [holdProgress, setHoldProgress] = useState(0);
-  const [intensity, setIntensity] = useState<1 | 2 | 3>(1);
+  const [intensity,  setIntensity]  = useState<1 | 2 | 3>(1);
   const [countToday, setCountToday] = useState(initialCountToday);
-  const [pigPose, setPigPose] = useState<"neutral" | "heart-eyes">("neutral");
-  const [hearts, setHearts] = useState<SpawnedHeart[]>([]);
+  const [pigPose,    setPigPose]    = useState<"neutral" | "heart-eyes">("neutral");
+  const [hearts,     setHearts]     = useState<SpawnedHeart[]>([]);
 
-  const phaseRef = useRef<Phase>("idle");
+  const phaseRef        = useRef<Phase>("idle");
   const pendingAckIdRef = useRef<string | null>(null);
-  const pressStartRef = useRef(0);
-  const lastSentRef = useRef(0);
-  const rafRef = useRef<number>(0);
-  const intensityRef = useRef<1 | 2 | 3>(1);
-  const heartIdRef = useRef(0);
+  const pressStartRef   = useRef(0);
+  const lastSentRef     = useRef(0);
+  const rafRef          = useRef<number>(0);
+  const intensityRef    = useRef<1 | 2 | 3>(1);
+  const heartIdRef      = useRef(0);
 
   phaseRef.current = phase;
 
   // ── Press start ──────────────────────────────────────────────────
   function startHold() {
-    if (phaseRef.current !== "idle") return;
+    // Only block while actively pressing or mid-send
+    if (phase === "pressing" || phase === "sending") return;
     if (Date.now() - lastSentRef.current < DEBOUNCE) return;
 
+    // Cancel any pending ack from previous send
+    pendingAckIdRef.current = null;
+    setStatus("idle");
+    setPigPose("neutral");
+
     pressStartRef.current = Date.now();
-    intensityRef.current = 1;
+    intensityRef.current  = 1;
     setPhase("pressing");
     setHoldProgress(0);
     setIntensity(1);
@@ -63,40 +69,34 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
       let progress: number;
 
       if (elapsed < HOLD_2) {
-        next = 1;
+        next     = 1;
         progress = (elapsed / HOLD_2) * 0.48;
       } else if (elapsed < HOLD_3) {
-        next = 2;
+        next     = 2;
         progress = 0.48 + ((elapsed - HOLD_2) / (HOLD_3 - HOLD_2)) * 0.48;
       } else {
-        next = 3;
+        next     = 3;
         progress = 1;
-        if (intensityRef.current !== 3) {
-          if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-        }
+        if (intensityRef.current !== 3 && navigator.vibrate) navigator.vibrate([50, 30, 50]);
       }
 
       intensityRef.current = next;
       setIntensity(next);
       setHoldProgress(progress);
 
-      if (phaseRef.current === "pressing") {
-        rafRef.current = requestAnimationFrame(tick);
-      }
+      if (phaseRef.current === "pressing") rafRef.current = requestAnimationFrame(tick);
     }
 
     rafRef.current = requestAnimationFrame(tick);
   }
 
-  // ── Press end ────────────────────────────────────────────────────
   function endHold() {
     if (phaseRef.current !== "pressing") return;
     cancelAnimationFrame(rafRef.current);
-
     const elapsed = Date.now() - pressStartRef.current;
-    const final: 1 | 2 | 3 = elapsed >= HOLD_3 ? 3 : elapsed >= HOLD_2 ? 2 : 1;
+    const fin: 1 | 2 | 3 = elapsed >= HOLD_3 ? 3 : elapsed >= HOLD_2 ? 2 : 1;
     setHoldProgress(0);
-    sendMissing(final);
+    sendMissing(fin);
   }
 
   function cancelHold() {
@@ -111,17 +111,17 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
     const color = fin === 3 ? "#A8324F" : "#D14D6F";
     const count = fin === 3 ? 8 : fin === 2 ? 6 : 4;
     const batch: SpawnedHeart[] = Array.from({ length: count }, () => ({
-      id: heartIdRef.current++,
-      x: (Math.random() - 0.5) * 100,
-      y: -(24 + Math.random() * 48),
-      size: 10 + Math.floor(Math.random() * 10),
+      id:    heartIdRef.current++,
+      x:     (Math.random() - 0.5) * 100,
+      y:     -(24 + Math.random() * 48),
+      size:  10 + Math.floor(Math.random() * 10),
       color,
     }));
     setHearts(prev => [...prev, ...batch]);
     setTimeout(() => setHearts(prev => prev.filter(h => !batch.some(b => b.id === h.id))), 1400);
   }
 
-  // ── Send to server ───────────────────────────────────────────────
+  // ── Send ─────────────────────────────────────────────────────────
   async function sendMissing(fin: 1 | 2 | 3) {
     setPhase("sending");
     setIntensity(fin);
@@ -138,18 +138,20 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
       const { id, count_today } = await res.json();
       pendingAckIdRef.current = id;
       setCountToday(count_today);
-      setPhase("sent");
+      setStatus("sent");
+      setPhase("idle"); // re-enable button immediately
       spawnHearts(fin);
 
-      // Auto-reset after 30s if no ack arrives
+      // Clear "sent" toast after 4s if not acked
       setTimeout(() => {
-        if (phaseRef.current === "sent") {
-          pendingAckIdRef.current = null;
-          setPhase("idle");
-        }
+        setStatus(prev => prev === "sent" ? "idle" : prev);
+      }, 4000);
+
+      // Stop listening for ack after 30s
+      setTimeout(() => {
+        if (pendingAckIdRef.current === id) pendingAckIdRef.current = null;
       }, 30_000);
     } catch {
-      // TODO: queue in IndexedDB for offline retry
       setPhase("idle");
     }
   }
@@ -158,23 +160,20 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
   const handleRealtime = useCallback((e: RealtimeEvent) => {
     if (e.event === "missing:ack" && e.payload.id === pendingAckIdRef.current) {
       pendingAckIdRef.current = null;
-      setPhase("acked");
+      setStatus("acked");
       setPigPose("heart-eyes");
       setTimeout(() => {
         setPigPose("neutral");
-        setPhase("idle");
+        setStatus("idle");
       }, 5000);
     }
   }, []);
 
   useRealtime(handleRealtime);
-
   useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
   const isPressing = phase === "pressing";
   const isSending  = phase === "sending";
-  const isSent     = phase === "sent";
-  const isAcked    = phase === "acked";
   const glow       = intensity === 3 && isPressing;
 
   return (
@@ -186,9 +185,7 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
         {/* Progress ring */}
         <svg
           className="absolute inset-0 -rotate-90 pointer-events-none"
-          width={160}
-          height={160}
-          viewBox="0 0 160 160"
+          width={160} height={160} viewBox="0 0 160 160"
         >
           <circle
             cx={80} cy={80} r={68}
@@ -203,10 +200,7 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
 
         {/* Floating hearts */}
         {hearts.map(h => (
-          <FloatingHeart
-            key={h.id}
-            size={h.size}
-            color={h.color}
+          <FloatingHeart key={h.id} size={h.size} color={h.color}
             style={{ left: "50%", top: "50%", marginLeft: h.x, marginTop: h.y }}
           />
         ))}
@@ -224,19 +218,12 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
           animate={{
             scale: isPressing ? 0.95 : 1,
             boxShadow: glow
-              ? [
-                  "0 0 0 0 rgba(209,77,111,0)",
-                  "0 0 36px 14px rgba(209,77,111,0.45)",
-                  "0 0 0 0 rgba(209,77,111,0)",
-                ]
+              ? ["0 0 0 0 rgba(209,77,111,0)", "0 0 36px 14px rgba(209,77,111,0.45)", "0 0 0 0 rgba(209,77,111,0)"]
               : "0 8px 32px -8px rgba(168,50,79,0.32)",
           }}
           transition={
             glow
-              ? {
-                  boxShadow: { repeat: Infinity, duration: 1.1, ease: "easeInOut" },
-                  scale: { type: "spring", stiffness: 400, damping: 25 },
-                }
+              ? { boxShadow: { repeat: Infinity, duration: 1.1, ease: "easeInOut" }, scale: { type: "spring", stiffness: 400, damping: 25 } }
               : { type: "spring", stiffness: 400, damping: 25 }
           }
           style={{ WebkitTapHighlightColor: "transparent" }}
@@ -248,14 +235,14 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
       {/* ── Status label ── */}
       <div className="h-10 flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
-          {isAcked ? (
+          {status === "acked" ? (
             <motion.p key="acked"
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               className="font-body text-base font-medium text-rose-500"
             >
               {t("ackedJustNow")}
             </motion.p>
-          ) : isSent ? (
+          ) : status === "sent" ? (
             <motion.p key="sent"
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               className="font-body text-base text-ink-soft"
@@ -272,10 +259,7 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
           ) : isPressing ? (
             <motion.p key={`pressing-${intensity}`}
               initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-              className={[
-                "font-body text-sm font-medium",
-                intensity === 3 ? "text-rose-600" : "text-ink-soft",
-              ].join(" ")}
+              className={["font-body text-sm font-medium", intensity === 3 ? "text-rose-600" : "text-ink-soft"].join(" ")}
             >
               {intensity === 1 ? t("tap") : intensity === 2 ? t("hold") : t("longHold")}
             </motion.p>
