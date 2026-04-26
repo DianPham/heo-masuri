@@ -45,12 +45,21 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
   const rafRef          = useRef<number>(0);
   const intensityRef    = useRef<1 | 2 | 3>(1);
   const heartIdRef      = useRef(0);
-  const recentSendsRef  = useRef<number[]>([]);
+  const recentPressesRef = useRef<number[]>([]);
 
   phaseRef.current = phase;
 
   // ── Press start ──────────────────────────────────────────────────
   function startHold() {
+    // Track every press attempt — spam guard fires before debounce
+    const now = Date.now();
+    recentPressesRef.current = recentPressesRef.current.filter(t => now - t < SPAM_WINDOW);
+    recentPressesRef.current.push(now);
+    if (recentPressesRef.current.length > SPAM_LIMIT) {
+      setSpamModal(true);
+      return;
+    }
+
     // Only block while actively pressing or mid-send
     if (phase === "pressing" || phase === "sending") return;
     if (Date.now() - lastSentRef.current < DEBOUNCE) return;
@@ -125,21 +134,8 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
     setTimeout(() => setHearts(prev => prev.filter(h => !batch.some(b => b.id === h.id))), 1400);
   }
 
-  // ── Spam guard ───────────────────────────────────────────────────
-  function isSpamming(): boolean {
-    const now = Date.now();
-    recentSendsRef.current = recentSendsRef.current.filter(t => now - t < SPAM_WINDOW);
-    return recentSendsRef.current.length >= SPAM_LIMIT;
-  }
-
   // ── Send ─────────────────────────────────────────────────────────
   async function sendMissing(fin: 1 | 2 | 3) {
-    if (isSpamming()) {
-      setPhase("idle");
-      setSpamModal(true);
-      return;
-    }
-    recentSendsRef.current.push(Date.now());
     setPhase("sending");
     setIntensity(fin);
     lastSentRef.current = Date.now();
@@ -291,8 +287,6 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
         </AnimatePresence>
       </div>
 
-    </div>
-
       {/* ── Spam modal ── */}
       <AnimatePresence>
         {spamModal && (
@@ -332,5 +326,6 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
   );
 }
