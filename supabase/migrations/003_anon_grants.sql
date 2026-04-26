@@ -19,3 +19,8 @@ grant select on public.reunion_dates      to anon;
 
 -- angry_buzzes, push_subscriptions, notification_prefs:
 -- NO grant to anon. Server-only via service_role.
+
+-- service_role needs full access to all tables (may not be automatic
+-- if the project was created without "Expose schema" enabled)
+grant usage on schema public to service_role;
+grant all on all tables in schema public to service_role;
