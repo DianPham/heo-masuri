@@ -10,74 +10,56 @@ interface SettingsPageProps {
   who: "heo" | "masuri";
 }
 
-// ── Section wrapper ──────────────────────────────────────────
-function Section({
+function SectionLabel({
   icon: Icon,
-  title,
-  children,
+  label,
   danger,
-  delay = 0,
 }: {
   icon: React.ElementType;
-  title: string;
-  children: React.ReactNode;
+  label: string;
   danger?: boolean;
-  delay?: number;
 }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="space-y-4"
-    >
-      <div className="flex items-center gap-2">
-        <Icon
-          size={15}
-          className={danger ? "text-rose-500" : "text-ink-soft"}
-        />
-        <h2
-          className={[
-            "font-body text-xs font-semibold uppercase tracking-widest",
-            danger ? "text-rose-500" : "text-ink-soft",
-          ].join(" ")}
-        >
-          {title}
-        </h2>
-      </div>
-      <div
-        className="bg-rose-100 rounded-2xl overflow-hidden"
-        style={{ boxShadow: "0 2px 12px -4px rgba(168,50,79,0.10)" }}
+    <div className="flex items-center gap-2 px-1">
+      <Icon size={14} className={danger ? "text-rose-500" : "text-ink-soft"} />
+      <span
+        className={[
+          "font-body text-xs font-bold uppercase tracking-widest",
+          danger ? "text-rose-500" : "text-ink-soft",
+        ].join(" ")}
       >
-        {children}
-      </div>
-    </motion.section>
+        {label}
+      </span>
+    </div>
   );
 }
 
-// ── Single row inside a section ──────────────────────────────
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="bg-rose-100 rounded-3xl overflow-hidden divide-y divide-rose-200/70"
+      style={{ boxShadow: "0 4px 24px -8px rgba(168,50,79,0.13)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function Row({
   label,
   sublabel,
   children,
-  divider = true,
 }: {
   label: string;
   sublabel?: string;
   children?: React.ReactNode;
-  divider?: boolean;
 }) {
   return (
-    <div
-      className={[
-        "flex items-center justify-between px-4 py-4 gap-3",
-        divider ? "border-b border-rose-200/60 last:border-0" : "",
-      ].join(" ")}
-    >
+    <div className="flex items-center justify-between px-6 py-5 gap-4">
       <div className="flex-1 min-w-0">
-        <p className="font-body text-sm font-medium text-ink truncate">{label}</p>
+        <p className="font-body text-base font-medium text-ink leading-snug">{label}</p>
         {sublabel && (
-          <p className="font-body text-xs text-ink-soft mt-0.5">{sublabel}</p>
+          <p className="font-body text-sm text-ink-soft mt-1 leading-snug">{sublabel}</p>
         )}
       </div>
       {children}
@@ -85,93 +67,130 @@ function Row({
   );
 }
 
-// ── Stub badge ───────────────────────────────────────────────
-function ComingSoon({ label = "Checkpoint 8" }: { label?: string }) {
+function Soon() {
   return (
-    <span className="font-body text-[10px] text-ink-soft/50 bg-rose-200/40 px-2 py-0.5 rounded-full">
-      {label}
+    <span className="shrink-0 font-body text-[11px] text-ink-soft/40 bg-rose-200/40 px-2.5 py-1 rounded-full">
+      CP8
     </span>
   );
 }
 
-// ── Main settings page ───────────────────────────────────────
 export function SettingsPage({ who }: SettingsPageProps) {
   const t = useTranslations("settings");
   const locale = useLocale();
   const router = useRouter();
 
   function clearWhoAndLeave() {
-    // Clear the soft-gate cookie
     document.cookie = "who=; path=/; max-age=0; samesite=lax";
     router.push("/");
     router.refresh();
   }
 
   return (
-    <div className="px-5 pt-12 pb-24 space-y-8 max-w-md mx-auto">
-      {/* Page title */}
-      <motion.h1
-        initial={{ opacity: 0, y: -12 }}
+    <div className="px-6 pb-28 max-w-md mx-auto">
+
+      {/* ── Heading ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="font-display text-3xl text-ink italic"
-        style={{ fontVariationSettings: "'opsz' 60" }}
+        className="pt-16 pb-10"
       >
-        {locale === "vi" ? "Cài đặt" : "Settings"}
-      </motion.h1>
-
-      {/* ── Thông báo / Notifications ── (stub until Checkpoint 8) */}
-      <Section icon={Bell} title={t("notifications")} delay={0.05}>
-        <Row
-          label={t("missing")}
-          sublabel={who === "heo" ? t("missingSubLabel") : undefined}
+        <h1
+          className="font-display text-4xl text-ink italic"
+          style={{ fontVariationSettings: "'opsz' 72" }}
         >
-          <ComingSoon />
-        </Row>
-        <Row label={t("thinkingHugKiss")}>
-          <ComingSoon />
-        </Row>
-        {who === "masuri" && (
-          <Row label={t("angryBuzz")}>
-            <ComingSoon />
-          </Row>
-        )}
-        <Row label={t("quietHours")} sublabel="23:00 – 07:00" divider={false}>
-          <ComingSoon />
-        </Row>
-      </Section>
+          {locale === "vi" ? "Cài đặt" : "Settings"}
+        </h1>
+      </motion.div>
 
-      {/* ── Ngôn ngữ / Language ── (fully functional at Checkpoint 2) */}
-      <Section icon={Globe} title={t("language")} delay={0.1}>
-        <div className="flex justify-center px-4 py-4">
-          <LanguageToggle />
-        </div>
-      </Section>
+      <div className="space-y-10">
 
-      {/* ── Khác / Other ── */}
-      <Section icon={MoreHorizontal} title={t("other")} delay={0.15}>
-        <button
-          onClick={clearWhoAndLeave}
-          className="w-full flex items-center gap-3 px-4 py-4 text-left
-                     hover:bg-rose-200/50 active:bg-rose-200 transition-colors duration-150"
+        {/* ── Thông báo ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.06, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-3"
         >
-          <LogOut size={16} className="text-ink-soft shrink-0" />
-          <span className="font-body text-sm font-medium text-ink">
-            {t("notMe")}
-          </span>
-        </button>
-      </Section>
+          <SectionLabel icon={Bell} label={t("notifications")} />
+          <Card>
+            <Row
+              label={t("missing")}
+              sublabel={who === "heo" ? t("missingSubLabel") : undefined}
+            >
+              <Soon />
+            </Row>
+            <Row label={t("thinkingHugKiss")}>
+              <Soon />
+            </Row>
+            {who === "masuri" && (
+              <Row label={t("angryBuzz")}>
+                <Soon />
+              </Row>
+            )}
+            <Row label={t("quietHours")} sublabel="23:00 – 07:00">
+              <Soon />
+            </Row>
+          </Card>
+        </motion.div>
 
-      {/* ── Vùng nguy hiểm / Danger zone ── (stub until Checkpoint 8) */}
-      <Section icon={Trash2} title={t("dangerZone")} danger delay={0.2}>
-        <Row
-          label={t("deleteAll")}
-          sublabel={t("deleteConfirmPrompt")}
-          divider={false}
+        {/* ── Ngôn ngữ ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-3"
         >
-          <ComingSoon />
-        </Row>
-      </Section>
+          <SectionLabel icon={Globe} label={t("language")} />
+          <Card>
+            <div className="flex items-center justify-between px-6 py-5 gap-4">
+              <p className="font-body text-base font-medium text-ink">
+                {locale === "vi" ? "Tiếng Việt" : "English"}
+              </p>
+              <LanguageToggle />
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* ── Khác ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-3"
+        >
+          <SectionLabel icon={MoreHorizontal} label={t("other")} />
+          <Card>
+            <button
+              onClick={clearWhoAndLeave}
+              className="w-full flex items-center gap-4 px-6 py-5 text-left
+                         hover:bg-rose-200/50 active:bg-rose-200/80 transition-colors duration-150"
+            >
+              <LogOut size={18} className="text-ink-soft shrink-0" />
+              <span className="font-body text-base font-medium text-ink">
+                {t("notMe")}
+              </span>
+            </button>
+          </Card>
+        </motion.div>
+
+        {/* ── Vùng nguy hiểm ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.24, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-3"
+        >
+          <SectionLabel icon={Trash2} label={t("dangerZone")} danger />
+          <Card>
+            <Row label={t("deleteAll")} sublabel={t("deleteConfirmPrompt")}>
+              <Soon />
+            </Row>
+          </Card>
+        </motion.div>
+
+      </div>
     </div>
   );
 }
