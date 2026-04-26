@@ -42,22 +42,11 @@ export async function notifyMissing(payload: {
     timestamp: new Date().toISOString(),
   };
 
+  embed.description = (embed.description ?? "") + `\n\n[👉 Đã thấy 💕](${ackUrl})`;
+
   await sendWebhook(process.env.DISCORD_WEBHOOK_MISSING, {
     username: "Heo",
     embeds: [embed],
-    components: [
-      {
-        type: 1,
-        components: [
-          {
-            type: 2,
-            style: 5,
-            label: "Đã thấy 💕",
-            url: ackUrl,
-          },
-        ],
-      },
-    ],
   });
 }
 
@@ -98,6 +87,13 @@ export async function notifyAngry(payload: {
     fields.splice(1, 0, { name: "Heo nói:", value: contextNote });
   }
 
+  const replyLinks = [
+    `[Đã thấy](${baseUrl}/heard_you)`,
+    `[Xin lỗi](${baseUrl}/sorry)`,
+    `[Đang đến](${baseUrl}/on_my_way)`,
+    `[10 phút nữa](${baseUrl}/talk_in_10)`,
+  ].join(" · ");
+
   await sendWebhook(process.env.DISCORD_WEBHOOK_ANGRY, {
     username: "Heo",
     embeds: [
@@ -105,18 +101,8 @@ export async function notifyAngry(payload: {
         title: "💔 Heo đang không ổn",
         color: ANGRY_COLORS[needType] ?? 0xf8b4c4,
         fields,
+        description: replyLinks,
         timestamp: new Date().toISOString(),
-      },
-    ],
-    components: [
-      {
-        type: 1,
-        components: [
-          { type: 2, style: 5, label: "Đã thấy",           url: `${baseUrl}/heard_you` },
-          { type: 2, style: 5, label: "Xin lỗi",           url: `${baseUrl}/sorry` },
-          { type: 2, style: 5, label: "Đang đến",          url: `${baseUrl}/on_my_way` },
-          { type: 2, style: 5, label: "10 phút nữa",       url: `${baseUrl}/talk_in_10` },
-        ],
       },
     ],
   });
