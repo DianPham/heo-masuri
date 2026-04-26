@@ -33,10 +33,7 @@ export const metadata: Metadata = {
     title: "H&M",
     statusBarStyle: "default",
   },
-  icons: {
-    // Explicitly declared so Next.js emits the apple-touch-icon link tag.
-    apple: "/apple-touch-icon.png",
-  },
+  // apple-touch-icon is emitted automatically by app/apple-icon.tsx
   robots: {
     index: false,
     follow: false,
