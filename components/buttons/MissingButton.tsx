@@ -8,10 +8,12 @@ import { FloatingHeart } from "@/components/theme/Heart";
 import { useRealtime } from "@/components/realtime/RealtimeProvider";
 import type { RealtimeEvent } from "@/components/realtime/RealtimeProvider";
 
-const HOLD_2  = 400;   // ms → intensity 2
-const HOLD_3  = 1500;  // ms → intensity 3
-const DEBOUNCE = 500;  // ms minimum between sends
-const RING_C  = 427.3; // circumference of r=68 circle
+const HOLD_2      = 400;   // ms → intensity 2
+const HOLD_3      = 1500;  // ms → intensity 3
+const DEBOUNCE    = 500;   // ms minimum between sends
+const RING_C      = 427.3; // circumference of r=68 circle
+const SPAM_LIMIT  = 5;     // max sends before spam modal
+const SPAM_WINDOW = 3000;  // ms rolling window
 
 type Phase  = "idle" | "pressing" | "sending";
 type Status = "idle" | "sent" | "acked";
@@ -34,6 +36,7 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
   const [countToday, setCountToday] = useState(initialCountToday);
   const [pigPose,    setPigPose]    = useState<"neutral" | "heart-eyes">("neutral");
   const [hearts,     setHearts]     = useState<SpawnedHeart[]>([]);
+  const [spamModal,  setSpamModal]  = useState(false);
 
   const phaseRef        = useRef<Phase>("idle");
   const pendingAckIdRef = useRef<string | null>(null);
@@ -42,6 +45,7 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
   const rafRef          = useRef<number>(0);
   const intensityRef    = useRef<1 | 2 | 3>(1);
   const heartIdRef      = useRef(0);
+  const recentSendsRef  = useRef<number[]>([]);
 
   phaseRef.current = phase;
 
@@ -121,8 +125,21 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
     setTimeout(() => setHearts(prev => prev.filter(h => !batch.some(b => b.id === h.id))), 1400);
   }
 
+  // ── Spam guard ───────────────────────────────────────────────────
+  function isSpamming(): boolean {
+    const now = Date.now();
+    recentSendsRef.current = recentSendsRef.current.filter(t => now - t < SPAM_WINDOW);
+    return recentSendsRef.current.length >= SPAM_LIMIT;
+  }
+
   // ── Send ─────────────────────────────────────────────────────────
   async function sendMissing(fin: 1 | 2 | 3) {
+    if (isSpamming()) {
+      setPhase("idle");
+      setSpamModal(true);
+      return;
+    }
+    recentSendsRef.current.push(Date.now());
     setPhase("sending");
     setIntensity(fin);
     lastSentRef.current = Date.now();
@@ -275,5 +292,45 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
       </div>
 
     </div>
+
+      {/* ── Spam modal ── */}
+      <AnimatePresence>
+        {spamModal && (
+          <motion.div
+            key="spam-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-8"
+            style={{ background: "rgba(58,33,41,0.45)", backdropFilter: "blur(6px)" }}
+            onClick={() => setSpamModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 8 }}
+              transition={{ type: "spring", stiffness: 340, damping: 26 }}
+              className="bg-rose-50 rounded-3xl px-8 py-10 flex flex-col items-center gap-5 max-w-xs w-full"
+              style={{ boxShadow: "0 24px 48px -12px rgba(168,50,79,0.28)" }}
+              onClick={e => e.stopPropagation()}
+            >
+              <Pig pose="heart-eyes" size={80} animate={false} />
+              <p
+                className="font-display text-xl text-ink italic text-center leading-snug"
+                style={{ fontVariationSettings: "'opsz' 32" }}
+              >
+                {t("spamMessage")}
+              </p>
+              <button
+                onClick={() => setSpamModal(false)}
+                className="mt-1 px-7 py-3 rounded-full bg-rose-400 text-white font-body text-sm font-semibold
+                           hover:bg-rose-500 active:bg-rose-600 transition-colors duration-150"
+              >
+                {t("spamDismiss")}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
   );
 }

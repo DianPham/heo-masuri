@@ -15,7 +15,9 @@
     "countToday": "Đây là lần thứ {count} hôm nay",
     "todayCount": "Hôm nay: {count} lần",
     "sending": "Đang gửi...",
-    "queuedOffline": "Đã lưu lại, sẽ gửi khi có mạng"
+    "queuedOffline": "Đã lưu lại, sẽ gửi khi có mạng",
+    "spamMessage": "Anh biết em nhớ anh rồi, anh đây nèeeeee",
+    "spamDismiss": "Okay 🥰"
   },
   "thinking": {
     "thinking": "Nhớ Masuri",

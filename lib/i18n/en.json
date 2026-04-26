@@ -15,7 +15,9 @@
     "countToday": "This is time #{count} today",
     "todayCount": "Today: {count} times",
     "sending": "Sending...",
-    "queuedOffline": "Saved, will send when back online"
+    "queuedOffline": "Saved, will send when back online",
+    "spamMessage": "I know you miss me, I'm right here~",
+    "spamDismiss": "Okay 🥰"
   },
   "thinking": {
     "thinking": "Missing Masuri",
