@@ -1,6 +1,7 @@
 import { BottomNav } from "@/components/nav/BottomNav";
 import { RealtimeProvider } from "@/components/realtime/RealtimeProvider";
 import { ThinkingIncoming } from "@/components/realtime/ThinkingIncoming";
+import { PushPermission } from "@/components/notifications/PushPermission";
 
 export default function HeoLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function HeoLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto pb-24">{children}</main>
         <BottomNav who="heo" />
         <ThinkingIncoming who="heo" />
+        <PushPermission />
       </div>
     </RealtimeProvider>
   );

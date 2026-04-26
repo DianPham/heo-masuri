@@ -7,6 +7,7 @@ import { Pig } from "@/components/theme/Pig";
 import { FloatingHeart } from "@/components/theme/Heart";
 import { useRealtime } from "@/components/realtime/RealtimeProvider";
 import type { RealtimeEvent } from "@/components/realtime/RealtimeProvider";
+import { signalPushEligible } from "@/lib/push-eligible";
 
 const HOLD_2      = 400;   // ms → intensity 2
 const HOLD_3      = 1500;  // ms → intensity 3
@@ -154,6 +155,7 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
       setStatus("sent");
       setPhase("idle"); // re-enable button immediately
       spawnHearts(fin);
+      signalPushEligible();
 
       // Clear "sent" toast after 4s if not acked
       setTimeout(() => {

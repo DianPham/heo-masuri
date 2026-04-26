@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Pig } from "@/components/theme/Pig";
 import { useRealtime } from "./RealtimeProvider";
 import type { RealtimeEvent } from "./RealtimeProvider";
+import { signalPushEligible } from "@/lib/push-eligible";
 
 type Who = "heo" | "masuri";
 
@@ -25,6 +26,7 @@ export function ThinkingIncoming({ who }: { who: Who }) {
 
     const { id, kind, from_name } = e.payload;
     setPing({ id, kind: kind as IncomingPing["kind"], from_name });
+    signalPushEligible();
 
     fetch("/api/signal/thinking/seen", {
       method: "POST",
