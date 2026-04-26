@@ -29,7 +29,7 @@ function Section({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="space-y-3"
+      className="space-y-4"
     >
       <div className="flex items-center gap-2">
         <Icon
@@ -70,7 +70,7 @@ function Row({
   return (
     <div
       className={[
-        "flex items-center justify-between px-4 py-3.5 gap-3",
+        "flex items-center justify-between px-4 py-4 gap-3",
         divider ? "border-b border-rose-200/60 last:border-0" : "",
       ].join(" ")}
     >
@@ -108,7 +108,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
   }
 
   return (
-    <div className="px-5 pt-10 pb-24 space-y-6 max-w-md mx-auto">
+    <div className="px-5 pt-12 pb-24 space-y-8 max-w-md mx-auto">
       {/* Page title */}
       <motion.h1
         initial={{ opacity: 0, y: -12 }}
@@ -152,7 +152,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
       <Section icon={MoreHorizontal} title={t("other")} delay={0.15}>
         <button
           onClick={clearWhoAndLeave}
-          className="w-full flex items-center gap-3 px-4 py-3.5 text-left
+          className="w-full flex items-center gap-3 px-4 py-4 text-left
                      hover:bg-rose-200/50 active:bg-rose-200 transition-colors duration-150"
         >
           <LogOut size={16} className="text-ink-soft shrink-0" />
