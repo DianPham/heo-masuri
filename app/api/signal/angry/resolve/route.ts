@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { sendPushIfAllowed } from "@/lib/push";
 import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
@@ -25,6 +26,16 @@ export async function POST(req: NextRequest) {
     event: "angry:resolved",
     payload: { id },
   });
+
+  const { data: masuri } = await supabase.from("users").select("id").eq("slug", "masuri").single();
+  if (masuri) {
+    sendPushIfAllowed(masuri.id, "angry_enabled", {
+      title: "Heo ổn rồi 🌸",
+      body: "Heo đã cảm thấy tốt hơn rồi 💕",
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/masuri`,
+      tag: "angry-resolved",
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }
