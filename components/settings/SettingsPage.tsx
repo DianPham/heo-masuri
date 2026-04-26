@@ -16,17 +16,19 @@ function Section({
   title,
   children,
   danger,
+  delay = 0,
 }: {
   icon: React.ElementType;
   title: string;
   children: React.ReactNode;
   danger?: boolean;
+  delay?: number;
 }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ delay, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="space-y-3"
     >
       <div className="flex items-center gap-2">
@@ -119,7 +121,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
       </motion.h1>
 
       {/* ── Thông báo / Notifications ── (stub until Checkpoint 8) */}
-      <Section icon={Bell} title={t("notifications")}>
+      <Section icon={Bell} title={t("notifications")} delay={0.05}>
         <Row
           label={t("missing")}
           sublabel={who === "heo" ? t("missingSubLabel") : undefined}
@@ -140,14 +142,14 @@ export function SettingsPage({ who }: SettingsPageProps) {
       </Section>
 
       {/* ── Ngôn ngữ / Language ── (fully functional at Checkpoint 2) */}
-      <Section icon={Globe} title={t("language")}>
-        <Row label="" divider={false}>
+      <Section icon={Globe} title={t("language")} delay={0.1}>
+        <div className="flex justify-center px-4 py-4">
           <LanguageToggle />
-        </Row>
+        </div>
       </Section>
 
       {/* ── Khác / Other ── */}
-      <Section icon={MoreHorizontal} title={t("other")}>
+      <Section icon={MoreHorizontal} title={t("other")} delay={0.15}>
         <button
           onClick={clearWhoAndLeave}
           className="w-full flex items-center gap-3 px-4 py-3.5 text-left
@@ -161,7 +163,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
       </Section>
 
       {/* ── Vùng nguy hiểm / Danger zone ── (stub until Checkpoint 8) */}
-      <Section icon={Trash2} title={t("dangerZone")} danger>
+      <Section icon={Trash2} title={t("dangerZone")} danger delay={0.2}>
         <Row
           label={t("deleteAll")}
           sublabel={t("deleteConfirmPrompt")}

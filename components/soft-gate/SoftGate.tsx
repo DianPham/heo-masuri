@@ -127,7 +127,7 @@ export function SoftGate() {
       </motion.div>
 
       {/* Portraits */}
-      <div className="flex items-end gap-12 relative z-10">
+      <div className="flex items-center gap-8 relative z-10">
         <Portrait label={t("heo")} delay={0.1} onClick={() => choose("heo")}>
           <Pig pose="neutral" size={88} />
         </Portrait>
