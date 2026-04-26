@@ -65,6 +65,7 @@
     "settings": "Settings"
   },
   "settings": {
+    "account": "Account",
     "notifications": "Notifications",
     "missing": "Missing",
     "missingSubLabel": "When Masuri sees the message",

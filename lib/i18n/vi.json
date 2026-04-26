@@ -65,6 +65,7 @@
     "settings": "Cài đặt"
   },
   "settings": {
+    "account": "Tài khoản",
     "notifications": "Thông báo",
     "missing": "Nhớ",
     "missingSubLabel": "Khi Masuri thấy tin nhắn",
