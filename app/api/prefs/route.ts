@@ -41,8 +41,7 @@ export async function PUT(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("notification_prefs")
-    .update(updates)
-    .eq("user_id", user.id)
+    .upsert({ user_id: user.id, ...updates }, { onConflict: "user_id" })
     .select()
     .single();
 
