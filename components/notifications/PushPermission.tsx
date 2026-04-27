@@ -70,36 +70,44 @@ export function PushPermission() {
       {state !== "hidden" && (
         <motion.div
           key={state}
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 32 }}
-          transition={{ type: "spring", stiffness: 320, damping: 28 }}
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 40, scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 340, damping: 30 }}
           className="fixed bottom-28 left-4 right-4 z-50"
         >
           <div
-            className="bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 flex flex-col gap-3 max-w-sm mx-auto"
-            style={{ boxShadow: "0 8px 24px -6px rgba(168,50,79,0.22)" }}
+            className="rounded-3xl p-6 flex flex-col gap-5 max-w-sm mx-auto"
+            style={{
+              background: "rgba(255, 249, 245, 0.92)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "2px solid rgba(248,168,188,0.35)",
+              boxShadow: "0 12px 40px -8px rgba(168,50,79,0.28), 0 2px 8px rgba(168,50,79,0.08)",
+            }}
           >
             {state === "pre-prompt" ? (
               <>
-                <div>
-                  <p className="font-body text-sm font-semibold text-ink">
+                <div className="flex flex-col gap-2">
+                  <p className="font-accent text-lg font-semibold text-ink leading-snug">
                     🔔 {t("prePromptTitle")}
                   </p>
-                  <p className="font-body text-xs text-ink-soft mt-1 leading-relaxed">
+                  <p className="font-accent text-base text-ink-soft leading-relaxed">
                     {t("prePromptBody")}
                   </p>
                 </div>
-                <div className="flex gap-2 justify-end">
+                <div className="flex gap-3">
                   <button
                     onClick={handleDismiss}
-                    className="font-body text-xs text-ink-soft px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
+                    className="flex-1 font-accent text-base text-ink-soft py-3 rounded-2xl
+                               border-2 border-rose-200/60 hover:bg-rose-100/60 transition-colors"
                   >
                     {t("later")}
                   </button>
                   <button
                     onClick={handleEnable}
-                    className="font-body text-xs font-semibold text-white bg-rose-400 px-4 py-1.5 rounded-lg hover:bg-rose-500 transition-colors"
+                    className="flex-1 font-accent text-base font-semibold text-white py-3 rounded-2xl
+                               bg-rose-400 hover:bg-rose-500 active:scale-[0.97] transition-all"
                   >
                     {t("enable")}
                   </button>
@@ -107,14 +115,21 @@ export function PushPermission() {
               </>
             ) : (
               <>
-                <p className="font-body text-sm font-semibold text-ink">
-                  📲 {t("installBanner")}
-                </p>
-                <p className="font-body text-xs text-ink-soft">1. {t("installStep1")}</p>
-                <p className="font-body text-xs text-ink-soft">2. {t("installStep2")}</p>
+                <div className="flex flex-col gap-3">
+                  <p className="font-accent text-lg font-semibold text-ink leading-snug">
+                    📲 {t("installBanner")}
+                  </p>
+                  <p className="font-accent text-base text-ink-soft leading-relaxed">
+                    1. {t("installStep1")}
+                  </p>
+                  <p className="font-accent text-base text-ink-soft leading-relaxed">
+                    2. {t("installStep2")}
+                  </p>
+                </div>
                 <button
                   onClick={handleDismiss}
-                  className="self-end font-body text-xs text-ink-soft px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-colors"
+                  className="w-full font-accent text-base text-ink-soft py-3 rounded-2xl
+                             border-2 border-rose-200/60 hover:bg-rose-100/60 transition-colors"
                 >
                   {t("later")}
                 </button>

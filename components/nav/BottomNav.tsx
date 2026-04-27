@@ -49,7 +49,7 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
                 />
               </span>
               <span
-                className={`relative z-10 text-xs font-accent transition-colors duration-200 ${
+                className={`relative z-10 text-sm font-accent transition-colors duration-200 ${
                   active ? "text-rose-500" : "text-rose-300"
                 }`}
               >

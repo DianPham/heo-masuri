@@ -68,7 +68,7 @@ export default async function HeoHome() {
         {/* Divider with handwritten label */}
         <div className="flex items-center gap-3 px-1">
           <div className="flex-1 h-px bg-rose-200/70" />
-          <span className="font-accent text-sm text-rose-300/90">
+          <span className="font-accent text-base text-rose-300/90">
             {locale === "vi" ? "gửi thêm ♡" : "send more ♡"}
           </span>
           <div className="flex-1 h-px bg-rose-200/70" />
@@ -86,7 +86,7 @@ export default async function HeoHome() {
           style={{ boxShadow: "0 2px 10px -4px rgba(168,50,79,0.10)" }}
         >
           <span className="text-base">🌧</span>
-          <span className="font-accent text-sm text-rose-400/90">
+          <span className="font-accent text-base text-rose-400/90">
             {locale === "vi" ? "Heo đang không ổn..." : "Heo's not okay..."}
           </span>
         </Link>

@@ -65,8 +65,7 @@ export function ThinkingButtons({ who, locale }: { who: Who; locale: string }) {
             >
               {isSent ? "💕" : emoji}
             </motion.span>
-            {/* font-accent (Caveat) gives a warm handwritten feel; truncate prevents wrapping */}
-            <span className="font-accent text-sm text-ink-soft leading-none text-center w-full px-1 truncate">
+            <span className="font-accent text-base text-ink-soft leading-none text-center w-full px-1 truncate">
               {isSent ? (locale === "vi" ? "Đã gửi ✓" : "Sent ✓") : label}
             </span>
           </motion.button>

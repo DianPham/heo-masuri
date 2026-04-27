@@ -77,7 +77,7 @@ function Row({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between px-5 py-4 gap-4">
+    <div className="flex items-center justify-between px-6 py-5 gap-4">
       <div className="flex-1 min-w-0">
         <p
           className={[
@@ -118,7 +118,7 @@ function TappableRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between px-5 py-4 gap-4 text-left
+      className="w-full flex items-center justify-between px-6 py-5 gap-4 text-left
                  hover:bg-rose-500/5 active:bg-rose-500/8 transition-colors duration-150"
     >
       <div className="flex-1 min-w-0">
@@ -367,7 +367,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
               )}
 
               {/* Quiet hours */}
-              <div className="px-5 py-4">
+              <div className="px-6 py-5">
                 <p className="font-body text-[15px] text-ink leading-snug mb-2.5">
                   {t("quietHours")}
                 </p>

@@ -89,8 +89,8 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
           >
 
             {/* ── What was sent ── */}
-            <div className="rounded-2xl px-5 py-4 bg-white/50 border-2 border-rose-200/50">
-              <p className="font-accent text-xs text-ink-soft/60 mb-1">{t("sent")}</p>
+            <div className="rounded-2xl px-5 py-5 bg-white/50 border-2 border-rose-200/50">
+              <p className="font-accent text-sm text-ink-soft/60 mb-1">{t("sent")}</p>
               <p className="font-accent text-base font-semibold text-ink">{needLabel}</p>
             </div>
 
@@ -102,7 +102,7 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
                 boxShadow: "var(--shadow-card)",
               }}
             >
-              <p className="font-accent text-xs text-ink-soft/60 mb-3">{t("danReplied")}</p>
+              <p className="font-accent text-sm text-ink-soft/60 mb-3">{t("danReplied")}</p>
               <AnimatePresence mode="wait">
                 {reply ? (
                   <motion.p

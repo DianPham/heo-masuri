@@ -42,7 +42,7 @@ export default async function MasuriHome() {
             />
             <Link
               href="/masuri/reunion"
-              className="font-accent text-sm text-ink-soft/40 hover:text-rose-400 transition-colors"
+              className="font-accent text-base text-ink-soft/40 hover:text-rose-400 transition-colors"
             >
               {locale === "vi" ? "chỉnh sửa ✎" : "edit ✎"}
             </Link>
@@ -84,7 +84,7 @@ export default async function MasuriHome() {
           <div className="w-full pb-8 flex flex-col gap-3">
             <div className="flex items-center gap-3 px-1">
               <div className="flex-1 h-px bg-rose-200/70" />
-              <span className="font-accent text-sm text-rose-300/90">
+              <span className="font-accent text-base text-rose-300/90">
                 {locale === "vi" ? "gửi thêm ♡" : "send more ♡"}
               </span>
               <div className="flex-1 h-px bg-rose-200/70" />

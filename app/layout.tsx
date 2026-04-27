@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans, Caveat } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans, Nunito } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
@@ -17,8 +17,9 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const caveat = Caveat({
-  subsets: ["latin"],
+// Nunito: modern, rounded, full Vietnamese support — replaces Caveat
+const nunito = Nunito({
+  subsets: ["latin", "vietnamese"],
   variable: "--font-accent",
   display: "swap",
 });
@@ -60,7 +61,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${fraunces.variable} ${plusJakartaSans.variable} ${caveat.variable}`}
+      className={`${fraunces.variable} ${plusJakartaSans.variable} ${nunito.variable}`}
     >
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
