@@ -27,9 +27,9 @@ interface ActiveBuzzProps {
 export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzzProps) {
   const t = useTranslations("angry");
   const router = useRouter();
-  const [reply, setReply]       = useState<string | null>(initialReply);
+  const [reply, setReply]         = useState<string | null>(initialReply);
   const [resolving, setResolving] = useState(false);
-  const [resolved, setResolved] = useState(false);
+  const [resolved, setResolved]   = useState(false);
 
   const handleRealtime = useCallback((e: RealtimeEvent) => {
     if (e.event === "angry:reply" && e.payload.id === id) {
@@ -59,8 +59,10 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
   void needType;
 
   return (
-    <div className="flex flex-col min-h-[calc(100dvh-96px)] px-6 pt-10 pb-10">
+    <div className="flex flex-col min-h-[calc(100dvh-96px)] px-5 pt-8 pb-10">
       <AnimatePresence mode="wait">
+
+        {/* ── Resolved state ── */}
         {resolved ? (
           <motion.div
             key="resolved"
@@ -71,37 +73,43 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
           >
             <Pig pose="sparkle" size={100} animate={false} />
             <p
-              className="font-display text-2xl text-rose-500 italic"
+              className="font-display text-2xl text-rose-500 italic text-center"
               style={{ fontVariationSettings: "'opsz' 36" }}
             >
               {t("okayNow")}
             </p>
           </motion.div>
+
         ) : (
           <motion.div
             key="active"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col gap-8 w-full"
+            className="flex flex-col gap-5 w-full flex-1"
           >
-            {/* What was sent */}
-            <div className="space-y-1">
-              <p className="font-body text-xs text-ink-soft/60 uppercase tracking-wider">{t("sent")}</p>
-              <p className="font-body text-base font-semibold text-ink">{needLabel}</p>
+
+            {/* ── What was sent ── */}
+            <div className="rounded-2xl px-5 py-4 bg-white/50 border-2 border-rose-200/50">
+              <p className="font-accent text-xs text-ink-soft/60 mb-1">{t("sent")}</p>
+              <p className="font-accent text-base font-semibold text-ink">{needLabel}</p>
             </div>
 
-            {/* Masuri's reply */}
-            <div className="bg-rose-100 border border-rose-200/60 rounded-2xl px-5 py-4 min-h-[88px] flex flex-col justify-center">
-              <p className="font-body text-xs text-ink-soft/60 uppercase tracking-wider mb-2">
-                {t("danReplied")}
-              </p>
+            {/* ── Reply card ── */}
+            <div
+              className="rounded-3xl px-5 py-5 flex-1 flex flex-col justify-center min-h-[110px]"
+              style={{
+                background: "linear-gradient(145deg, #FFE4EA 0%, #FFF5F7 100%)",
+                boxShadow: "var(--shadow-card)",
+              }}
+            >
+              <p className="font-accent text-xs text-ink-soft/60 mb-3">{t("danReplied")}</p>
               <AnimatePresence mode="wait">
                 {reply ? (
                   <motion.p
                     key={reply}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="font-body text-base font-medium text-ink"
+                    className="font-accent text-lg text-ink"
                   >
                     {REPLY_LABELS[reply] ?? reply}
                   </motion.p>
@@ -109,8 +117,12 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
                   <motion.p
                     key="waiting"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="font-body text-sm text-ink-soft/50 italic"
+                    animate={{ opacity: [0.4, 0.75, 0.4] }}
+                    transition={{
+                      opacity: { duration: 2.2, repeat: Infinity, ease: "easeInOut" },
+                      default: { duration: 0.3 },
+                    }}
+                    className="font-accent text-base text-ink-soft/60 italic"
                   >
                     {t("waitingReply")}
                   </motion.p>
@@ -118,19 +130,24 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
               </AnimatePresence>
             </div>
 
-            {/* Resolve */}
+            {/* ── Resolve button ── */}
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handleResolve}
               disabled={resolving}
-              className="w-full py-4 rounded-2xl font-body font-semibold text-base text-white
+              className="w-full py-4 rounded-2xl font-accent text-base text-white
                          disabled:opacity-50 transition-colors duration-150"
-              style={{ backgroundColor: "#9CAF88" }}
+              style={{
+                backgroundColor: "#9CAF88",
+                boxShadow: "0 8px 24px -8px rgba(156,175,136,0.55)",
+              }}
             >
               {t("okayNow")}
             </motion.button>
+
           </motion.div>
         )}
+
       </AnimatePresence>
     </div>
   );

@@ -42,9 +42,11 @@ export default async function HeoHome() {
   }
 
   return (
-    <div className="flex flex-col items-center px-8 min-h-[calc(100dvh-96px)]">
+    <div className="flex flex-col items-center px-5 min-h-[calc(100dvh-96px)]">
+
+      {/* ── Countdown ── */}
       {reunion && (
-        <div className="pt-10 pb-2 w-full flex justify-center">
+        <div className="pt-8 pb-2 w-full flex justify-center">
           <Countdown
             daysLeft={daysUntil(reunion.target_date)}
             label={reunion.label}
@@ -55,21 +57,40 @@ export default async function HeoHome() {
         </div>
       )}
 
+      {/* ── Hero: Missing button ── */}
       <div className="flex-1 flex items-center justify-center w-full">
         <MissingButton initialCountToday={countToday} />
       </div>
 
-      <div className="pb-10 w-full flex flex-col items-center gap-3">
-        <p className="font-body text-xs text-ink-soft/60 uppercase tracking-widest">
-          {locale === "vi" ? "Gửi nhanh" : "Quick send"}
-        </p>
+      {/* ── Love bar ── */}
+      <div className="w-full pb-8 flex flex-col gap-3">
+
+        {/* Divider with handwritten label */}
+        <div className="flex items-center gap-3 px-1">
+          <div className="flex-1 h-px bg-rose-200/70" />
+          <span className="font-accent text-sm text-rose-300/90">
+            {locale === "vi" ? "gửi thêm ♡" : "send more ♡"}
+          </span>
+          <div className="flex-1 h-px bg-rose-200/70" />
+        </div>
+
+        {/* Equal-width quick-send buttons */}
         <ThinkingButtons who="heo" locale={locale} />
+
+        {/* "Not okay" — now a proper soft button, not a ghost link */}
         <Link
           href="/heo/angry"
-          className="mt-2 font-body text-xs text-ink-soft/35 hover:text-ink-soft/60 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl
+                     bg-rose-100/60 border-2 border-rose-200/60 transition-all duration-200
+                     hover:bg-rose-200/50 hover:border-rose-300 active:scale-[0.98]"
+          style={{ boxShadow: "0 2px 10px -4px rgba(168,50,79,0.10)" }}
         >
-          {locale === "vi" ? "Heo đang không ổn..." : "Heo is not okay..."}
+          <span className="text-base">🌧</span>
+          <span className="font-accent text-sm text-rose-400/90">
+            {locale === "vi" ? "Heo đang không ổn..." : "Heo's not okay..."}
+          </span>
         </Link>
+
       </div>
     </div>
   );

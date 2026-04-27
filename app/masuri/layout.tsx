@@ -7,7 +7,7 @@ import { PushPermission } from "@/components/notifications/PushPermission";
 export default function MasuriLayout({ children }: { children: React.ReactNode }) {
   return (
     <RealtimeProvider who="masuri">
-      <div className="min-h-dvh bg-rose-50 flex flex-col">
+      <div className="min-h-dvh flex flex-col" style={{ background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)" }}>
         <main className="flex-1 overflow-y-auto pb-24">{children}</main>
         <BottomNav who="masuri" />
         <MissingIncoming />
