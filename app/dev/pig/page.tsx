@@ -152,7 +152,7 @@ function PoseCard({
       style={{
         backgroundColor: "#FFE4EA",
         borderRadius: 20,
-        padding: "24px 20px",
+        padding: "32px 24px",
         display: "flex",
         flexDirection: "column",
         gap: 16,
