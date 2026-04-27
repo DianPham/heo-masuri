@@ -97,7 +97,8 @@
     "targetDate": "Reunion date",
     "save": "Save",
     "noCountdown": "No countdown yet",
-    "createNew": "Create new countdown"
+    "createNew": "Create new countdown",
+    "edit": "Edit reunion date"
   },
   "errors": {
     "network": "Something went wrong... try again",

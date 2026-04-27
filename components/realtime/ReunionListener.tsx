@@ -2,12 +2,14 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { motion, AnimatePresence } from "motion/react";
 import { useRealtime } from "./RealtimeProvider";
 import type { RealtimeEvent } from "./RealtimeProvider";
 
 export function ReunionListener() {
   const router = useRouter();
+  const locale = useLocale();
   const [msg, setMsg] = useState<string | null>(null);
 
   const handleRealtime = useCallback((e: RealtimeEvent) => {
@@ -15,11 +17,11 @@ export function ReunionListener() {
     router.refresh();
     setMsg(
       e.payload.target_date
-        ? "Masuri đã cập nhật ngày gặp lại 💕"
-        : "Masuri đã xóa countdown 🌙"
+        ? (locale === "vi" ? "Masuri đã cập nhật ngày gặp lại 💕" : "Masuri updated the reunion date 💕")
+        : (locale === "vi" ? "Masuri đã xóa countdown 🌙" : "Masuri removed the countdown 🌙")
     );
     setTimeout(() => setMsg(null), 5000);
-  }, [router]);
+  }, [router, locale]);
 
   useRealtime(handleRealtime);
 

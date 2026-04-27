@@ -1,18 +1,12 @@
 import { createServerClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Pig } from "@/components/theme/Pig";
 import { cookies } from "next/headers";
 
 const VALID_REPLIES = ["sorry", "on_my_way", "talk_in_10", "heard_you"] as const;
 type Reply = (typeof VALID_REPLIES)[number];
-
-const REPLY_LABELS: Record<Reply, string> = {
-  sorry:      "Xin lỗi em 🙏",
-  on_my_way:  "Anh đang đến 🏃",
-  talk_in_10: "10 phút nữa mình nói chuyện nhé 💬",
-  heard_you:  "Anh nghe em rồi 💕",
-};
 
 export default async function AngryReplyPage({
   params,
@@ -27,6 +21,11 @@ export default async function AngryReplyPage({
   if (who !== "masuri") redirect("/");
 
   if (!VALID_REPLIES.includes(reply as Reply)) return notFound();
+
+  const [t, tAngry] = await Promise.all([
+    getTranslations("reply"),
+    getTranslations("angry"),
+  ]);
 
   const supabase = createServerClient();
   const { data } = await supabase
@@ -50,18 +49,19 @@ export default async function AngryReplyPage({
     });
   }
 
-  const label = REPLY_LABELS[reply as Reply];
+  const replyKey = reply as Reply;
+  const label = tAngry(`replies.${replyKey}`);
 
   return (
     <main className="min-h-dvh bg-cream flex flex-col items-center justify-center gap-6 px-6 text-center">
       <Pig pose="heart-eyes" size={96} />
       <div className="space-y-2">
-        <h1 className="font-display text-2xl text-ink italic">Đã gửi cho Heo 💕</h1>
-        <p className="font-body text-ink-soft text-sm">Heo sẽ thấy:</p>
+        <h1 className="font-display text-2xl text-ink italic">{t("title")}</h1>
+        <p className="font-body text-ink-soft text-sm">{t("body")}</p>
         <p className="font-body text-ink font-semibold">{label}</p>
       </div>
       <Link href="/masuri" className="font-body text-sm text-rose-500 underline underline-offset-4">
-        Về trang chủ
+        {t("goHome")}
       </Link>
     </main>
   );

@@ -1,7 +1,11 @@
+export const dynamic = "force-dynamic";
+
 import { createServerClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import { ReunionForm } from "@/components/countdown/ReunionForm";
 
 export default async function ReunionPage() {
+  const t = await getTranslations("reunion");
   let current: { label: string; label_en: string | null; target_date: string } | null = null;
 
   try {
@@ -27,7 +31,7 @@ export default async function ReunionPage() {
         Countdown
       </h1>
       <p className="font-body text-sm text-ink-soft mb-8">
-        {current ? "Chỉnh sửa ngày gặp lại" : "Tạo countdown mới"}
+        {current ? t("edit") : t("createNew")}
       </p>
       <ReunionForm current={current} />
     </div>

@@ -97,7 +97,8 @@
     "targetDate": "Ngày gặp lại",
     "save": "Lưu",
     "noCountdown": "Chưa có countdown nào",
-    "createNew": "Tạo countdown mới"
+    "createNew": "Tạo countdown mới",
+    "edit": "Chỉnh sửa ngày gặp lại"
   },
   "errors": {
     "network": "Có gì đó sai sai... thử lại nhé",
