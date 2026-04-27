@@ -27,7 +27,9 @@
 }
 
 :root {
-  --shadow: 0 8px 24px -8px rgba(168, 50, 79, 0.18);
+  --shadow:      0 8px 24px -8px rgba(168, 50, 79, 0.18);
+  --shadow-card: 0 16px 48px -12px rgba(168, 50, 79, 0.24), 0 2px 8px rgba(168, 50, 79, 0.06);
+  --shadow-lift: 0 4px 16px -6px rgba(168, 50, 79, 0.18);
 }
 
 * {

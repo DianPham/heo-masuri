@@ -253,35 +253,35 @@ export function MissingButton({ initialCountToday = 0 }: { initialCountToday?: n
           {status === "acked" ? (
             <motion.p key="acked"
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="font-body text-base font-medium text-rose-500"
+              className="font-accent text-lg text-rose-500"
             >
               {t("ackedJustNow")}
             </motion.p>
           ) : status === "sent" ? (
             <motion.p key="sent"
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="font-body text-base text-ink-soft"
+              className="font-accent text-base text-ink-soft"
             >
               {t("sent")}
             </motion.p>
           ) : isSending ? (
             <motion.p key="sending"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="font-body text-sm text-ink-soft/60"
+              className="font-accent text-base text-ink-soft/60"
             >
               {t("sending")}
             </motion.p>
           ) : isPressing ? (
             <motion.p key={`pressing-${intensity}`}
               initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-              className={["font-body text-sm font-medium", intensity === 3 ? "text-rose-600" : "text-ink-soft"].join(" ")}
+              className={["font-accent text-base", intensity === 3 ? "text-rose-600" : "text-ink-soft"].join(" ")}
             >
               {intensity === 1 ? t("tap") : intensity === 2 ? t("hold") : t("longHold")}
             </motion.p>
           ) : (
             <motion.p key="idle"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="font-body text-sm text-ink-soft/50"
+              className="font-accent text-base text-ink-soft/50"
             >
               {countToday > 0 ? t("todayCount", { count: countToday }) : ""}
             </motion.p>

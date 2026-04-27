@@ -14,11 +14,14 @@ export function Card({ children, className = "", padding = "md" }: CardProps) {
   return (
     <div
       className={[
-        "bg-rose-100 rounded-3xl",
+        "rounded-3xl",
         paddingStyles[padding],
         className,
       ].join(" ")}
-      style={{ boxShadow: "var(--shadow)" }}
+      style={{
+        background: "linear-gradient(145deg, #FFE4EA 0%, #FFF5F7 100%)",
+        boxShadow: "var(--shadow-card)",
+      }}
     >
       {children}
     </div>
