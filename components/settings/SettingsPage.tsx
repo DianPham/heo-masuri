@@ -21,7 +21,7 @@ interface Prefs {
   quiet_end: string | null;
 }
 
-// ── Layout primitives (unchanged from CP2 design) ─────────────
+// ── Section header — now uses font-accent for warmth ─────────
 function SectionHeader({
   icon: Icon,
   label,
@@ -32,12 +32,12 @@ function SectionHeader({
   danger?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 px-1 pb-3">
-      <Icon size={14} className={danger ? "text-rose-500" : "text-ink-soft"} />
+    <div className="flex items-center gap-2 px-1 pb-2.5">
+      <Icon size={13} className={danger ? "text-rose-400" : "text-rose-300"} />
       <span
         className={[
-          "text-[10px] font-medium uppercase tracking-[0.16em] font-body",
-          danger ? "text-rose-500" : "text-ink-soft",
+          "font-accent text-sm",
+          danger ? "text-rose-400" : "text-ink-soft/70",
         ].join(" ")}
       >
         {label}
@@ -46,14 +46,25 @@ function SectionHeader({
   );
 }
 
+// ── Row group — glass card style matching rest of app ────────
 function RowGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl overflow-hidden border border-rose-200/60 bg-rose-100 divide-y divide-rose-200/70">
+    <div
+      className="rounded-2xl overflow-hidden divide-y divide-rose-200/50"
+      style={{
+        background: "rgba(255,255,255,0.55)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        border: "2px solid rgba(248,168,188,0.25)",
+        boxShadow: "0 2px 16px -6px rgba(168,50,79,0.10)",
+      }}
+    >
       {children}
     </div>
   );
 }
 
+// ── Static row (label + right slot) ─────────────────────────
 function Row({
   label,
   sublabel,
@@ -66,11 +77,11 @@ function Row({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between px-6 py-5 gap-4">
+    <div className="flex items-center justify-between px-5 py-4 gap-4">
       <div className="flex-1 min-w-0">
         <p
           className={[
-            "font-body text-base font-normal leading-snug",
+            "font-body text-[15px] font-normal leading-snug",
             danger ? "text-rose-500" : "text-ink",
           ].join(" ")}
         >
@@ -79,8 +90,8 @@ function Row({
         {sublabel && (
           <p
             className={[
-              "font-body text-sm mt-1 leading-snug",
-              danger ? "text-rose-400/70" : "text-ink-soft",
+              "font-accent text-sm mt-0.5 leading-snug",
+              danger ? "text-rose-400/70" : "text-ink-soft/70",
             ].join(" ")}
           >
             {sublabel}
@@ -92,6 +103,7 @@ function Row({
   );
 }
 
+// ── Tappable row ─────────────────────────────────────────────
 function TappableRow({
   label,
   sublabel,
@@ -106,20 +118,20 @@ function TappableRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between px-6 py-5 gap-4 text-left
-                 hover:bg-rose-500/5 active:bg-rose-500/10 transition-colors duration-150"
+      className="w-full flex items-center justify-between px-5 py-4 gap-4 text-left
+                 hover:bg-rose-500/5 active:bg-rose-500/8 transition-colors duration-150"
     >
       <div className="flex-1 min-w-0">
-        <p className="font-body text-base font-normal text-ink leading-snug">
+        <p className="font-body text-[15px] font-normal text-ink leading-snug">
           {label}
         </p>
         {sublabel && (
-          <p className="font-body text-sm text-ink-soft mt-1 leading-snug">
+          <p className="font-accent text-sm text-ink-soft/70 mt-0.5 leading-snug">
             {sublabel}
           </p>
         )}
       </div>
-      {children ?? <ChevronRight size={16} className="text-ink/30 shrink-0" />}
+      {children ?? <ChevronRight size={15} className="text-ink/25 shrink-0" />}
     </button>
   );
 }
@@ -143,13 +155,15 @@ function Toggle({
       className={[
         "relative inline-flex w-12 h-7 rounded-full transition-colors duration-200 shrink-0",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-1",
-        checked ? "bg-rose-400" : "bg-rose-200",
+        checked ? "bg-rose-400" : "bg-rose-200/80",
         disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
       ].join(" ")}
     >
-      <span
+      <motion.span
+        layout
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
         className={[
-          "absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200",
+          "absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm",
           checked ? "left-6" : "left-1",
         ].join(" ")}
       />
@@ -158,7 +172,7 @@ function Toggle({
 }
 
 function ToggleSkeleton() {
-  return <div className="w-12 h-7 rounded-full bg-rose-200/60 animate-pulse shrink-0" />;
+  return <div className="w-12 h-7 rounded-full bg-rose-200/50 animate-pulse shrink-0" />;
 }
 
 // ── Main ─────────────────────────────────────────────────────
@@ -167,17 +181,16 @@ export function SettingsPage({ who }: SettingsPageProps) {
   const locale = useLocale();
   const router = useRouter();
 
-  const [prefs, setPrefs] = useState<Prefs | null>(null);
+  const [prefs, setPrefs]               = useState<Prefs | null>(null);
   const [prefsLoading, setPrefsLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved]               = useState(false);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteInput, setDeleteInput] = useState("");
-  const [deleting, setDeleting] = useState(false);
-  const [wiped, setWiped] = useState(false);
+  const [deleteInput, setDeleteInput]         = useState("");
+  const [deleting, setDeleting]               = useState(false);
+  const [wiped, setWiped]                     = useState(false);
 
-  // Load prefs on mount
   useEffect(() => {
     fetch("/api/prefs")
       .then((r) => (r.ok ? r.json() : null))
@@ -230,10 +243,13 @@ export function SettingsPage({ who }: SettingsPageProps) {
     setDeleting(false);
   }
 
-  // ── Post-wipe screen ─────────────────────────────────────
+  // ── Post-wipe screen ──────────────────────────────────────
   if (wiped) {
     return (
-      <div className="min-h-screen bg-rose-50 flex flex-col items-center justify-center px-8 text-center gap-6">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-8 text-center gap-6"
+        style={{ background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)" }}
+      >
         <Pig pose="sleepy" size={120} />
         <div className="space-y-2">
           <p
@@ -242,10 +258,8 @@ export function SettingsPage({ who }: SettingsPageProps) {
           >
             {t("deleteSuccess")}
           </p>
-          <p className="font-body text-sm text-ink-soft">
-            {locale === "vi"
-              ? "Mọi thứ đã được xóa sạch"
-              : "Everything has been cleared"}
+          <p className="font-accent text-base text-ink-soft">
+            {locale === "vi" ? "Mọi thứ đã được xóa sạch" : "Everything has been cleared"}
           </p>
         </div>
       </div>
@@ -253,35 +267,53 @@ export function SettingsPage({ who }: SettingsPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-rose-50 pb-20">
-      <div className="max-w-[390px] mx-auto">
+    <div
+      className="min-h-screen pb-24"
+      style={{ background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)" }}
+    >
+      <div className="max-w-[420px] mx-auto">
 
         {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="px-7 pt-14 pb-10 border-b border-rose-200 relative"
+          className="px-6 pt-12 pb-8 relative"
         >
-          <p className="font-body text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft mb-2.5">
-            {t("account")}
-          </p>
+          {/* Small pig avatar in header */}
+          <div className="flex items-start justify-between mb-1">
+            <p className="font-accent text-sm text-rose-300/80">
+              {t("account")}
+            </p>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+              style={{
+                background: "linear-gradient(145deg, #FFE4EA, #FFF5F7)",
+                boxShadow: "var(--shadow-lift)",
+              }}
+            >
+              <Pig pose="neutral" size={28} animate={false} />
+            </div>
+          </div>
+
           <div className="flex items-end justify-between">
             <h1
-              className="font-display text-[38px] leading-[1.1] text-ink italic tracking-[-0.01em]"
+              className="font-display text-[40px] leading-[1.05] text-ink italic tracking-[-0.01em]"
               style={{ fontVariationSettings: "'opsz' 72" }}
             >
               {locale === "vi" ? "Cài đặt" : "Settings"}
             </h1>
+
+            {/* Saved badge */}
             <AnimatePresence>
               {saved && (
                 <motion.div
                   key="saved"
-                  initial={{ opacity: 0, scale: 0.85 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.85, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.85 }}
-                  className="flex items-center gap-1.5 font-body text-xs px-3 py-1.5 rounded-full mb-1"
-                  style={{ color: "#9CAF88", backgroundColor: "rgba(156,175,136,0.14)" }}
+                  className="flex items-center gap-1.5 font-accent text-sm px-3 py-1.5 rounded-full mb-1"
+                  style={{ color: "#9CAF88", backgroundColor: "rgba(156,175,136,0.15)" }}
                 >
                   <Check size={12} />
                   {t("saved")}
@@ -289,15 +321,10 @@ export function SettingsPage({ who }: SettingsPageProps) {
               )}
             </AnimatePresence>
           </div>
-
-          {/* Decorative accent dot */}
-          <div className="absolute top-14 right-7 w-9 h-9 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center">
-            <div className="w-2.5 h-2.5 rounded-full bg-rose-400/70" />
-          </div>
         </motion.div>
 
         {/* ── Sections ── */}
-        <div className="px-6 pt-6 space-y-8">
+        <div className="px-5 space-y-7">
 
           {/* Notifications */}
           <motion.div
@@ -311,9 +338,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
                 label={t("missing")}
                 sublabel={who === "heo" ? t("missingSubLabel") : undefined}
               >
-                {prefsLoading ? (
-                  <ToggleSkeleton />
-                ) : (
+                {prefsLoading ? <ToggleSkeleton /> : (
                   <Toggle
                     checked={prefs?.missing_enabled ?? true}
                     onChange={(v) => updatePref({ missing_enabled: v })}
@@ -322,23 +347,17 @@ export function SettingsPage({ who }: SettingsPageProps) {
               </Row>
 
               <Row label={t("thinkingHugKiss")}>
-                {prefsLoading ? (
-                  <ToggleSkeleton />
-                ) : (
+                {prefsLoading ? <ToggleSkeleton /> : (
                   <Toggle
                     checked={prefs?.thinking_enabled ?? true}
-                    onChange={(v) =>
-                      updatePref({ thinking_enabled: v, hug_kiss_enabled: v })
-                    }
+                    onChange={(v) => updatePref({ thinking_enabled: v, hug_kiss_enabled: v })}
                   />
                 )}
               </Row>
 
               {who === "masuri" && (
                 <Row label={t("angryBuzz")}>
-                  {prefsLoading ? (
-                    <ToggleSkeleton />
-                  ) : (
+                  {prefsLoading ? <ToggleSkeleton /> : (
                     <Toggle
                       checked={prefs?.angry_enabled ?? true}
                       onChange={(v) => updatePref({ angry_enabled: v })}
@@ -348,12 +367,12 @@ export function SettingsPage({ who }: SettingsPageProps) {
               )}
 
               {/* Quiet hours */}
-              <div className="px-6 py-5">
-                <p className="font-body text-base font-normal text-ink leading-snug">
+              <div className="px-5 py-4">
+                <p className="font-body text-[15px] text-ink leading-snug mb-2.5">
                   {t("quietHours")}
                 </p>
-                <div className="flex items-center gap-3 mt-2.5 flex-wrap">
-                  <span className="font-body text-sm text-ink-soft">{t("quietFrom")}</span>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span className="font-accent text-sm text-ink-soft/70">{t("quietFrom")}</span>
                   <input
                     key={`qs-${prefs?.quiet_start}`}
                     type="time"
@@ -361,12 +380,13 @@ export function SettingsPage({ who }: SettingsPageProps) {
                     onBlur={(e) => updatePref({ quiet_start: e.target.value })}
                     disabled={prefsLoading}
                     className={[
-                      "font-body text-sm text-ink bg-rose-200/60 rounded-xl px-3 py-1.5",
-                      "border-0 outline-none focus:ring-2 focus:ring-rose-400/50",
+                      "font-body text-sm text-ink rounded-xl px-3 py-1.5 border-0 outline-none",
+                      "focus:ring-2 focus:ring-rose-400/40 transition-all",
                       prefsLoading ? "opacity-50" : "",
                     ].join(" ")}
+                    style={{ background: "rgba(248,168,188,0.18)" }}
                   />
-                  <span className="font-body text-sm text-ink-soft">{t("quietTo")}</span>
+                  <span className="font-accent text-sm text-ink-soft/70">{t("quietTo")}</span>
                   <input
                     key={`qe-${prefs?.quiet_end}`}
                     type="time"
@@ -374,10 +394,11 @@ export function SettingsPage({ who }: SettingsPageProps) {
                     onBlur={(e) => updatePref({ quiet_end: e.target.value })}
                     disabled={prefsLoading}
                     className={[
-                      "font-body text-sm text-ink bg-rose-200/60 rounded-xl px-3 py-1.5",
-                      "border-0 outline-none focus:ring-2 focus:ring-rose-400/50",
+                      "font-body text-sm text-ink rounded-xl px-3 py-1.5 border-0 outline-none",
+                      "focus:ring-2 focus:ring-rose-400/40 transition-all",
                       prefsLoading ? "opacity-50" : "",
                     ].join(" ")}
+                    style={{ background: "rgba(248,168,188,0.18)" }}
                   />
                 </div>
               </div>
@@ -434,7 +455,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
                 sublabel={t("deleteConfirmPrompt")}
                 onClick={() => setShowDeleteModal(true)}
               >
-                <AlertTriangle size={16} className="text-rose-400 shrink-0" />
+                <AlertTriangle size={15} className="text-rose-400/70 shrink-0" />
               </TappableRow>
             </RowGroup>
           </motion.div>
@@ -442,7 +463,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
         </div>
       </div>
 
-      {/* ── Delete confirmation modal ── */}
+      {/* ── Delete confirmation sheet ── */}
       <AnimatePresence>
         {showDeleteModal && (
           <>
@@ -451,35 +472,35 @@ export function SettingsPage({ who }: SettingsPageProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-ink/30 backdrop-blur-sm z-40"
-              onClick={() => {
-                setShowDeleteModal(false);
-                setDeleteInput("");
-              }}
+              className="fixed inset-0 bg-ink/25 backdrop-blur-sm z-40"
+              onClick={() => { setShowDeleteModal(false); setDeleteInput(""); }}
             />
             <motion.div
               key="sheet"
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 48 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
+              exit={{ opacity: 0, y: 48 }}
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
               className="fixed inset-x-0 bottom-0 z-50 px-5 pb-10 pt-2"
             >
               <div
-                className="max-w-[390px] mx-auto bg-paper rounded-3xl p-6"
-                style={{ boxShadow: "0 -4px 40px rgba(58,33,41,0.18)" }}
+                className="max-w-[420px] mx-auto rounded-3xl p-6"
+                style={{
+                  background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)",
+                  boxShadow: "0 -4px 40px rgba(58,33,41,0.15)",
+                }}
               >
                 <div className="flex flex-col items-center text-center gap-4">
                   <Pig pose="sad" size={80} animate={false} />
 
-                  <div>
+                  <div className="space-y-1">
                     <h2
                       className="font-display text-xl text-ink italic"
                       style={{ fontVariationSettings: "'opsz' 40" }}
                     >
                       {t("deleteAll")}
                     </h2>
-                    <p className="font-body text-sm text-ink-soft mt-1">
+                    <p className="font-accent text-base text-ink-soft">
                       {t("deleteConfirmPrompt")}
                     </p>
                   </div>
@@ -492,19 +513,17 @@ export function SettingsPage({ who }: SettingsPageProps) {
                     autoCapitalize="characters"
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full font-body text-sm text-ink bg-rose-100 rounded-2xl
-                               px-4 py-3.5 border border-rose-200 outline-none
-                               focus:ring-2 focus:ring-rose-400/50 text-center tracking-wider"
+                    className="w-full font-body text-sm text-ink rounded-2xl
+                               px-4 py-3.5 border-2 border-rose-200/60 outline-none
+                               focus:border-rose-300 transition-colors text-center tracking-wider"
+                    style={{ background: "rgba(255,255,255,0.7)" }}
                   />
 
                   <div className="flex gap-3 w-full">
                     <button
-                      onClick={() => {
-                        setShowDeleteModal(false);
-                        setDeleteInput("");
-                      }}
-                      className="flex-1 font-body text-sm font-medium text-ink-soft py-3.5
-                                 bg-rose-100 rounded-2xl hover:bg-rose-200 transition-colors"
+                      onClick={() => { setShowDeleteModal(false); setDeleteInput(""); }}
+                      className="flex-1 font-accent text-base text-ink-soft py-3.5
+                                 rounded-2xl border-2 border-rose-200/60 hover:bg-rose-100 transition-colors"
                     >
                       {t("deleteCancel")}
                     </button>
@@ -512,10 +531,10 @@ export function SettingsPage({ who }: SettingsPageProps) {
                       onClick={handleWipe}
                       disabled={deleteInput !== confirmWord || deleting}
                       className={[
-                        "flex-1 font-body text-sm font-semibold py-3.5 rounded-2xl transition-colors",
+                        "flex-1 font-accent text-base py-3.5 rounded-2xl transition-colors",
                         deleteInput === confirmWord && !deleting
                           ? "bg-rose-500 text-white hover:bg-rose-600"
-                          : "bg-rose-200/50 text-rose-300 cursor-not-allowed",
+                          : "bg-rose-200/40 text-rose-300 cursor-not-allowed",
                       ].join(" ")}
                     >
                       {deleting ? "..." : t("deleteConfirmButton")}
