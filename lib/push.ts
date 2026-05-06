@@ -110,7 +110,7 @@ export async function sendPushIgnoringQuietHours(
   const supabase = createServerClient();
   const { data: prefs } = await supabase
     .from("notification_prefs")
-    .select(prefKey)
+    .select("*")
     .eq("user_id", userId)
     .single();
 
