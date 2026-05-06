@@ -29,18 +29,20 @@
   },
   "angry": {
     "title": "Heo đang không ổn",
-    "subtitle": "Không sao đâu, Masuri sẽ hiểu",
-    "needSpace": "Heo cần không gian",
+    "subtitle": "Không sao đâu. Masuri sẽ hiểu.",
+    "needSpace": "Heo cần một chút không gian",
     "needPresence": "Heo cần Masuri ở đây",
-    "needVent": "Heo chỉ muốn xả",
-    "needFix": "Heo cần Masuri sửa cái gì đó",
-    "contextPlaceholder": "Masuri có thể làm gì để Heo dễ chịu hơn? (không bắt buộc)",
-    "submit": "Gửi",
+    "needVent": "Heo cần được lắng nghe",
+    "needFix": "Heo cần Masuri giúp sửa một chuyện",
+    "contextLabel": "Heo muốn nói thêm gì không? (không bắt buộc)",
+    "contextPlaceholder": "Vài chữ thôi cũng được nha...",
+    "submit": "Gửi cho Masuri",
     "back": "Quay lại",
     "sent": "Đã gửi cho Masuri",
     "waitingReply": "Đang chờ Masuri trả lời...",
     "okayNow": "Heo ổn rồi 🌸",
     "resolved": "Cảm ơn vì đã chia sẻ 💕",
+    "replyReceived": "Masuri vừa trả lời rồi nè",
     "danReplied": "Masuri đã trả lời:",
     "replies": {
       "sorry": "Xin lỗi em 🙏",
@@ -49,10 +51,10 @@
       "heard_you": "Anh nghe em rồi 💕"
     },
     "needLabels": {
-      "space": "cần không gian",
+      "space": "cần một chút không gian",
       "presence": "cần Masuri ở đây",
-      "vent": "chỉ muốn xả",
-      "fix": "cần Masuri sửa cái gì đó"
+      "vent": "cần được lắng nghe",
+      "fix": "cần Masuri giúp sửa một chuyện"
     }
   },
   "countdown": {

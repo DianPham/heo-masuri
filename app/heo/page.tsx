@@ -7,6 +7,7 @@ import Link from "next/link";
 import { MissingButton } from "@/components/buttons/MissingButton";
 import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 import { Countdown } from "@/components/countdown/Countdown";
+import { Pig } from "@/components/theme/Pig";
 
 export default async function HeoHome() {
   const locale = await getLocale();
@@ -41,19 +42,43 @@ export default async function HeoHome() {
     // env vars not set
   }
 
+  const daysLeft = reunion ? daysUntil(reunion.target_date) : null;
+  const targetMs = reunion ? new Date(reunion.target_date + "T00:00:00+07:00").getTime() : null;
+  const isYesterday = targetMs !== null && Date.now() > targetMs && Date.now() <= targetMs + 24 * 60 * 60 * 1000;
+  const showCountdown = reunion && !isYesterday;
+
   return (
     <div className="flex flex-col items-center px-5 min-h-[calc(100dvh-96px)]">
 
       {/* ── Countdown ── */}
-      {reunion && (
+      {showCountdown && (
         <div className="pt-8 pb-2 w-full flex justify-center">
           <Countdown
-            daysLeft={daysUntil(reunion.target_date)}
-            label={reunion.label}
-            labelEn={reunion.label_en}
-            progressPercent={progressPercent(reunion.created_at, reunion.target_date)}
+            daysLeft={daysLeft!}
+            label={reunion!.label}
+            labelEn={reunion!.label_en}
+            progressPercent={progressPercent(reunion!.created_at, reunion!.target_date)}
             who="heo"
           />
+        </div>
+      )}
+
+      {/* ── Yesterday grace banner ── */}
+      {isYesterday && (
+        <div className="pt-8 pb-2 w-full flex justify-center">
+          <p className="font-accent text-base text-rose-400 text-center">
+            Hôm qua mình đã ở bên nhau 💕
+          </p>
+        </div>
+      )}
+
+      {/* ── No upcoming reunion ── */}
+      {!reunion && (
+        <div className="pt-8 pb-2 w-full flex flex-col items-center gap-2">
+          <Pig pose="sleepy" size={56} animate={false} />
+          <p className="font-accent text-sm text-ink-soft/60 text-center">
+            Đang đợi ngày kế tiếp nha 🌸
+          </p>
         </div>
       )}
 

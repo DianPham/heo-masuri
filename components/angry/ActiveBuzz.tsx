@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -30,12 +30,39 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
   const [reply, setReply]         = useState<string | null>(initialReply);
   const [resolving, setResolving] = useState(false);
   const [resolved, setResolved]   = useState(false);
+  const mountedRef                = useRef(true);
+
+  const refreshState = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/signal/angry/${id}`);
+      if (!res.ok || !mountedRef.current) return;
+      const data = await res.json();
+      if (!data) return;
+      if (data.dan_reply && !reply) setReply(data.dan_reply);
+      if (data.resolved_at) { setResolved(true); setTimeout(() => router.push("/heo"), 2000); }
+    } catch { /* ignore */ }
+  }, [id, reply, router]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    refreshState();
+    const onVisible = () => { if (document.visibilityState === "visible") refreshState(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      mountedRef.current = false;
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refreshState]);
 
   const handleRealtime = useCallback((e: RealtimeEvent) => {
     if (e.event === "angry:reply" && e.payload.id === id) {
       setReply(e.payload.reply);
     }
-  }, [id]);
+    if (e.event === "angry:resolved" && e.payload.id === id) {
+      setResolved(true);
+      setTimeout(() => router.push("/heo"), 2000);
+    }
+  }, [id, router]);
 
   useRealtime(handleRealtime);
 

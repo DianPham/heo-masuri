@@ -60,15 +60,15 @@ const ANGRY_COLORS: Record<string, number> = {
 const ANGRY_GUIDANCE: Record<string, string> = {
   space:    "Lùi lại, đừng nhắn dồn. Cho Heo thời gian.",
   presence: "Gọi điện hoặc tới ngay nếu được.",
-  vent:     "Lắng nghe, không sửa, không khuyên.",
+  vent:     "Heo cần được lắng nghe. Đừng sửa, đừng khuyên — chỉ cần ở đó.",
   fix:      "Hỏi cụ thể vấn đề là gì.",
 };
 
 const ANGRY_NEED_LABELS: Record<string, string> = {
-  space:    "cần không gian",
+  space:    "cần một chút không gian",
   presence: "cần Masuri ở đây",
-  vent:     "chỉ muốn xả",
-  fix:      "cần Masuri sửa cái gì đó",
+  vent:     "cần được lắng nghe",
+  fix:      "cần Masuri giúp sửa một chuyện",
 };
 
 export async function notifyAngry(payload: {
@@ -79,6 +79,7 @@ export async function notifyAngry(payload: {
   const { id, needType, contextNote } = payload;
 
   const baseUrl = `${APP_URL}/m/angry/${id}/reply`;
+  const inAppUrl = `${APP_URL}/masuri/angry/${id}`;
   const fields = [
     { name: "Heo cần:", value: ANGRY_NEED_LABELS[needType] ?? needType },
     { name: "Gợi ý:", value: ANGRY_GUIDANCE[needType] ?? "" },
@@ -87,7 +88,7 @@ export async function notifyAngry(payload: {
     fields.splice(1, 0, { name: "Heo nói:", value: contextNote });
   }
 
-  const replyLinks = [
+  const quickLinks = [
     `[Đã thấy](${baseUrl}/heard_you)`,
     `[Xin lỗi](${baseUrl}/sorry)`,
     `[Đang đến](${baseUrl}/on_my_way)`,
@@ -101,7 +102,7 @@ export async function notifyAngry(payload: {
         title: "💔 Heo đang không ổn",
         color: ANGRY_COLORS[needType] ?? 0xf8b4c4,
         fields,
-        description: replyLinks,
+        description: `[**Mở trong app →**](${inAppUrl})\n\n⚡ Trả lời nhanh: ${quickLinks}`,
         timestamp: new Date().toISOString(),
       },
     ],

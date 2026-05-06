@@ -1,27 +1,24 @@
 export const dynamic = "force-dynamic";
 
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createServerClient } from "@/lib/supabase/server";
-import { ActiveBuzz } from "@/components/angry/ActiveBuzz";
+import { MasuriAngryView } from "@/components/angry/MasuriAngryView";
 
-const NEED_LABELS: Record<string, string> = {
-  space:    "Heo cần một chút không gian",
-  presence: "Heo cần Masuri ở đây",
-  vent:     "Heo cần được lắng nghe",
-  fix:      "Heo cần Masuri giúp sửa một chuyện",
-};
-
-export default async function ActiveBuzzPage({
+export default async function MasuriAngryPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const cookieStore = await cookies();
+  if (cookieStore.get("who")?.value !== "masuri") redirect("/");
 
+  const { id } = await params;
   const supabase = createServerClient();
+
   const { data: buzz } = await supabase
     .from("angry_buzzes")
-    .select("id, need_type, dan_reply, resolved_at, from_user")
+    .select("id, need_type, context_note, dan_reply, resolved_at, from_user")
     .eq("id", id)
     .single();
 
@@ -32,13 +29,13 @@ export default async function ActiveBuzzPage({
   if (!heo || buzz.from_user !== heo.id) return notFound();
 
   // Already resolved → go home
-  if (buzz.resolved_at) redirect("/heo");
+  if (buzz.resolved_at) redirect("/masuri");
 
   return (
-    <ActiveBuzz
+    <MasuriAngryView
       id={buzz.id}
       needType={buzz.need_type as "space" | "presence" | "vent" | "fix"}
-      needLabel={NEED_LABELS[buzz.need_type] ?? buzz.need_type}
+      contextNote={buzz.context_note}
       initialReply={buzz.dan_reply}
     />
   );

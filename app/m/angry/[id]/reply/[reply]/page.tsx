@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Pig } from "@/components/theme/Pig";
 import { cookies } from "next/headers";
+import { sendPushIfAllowed } from "@/lib/push";
 
 const VALID_REPLIES = ["sorry", "on_my_way", "talk_in_10", "heard_you"] as const;
 type Reply = (typeof VALID_REPLIES)[number];
@@ -47,6 +48,23 @@ export default async function AngryReplyPage({
       event: "angry:reply",
       payload: { id, reply },
     });
+
+    // Push Heo so she sees the reply even if the tab is backgrounded
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (heo) {
+      const REPLY_PUSH_BODY: Record<string, string> = {
+        sorry:      "Masuri vừa gửi: Xin lỗi em 🙏",
+        on_my_way:  "Masuri vừa gửi: Anh đang đến 🏃",
+        talk_in_10: "Masuri vừa gửi: 10 phút nữa mình nói chuyện nhé 💬",
+        heard_you:  "Masuri vừa gửi: Anh nghe em rồi 💕",
+      };
+      sendPushIfAllowed(heo.id, "angry_enabled", {
+        title: "💬 Masuri đã trả lời",
+        body: REPLY_PUSH_BODY[reply] ?? "Masuri vừa trả lời rồi nè",
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/heo/angry/${id}`,
+        tag: "angry-reply",
+      });
+    }
   }
 
   const replyKey = reply as Reply;
