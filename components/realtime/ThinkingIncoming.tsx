@@ -140,7 +140,7 @@ export function ThinkingIncoming({ who }: { who: Who }) {
           >
             <Pig pose="heart-eyes" size={40} animate={false} />
             <p className="font-body text-sm font-semibold text-ink leading-snug flex-1">
-              Masuri đã gửi {batchToast.count} lần khi Heo đi vắng 🥰
+              {who === "heo" ? "Masuri" : "Heo"} đã nhớ em {batchToast.count} lần khi đi vắng 🥰
             </p>
           </div>
         </motion.div>

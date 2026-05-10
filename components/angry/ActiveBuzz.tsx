@@ -17,6 +17,8 @@ const REPLY_LABELS: Record<string, string> = {
   heard_you:  "Anh nghe em rồi 💕",
 };
 
+const EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+
 interface ActiveBuzzProps {
   id: string;
   needType: NeedType;
@@ -31,6 +33,19 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
   const [resolving, setResolving] = useState(false);
   const [resolved, setResolved]   = useState(false);
   const mountedRef                = useRef(true);
+  const expireTimerRef            = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleExpiry = useCallback((createdAt: string) => {
+    if (expireTimerRef.current) clearTimeout(expireTimerRef.current);
+    const remaining = EXPIRY_MS - (Date.now() - new Date(createdAt).getTime());
+    if (remaining <= 0) {
+      router.push("/heo/angry");
+      return;
+    }
+    expireTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) router.push("/heo/angry");
+    }, remaining);
+  }, [router]);
 
   const refreshState = useCallback(async () => {
     try {
@@ -38,10 +53,12 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
       if (!res.ok || !mountedRef.current) return;
       const data = await res.json();
       if (!data) return;
-      if (data.dan_reply && !reply) setReply(data.dan_reply);
-      if (data.resolved_at) { setResolved(true); setTimeout(() => router.push("/heo"), 2000); }
+      if (data.dan_reply) { if (!reply) setReply(data.dan_reply); return; }
+      if (data.resolved_at) { setResolved(true); setTimeout(() => router.push("/heo"), 2000); return; }
+      // No reply yet — schedule expiry redirect
+      scheduleExpiry(data.created_at);
     } catch { /* ignore */ }
-  }, [id, reply, router]);
+  }, [id, reply, router, scheduleExpiry]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -51,12 +68,15 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
     return () => {
       mountedRef.current = false;
       document.removeEventListener("visibilitychange", onVisible);
+      if (expireTimerRef.current) clearTimeout(expireTimerRef.current);
     };
   }, [refreshState]);
 
   const handleRealtime = useCallback((e: RealtimeEvent) => {
     if (e.event === "angry:reply" && e.payload.id === id) {
       setReply(e.payload.reply);
+      // Received reply — cancel expiry timer
+      if (expireTimerRef.current) clearTimeout(expireTimerRef.current);
     }
     if (e.event === "angry:resolved" && e.payload.id === id) {
       setResolved(true);
@@ -82,14 +102,12 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
     }
   }
 
-  // suppress unused warning — needType reserved for future colour theming
   void needType;
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-96px)] px-5 pt-8 pb-10">
       <AnimatePresence mode="wait">
 
-        {/* ── Resolved state ── */}
         {resolved ? (
           <motion.div
             key="resolved"
@@ -115,13 +133,11 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
             className="flex flex-col gap-5 w-full flex-1"
           >
 
-            {/* ── What was sent ── */}
             <div className="rounded-2xl px-5 py-5 bg-white/50 border-2 border-rose-200/50">
               <p className="font-accent text-sm text-ink-soft/60 mb-1">{t("sent")}</p>
               <p className="font-accent text-base font-semibold text-ink">{needLabel}</p>
             </div>
 
-            {/* ── Reply card ── */}
             <div
               className="rounded-3xl px-5 py-5 flex-1 flex flex-col justify-center min-h-[110px]"
               style={{
@@ -157,7 +173,6 @@ export function ActiveBuzz({ id, needType, needLabel, initialReply }: ActiveBuzz
               </AnimatePresence>
             </div>
 
-            {/* ── Resolve button ── */}
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handleResolve}

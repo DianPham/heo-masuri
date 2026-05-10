@@ -3,6 +3,7 @@ import { RealtimeProvider } from "@/components/realtime/RealtimeProvider";
 import { MissingIncoming } from "@/components/realtime/MissingIncoming";
 import { ThinkingIncoming } from "@/components/realtime/ThinkingIncoming";
 import { PushPermission } from "@/components/notifications/PushPermission";
+import { AngryIncoming } from "@/components/angry/AngryIncoming";
 
 export default function MasuriLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export default function MasuriLayout({ children }: { children: React.ReactNode }
         <BottomNav who="masuri" />
         <MissingIncoming />
         <ThinkingIncoming who="masuri" />
+        <AngryIncoming who="masuri" />
         <PushPermission />
       </div>
     </RealtimeProvider>

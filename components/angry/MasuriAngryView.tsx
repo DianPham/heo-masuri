@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import { Pig } from "@/components/theme/Pig";
@@ -30,18 +30,39 @@ const REPLY_OPTIONS = [
   { key: "talk_in_10", label: "10 phút nữa mình nói chuyện nhé 💬" },
 ] as const;
 
+const EXPIRY_MS = 60 * 60 * 1000; // 1 hour
+
 interface MasuriAngryViewProps {
   id: string;
   needType: NeedType;
   contextNote: string | null;
   initialReply: string | null;
+  createdAt: string;
 }
 
-export function MasuriAngryView({ id, needType, contextNote, initialReply }: MasuriAngryViewProps) {
+export function MasuriAngryView({ id, needType, contextNote, initialReply, createdAt }: MasuriAngryViewProps) {
   const router = useRouter();
   const [reply, setReply]       = useState<string | null>(initialReply);
   const [sending, setSending]   = useState<string | null>(null);
   const [resolved, setResolved] = useState(false);
+  const [expired, setExpired]   = useState(false);
+  const expireTimerRef          = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Set expiry timer (only if not already replied)
+  useEffect(() => {
+    if (reply) return;
+    const remaining = EXPIRY_MS - (Date.now() - new Date(createdAt).getTime());
+    if (remaining <= 0) { setExpired(true); return; }
+    expireTimerRef.current = setTimeout(() => setExpired(true), remaining);
+    return () => { if (expireTimerRef.current) clearTimeout(expireTimerRef.current); };
+  }, [createdAt, reply]);
+
+  // Redirect home shortly after showing expired state
+  useEffect(() => {
+    if (!expired) return;
+    const t = setTimeout(() => router.push("/masuri"), 3000);
+    return () => clearTimeout(t);
+  }, [expired, router]);
 
   const handleReply = useCallback(async (replyKey: string) => {
     if (reply || sending) return;
@@ -52,7 +73,11 @@ export function MasuriAngryView({ id, needType, contextNote, initialReply }: Mas
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, reply: replyKey }),
       });
-      if (res.ok) setReply(replyKey);
+      if (res.ok) {
+        setReply(replyKey);
+        // Cancel expiry timer — reply received
+        if (expireTimerRef.current) clearTimeout(expireTimerRef.current);
+      }
     } finally {
       setSending(null);
     }
@@ -73,7 +98,25 @@ export function MasuriAngryView({ id, needType, contextNote, initialReply }: Mas
     <div className="flex flex-col min-h-[calc(100dvh-96px)] px-5 pt-8 pb-10">
       <AnimatePresence mode="wait">
 
-        {resolved ? (
+        {/* ── Expired: no reply within 1 hour ── */}
+        {expired ? (
+          <motion.div
+            key="expired"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 280, damping: 24 }}
+            className="flex flex-col items-center justify-center gap-4 flex-1"
+          >
+            <Pig pose="sleepy" size={80} animate={false} />
+            <p className="font-accent text-base text-ink-soft/70 text-center">
+              Heo không còn chờ nữa rồi.
+            </p>
+            <p className="font-accent text-sm text-ink-soft/50 text-center">
+              Nhớ hỏi thăm Heo nha 💕
+            </p>
+          </motion.div>
+
+        ) : resolved ? (
           <motion.div
             key="resolved"
             initial={{ opacity: 0, scale: 0.9 }}

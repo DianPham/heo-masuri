@@ -3,6 +3,7 @@ import { RealtimeProvider } from "@/components/realtime/RealtimeProvider";
 import { ThinkingIncoming } from "@/components/realtime/ThinkingIncoming";
 import { ReunionListener } from "@/components/realtime/ReunionListener";
 import { PushPermission } from "@/components/notifications/PushPermission";
+import { AngryIncoming } from "@/components/angry/AngryIncoming";
 
 export default function HeoLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function HeoLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto pb-24">{children}</main>
         <BottomNav who="heo" />
         <ThinkingIncoming who="heo" />
+        <AngryIncoming who="heo" />
         <ReunionListener />
         <PushPermission />
       </div>
