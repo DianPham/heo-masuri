@@ -83,15 +83,13 @@ export default async function HeoNotebookPage() {
           tapeColor="lilac"
           rotate={-1}
         />
-        {/* Placeholder tile — Ask Masuri (CP6) */}
         <SectionTile
-          href="#"
+          href="/heo/notebook/ask"
           emoji="❓"
           label="Hỏi Masuri"
           color="#E8F2E9"
           tapeColor="mint"
           rotate={2}
-          dimmed
         />
       </div>
 

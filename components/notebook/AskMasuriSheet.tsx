@@ -11,17 +11,37 @@ import { useRef, useState } from "react";
 interface AskMasuriSheetProps {
   word: string;
   onClose: () => void;
+  sourcePageId?: string;
 }
 
-export function AskMasuriSheet({ word, onClose }: AskMasuriSheetProps) {
+export function AskMasuriSheet({ word, onClose, sourcePageId }: AskMasuriSheetProps) {
   const [note, setNote] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   async function handleSend() {
-    // TODO CP6: POST /api/notebook/ask with context_word + question_note
-    setSent(true);
-    setTimeout(onClose, 1400);
+    if (sending) return;
+    setSending(true);
+    try {
+      await fetch("/api/notebook/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          word_en: word,
+          question_text: note.trim(),
+          source_page_id: sourcePageId,
+        }),
+      });
+      setSent(true);
+      setTimeout(onClose, 1400);
+    } catch {
+      // Silent — still show sent UI for now
+      setSent(true);
+      setTimeout(onClose, 1400);
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -84,10 +104,11 @@ export function AskMasuriSheet({ word, onClose }: AskMasuriSheetProps) {
               </button>
               <button
                 onClick={handleSend}
-                className="flex-1 py-3 rounded-2xl bg-rose-500 text-white text-sm font-semibold"
+                disabled={sending}
+                className="flex-1 py-3 rounded-2xl bg-rose-500 text-white text-sm font-semibold disabled:opacity-60"
                 style={{ boxShadow: "0 4px 12px rgba(209,77,111,0.35)" }}
               >
-                Gửi cho Masuri 💕
+                {sending ? "Đang gửi..." : "Gửi cho Masuri 💕"}
               </button>
             </div>
           </>

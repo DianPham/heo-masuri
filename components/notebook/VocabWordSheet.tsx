@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { VocabWord } from "@/types/notebook";
+import { AskMasuriSheet } from "@/components/notebook/AskMasuriSheet";
 
 interface VocabWordSheetProps {
   word: VocabWord;
@@ -20,6 +21,7 @@ export function VocabWordSheet({ word, onClose, onDeleted }: VocabWordSheetProps
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showAsk, setShowAsk] = useState(false);
 
   async function handleDelete() {
     if (!confirmDelete) {
@@ -87,11 +89,7 @@ export function VocabWordSheet({ word, onClose, onDeleted }: VocabWordSheetProps
           <SheetAction
             icon="💬"
             label="Hỏi Masuri"
-            onClick={() => {
-              // Opens Ask Masuri sheet — future CP6 wiring
-              onClose();
-            }}
-            dimNote="CP6"
+            onClick={() => setShowAsk(true)}
           />
           <SheetAction
             icon={confirmDelete ? "⚠️" : "🗑️"}
@@ -102,6 +100,20 @@ export function VocabWordSheet({ word, onClose, onDeleted }: VocabWordSheetProps
           />
         </div>
       </motion.div>
+
+      {/* Ask Masuri sheet (stacked above this one) */}
+      <AnimatePresence>
+        {showAsk && (
+          <AskMasuriSheet
+            word={word.word_en}
+            sourcePageId={word.source_page_id}
+            onClose={() => {
+              setShowAsk(false);
+              onClose();
+            }}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

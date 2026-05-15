@@ -273,7 +273,11 @@ export function TappableText({
       {/* Ask Masuri sheet */}
       <AnimatePresence>
         {askWord && (
-          <AskMasuriSheet word={askWord} onClose={() => setAskWord(null)} />
+          <AskMasuriSheet
+            word={askWord}
+            onClose={() => setAskWord(null)}
+            sourcePageId={sourcePageId}
+          />
         )}
       </AnimatePresence>
     </>

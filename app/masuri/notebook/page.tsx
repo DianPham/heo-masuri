@@ -8,6 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
+import { MasuriAskInbox } from "@/components/notebook/MasuriAskInbox";
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +103,7 @@ export default async function MasuriNotebookPage() {
         icon="❓"
         rotate={0.5}
       >
-        <p className="text-sm text-ink-soft">Chưa có câu hỏi nào — Heo đang học tốt 🌸</p>
+        <MasuriAskInbox />
       </SectionCard>
 
       {/* ── Decorative stickers ─────────────────────────────── */}
