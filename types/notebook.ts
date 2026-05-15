@@ -108,6 +108,28 @@ export type Card =
   | AskPromptCard
   | CompletionCard;
 
+// ── Vocabulary ────────────────────────────────────────────────
+export type SourceKind = "page" | "masuri_card" | "ask_masuri" | "letter";
+export type SelfConfidence = -1 | 0 | 1;
+
+export interface VocabWord {
+  id: string;
+  word_en: string;
+  word_vi: string;
+  example_en?: string;
+  example_vi?: string;
+  pos?: string;
+  source_page_id?: string;
+  source_kind: SourceKind;
+  saved_at: string;          // ISO timestamp
+  last_reviewed_at?: string;
+  review_count: number;
+  self_confidence: SelfConfidence;
+  // Joined from daily_pages (optional, when source_kind === "page")
+  source_page_title_vi?: string;
+  source_page_topic?: string;
+}
+
 // ── Page ──────────────────────────────────────────────────────
 export interface DailyPage {
   id: string;
