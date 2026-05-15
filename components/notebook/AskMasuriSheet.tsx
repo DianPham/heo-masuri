@@ -33,12 +33,16 @@ export function AskMasuriSheet({ word, onClose }: AskMasuriSheetProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
       />
 
       {/* Sheet */}
       <motion.div
         className="fixed bottom-0 left-0 right-0 z-[61] bg-white rounded-t-3xl px-6 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
         style={{ boxShadow: "0 -8px 32px rgba(58,33,41,0.18)" }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
