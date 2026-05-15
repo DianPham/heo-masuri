@@ -40,10 +40,6 @@ interface ExerciseCardProps {
 export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
   const label = EXERCISE_LABELS[card.exercise_type] ?? card.exercise_type;
 
-  function stopNav(e: React.PointerEvent) {
-    e.stopPropagation();
-  }
-
   function renderExercise() {
     switch (card.exercise_type) {
       case "word_train":
@@ -66,8 +62,7 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
   return (
     <div
       className="flex flex-col h-full px-7 py-8"
-      onPointerDown={stopNav}
-      onPointerUp={stopNav}
+      data-no-nav="true"
     >
       {/* Header */}
       <motion.div

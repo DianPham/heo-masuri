@@ -131,7 +131,7 @@ export function StoriesRenderer({ page }: StoriesRendererProps) {
   const goForward = useCallback(() => goTo(current + 1, 1), [current, goTo]);
   const goBack = useCallback(() => goTo(current - 1, -1), [current, goTo]);
 
-  // ── Pointer handlers (tap + swipe-down) ───────────────────────
+  // ── Pointer handlers (swipe-down detection only) ─────────────
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     pointerStart.current = { x: e.clientX, y: e.clientY };
     gestureHandled.current = false;
@@ -143,21 +143,24 @@ export function StoriesRenderer({ page }: StoriesRendererProps) {
     const dy = e.clientY - pointerStart.current.y;
     pointerStart.current = null;
 
-    // Swipe-down: more than 80px down and not too wide
+    // Swipe-down only: more than 80px down and not too wide
     if (dy > 80 && Math.abs(dx) < 60) {
       setShowExitConfirm(true);
       gestureHandled.current = true;
+    }
+  }
+
+  // ── Click handler (tap navigation) ───────────────────────────
+  // Uses onClick so e.target is reliable on iOS (unlike pointerup).
+  // data-no-nav on any ancestor suppresses navigation for that tap.
+  function onTapNav(e: React.MouseEvent<HTMLDivElement>) {
+    if (gestureHandled.current) {
+      gestureHandled.current = false;
       return;
     }
-
-    // If moved too much → not a tap
-    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) return;
-
-    // Check if tapping on an interactive element
     const target = e.target as HTMLElement;
     if (target.closest("[data-no-nav]")) return;
 
-    // Tap navigation
     const pct = e.clientX / window.innerWidth;
     if (pct <= 0.35 && current > 0) {
       goBack();
@@ -219,6 +222,7 @@ export function StoriesRenderer({ page }: StoriesRendererProps) {
         style={PAPER_BG}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
+        onClick={onTapNav}
       >
         {/* Top bar: close + progress dots + counter */}
         <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-3">
