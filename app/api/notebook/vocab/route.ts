@@ -101,10 +101,14 @@ export async function POST(req: NextRequest) {
     if (!heo) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const body = await req.json().catch(() => ({}));
-    const { word_en, word_vi, example_en, example_vi, pos, source_page_id } = body;
+    const { word_en, word_vi, example_en, example_vi, pos } = body;
     const source_kind: string = SOURCE_KINDS.includes(body.source_kind)
       ? body.source_kind
       : "page";
+
+    // Only pass source_page_id if it looks like a real UUID (test pages use slugs)
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const source_page_id = UUID_RE.test(body.source_page_id ?? "") ? body.source_page_id : null;
 
     if (!word_en || !word_vi) {
       return NextResponse.json({ error: "word_en and word_vi required" }, { status: 400 });
