@@ -3,14 +3,16 @@
 /**
  * TappableText — renders English text with each word tappable.
  *
- * Single tap  → VI translation bubble (2.5s auto-dismiss) + TTS
+ * Single tap  → VI translation bubble (2.5s auto-dismiss) + TTS + save button
  * Long press  → Ask Masuri sheet
  *
- * Long-press is detected via onContextMenu (the browser's native
- * long-press event on iOS/Android). This is more reliable than a
- * pointer-timer approach because iOS fires pointerleave/pointercancel
- * when it takes over the gesture, which would cancel a setTimeout-based
- * detector before it fires.
+ * Long-press strategy (per-platform):
+ *   Mobile  → onTouchStart timer (500ms). onTouchMove > 10px cancels it.
+ *             touch-action:manipulation + webkit-touch-callout:none prevent
+ *             the OS from taking over; touchcancel only fires for scroll/zoom
+ *             so a stationary hold completes cleanly.
+ *   Desktop → onContextMenu (right-click). Pointer long-press not needed on
+ *             desktop; right-click is the standard interaction.
  *
  * Blueprint §7: "Every English word on every card is tappable."
  */
@@ -29,6 +31,10 @@ interface TappableTextProps {
   className?: string;
   /** Extra class for each word button */
   wordClassName?: string;
+  /** Source context for saving words to vocab */
+  sourcePageId?: string;
+  sourcePageTopic?: string;
+  sourcePageTitleVi?: string;
 }
 
 interface Bubble {
@@ -49,13 +55,22 @@ export function TappableText({
   highlights = [],
   className = "",
   wordClassName = "",
+  sourcePageId,
+  sourcePageTopic,
+  sourcePageTitleVi,
 }: TappableTextProps) {
   const { speak } = useTTS();
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [askWord, setAskWord] = useState<string | null>(null);
+  const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
+  const [savingWord, setSavingWord] = useState<string | null>(null);
   const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Track whether the last action was a long-press so onClick doesn't also fire
+  // Prevent onClick firing right after a long-press
   const suppressNextClick = useRef(false);
+
+  // Touch long-press tracking
+  const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   const highlightSet = new Set(highlights.map((h) => h.toLowerCase()));
 
@@ -64,29 +79,54 @@ export function TappableText({
     setBubble(null);
   }, []);
 
-  /** Long-press: use onContextMenu — fires natively on iOS/Android after ~500ms hold */
-  function handleContextMenu(e: React.MouseEvent, rawWord: string) {
-    e.preventDefault();      // suppress the browser's native context menu
-    e.stopPropagation();     // don't let it bubble to StoriesRenderer
+  // ── Long-press (mobile: touch timer) ──────────────────────────
+  function handleTouchStart(e: React.TouchEvent, rawWord: string) {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchTimer.current = setTimeout(() => {
+      touchTimer.current = null;
+      const clean = cleanWord(rawWord);
+      if (!clean) return;
+      suppressNextClick.current = true;
+      clearBubble();
+      if (navigator.vibrate) navigator.vibrate(40);
+      setAskWord(clean);
+    }, 500);
+  }
 
+  function cancelTouchTimer() {
+    if (touchTimer.current) {
+      clearTimeout(touchTimer.current);
+      touchTimer.current = null;
+    }
+    touchStart.current = null;
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!touchStart.current) return;
+    const dx = Math.abs(e.touches[0].clientX - touchStart.current.x);
+    const dy = Math.abs(e.touches[0].clientY - touchStart.current.y);
+    if (dx > 10 || dy > 10) cancelTouchTimer();
+  }
+
+  // ── Long-press (desktop: right-click / contextmenu) ───────────
+  function handleContextMenu(e: React.MouseEvent, rawWord: string) {
+    e.preventDefault();
+    e.stopPropagation();
     const clean = cleanWord(rawWord);
     if (!clean) return;
-
     suppressNextClick.current = true;
+    clearBubble();
     if (navigator.vibrate) navigator.vibrate(40);
     setAskWord(clean);
   }
 
-  /** Single tap: TTS + VI translation bubble */
+  // ── Single tap ────────────────────────────────────────────────
   function handleClick(e: React.MouseEvent, rawWord: string) {
     e.stopPropagation();
-
-    // Was a long-press — skip the tap handler this time
     if (suppressNextClick.current) {
       suppressNextClick.current = false;
       return;
     }
-
     const clean = cleanWord(rawWord);
     if (!clean) return;
 
@@ -95,15 +135,38 @@ export function TappableText({
     const vi = viMap[clean];
     if (vi) {
       clearBubble();
-      // Clamp bubble so it doesn't overflow right edge
-      const x = Math.min(e.clientX, (typeof window !== "undefined" ? window.innerWidth : 400) - 168);
+      const x = Math.min(
+        e.clientX,
+        (typeof window !== "undefined" ? window.innerWidth : 400) - 168
+      );
       const y = e.clientY;
       setBubble({ word: clean, vi, x, y });
-      bubbleTimer.current = setTimeout(clearBubble, 2500);
+      bubbleTimer.current = setTimeout(clearBubble, 3000);
     }
   }
 
-  // Split text into word tokens and whitespace tokens
+  // ── Save word to vocab ─────────────────────────────────────────
+  async function handleSave(word: string, vi: string) {
+    if (savedWords.has(word) || savingWord === word) return;
+    setSavingWord(word);
+    try {
+      await fetch("/api/notebook/vocab", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          word_en: word,
+          word_vi: vi,
+          source_page_id: sourcePageId,
+          source_page_topic: sourcePageTopic,
+          source_page_title_vi: sourcePageTitleVi,
+        }),
+      });
+      setSavedWords((prev) => new Set(prev).add(word));
+    } finally {
+      setSavingWord(null);
+    }
+  }
+
   const tokens = text.split(/(\s+)/);
 
   return (
@@ -122,6 +185,10 @@ export function TappableText({
               data-no-nav="true"
               onContextMenu={(e) => handleContextMenu(e, token)}
               onClick={(e) => handleClick(e, token)}
+              onTouchStart={(e) => handleTouchStart(e, token)}
+              onTouchEnd={cancelTouchTimer}
+              onTouchMove={handleTouchMove}
+              onTouchCancel={cancelTouchTimer}
               className={[
                 "inline touch-manipulation select-none",
                 "rounded-sm px-0.5 -mx-0.5",
@@ -135,7 +202,6 @@ export function TappableText({
               style={{
                 WebkitTouchCallout: "none",
                 WebkitUserSelect: "none",
-                // Prevent double-tap zoom without disabling single-tap
                 touchAction: "manipulation",
               } as React.CSSProperties}
             >
@@ -150,25 +216,51 @@ export function TappableText({
         {bubble && (
           <motion.div
             key="bubble"
-            className="fixed z-[55] pointer-events-none"
-            style={{ left: bubble.x, top: bubble.y - 60 }}
+            className="fixed z-[55]"
+            style={{ left: bubble.x, top: bubble.y - 72 }}
             initial={{ opacity: 0, scale: 0.85, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85, y: 6 }}
             transition={{ duration: 0.15 }}
           >
             <div
-              className="rounded-xl px-3 py-2 text-sm font-semibold text-white"
+              className="rounded-xl px-3 py-2 text-sm font-semibold text-white flex items-center gap-2"
               style={{
                 background: "linear-gradient(135deg, #D14D6F 0%, #E97A95 100%)",
                 boxShadow: "0 4px 12px rgba(209,77,111,0.4)",
-                maxWidth: 160,
+                maxWidth: 200,
               }}
             >
-              <span className="text-rose-200 text-xs block leading-none mb-0.5">
-                {bubble.word}
-              </span>
-              {bubble.vi}
+              <div className="flex-1 min-w-0">
+                <span className="text-rose-200 text-xs block leading-none mb-0.5">
+                  {bubble.word}
+                </span>
+                <span className="leading-snug">{bubble.vi}</span>
+              </div>
+
+              {/* Save button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSave(bubble.word, bubble.vi);
+                }}
+                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                style={{
+                  backgroundColor: savedWords.has(bubble.word)
+                    ? "rgba(255,255,255,0.35)"
+                    : "rgba(255,255,255,0.2)",
+                }}
+                title={savedWords.has(bubble.word) ? "Đã lưu" : "Lưu từ"}
+              >
+                {savingWord === bubble.word ? (
+                  <span style={{ fontSize: 12 }}>⏳</span>
+                ) : savedWords.has(bubble.word) ? (
+                  <span style={{ fontSize: 12 }}>✓</span>
+                ) : (
+                  <span style={{ fontSize: 12 }}>📚</span>
+                )}
+              </button>
             </div>
           </motion.div>
         )}

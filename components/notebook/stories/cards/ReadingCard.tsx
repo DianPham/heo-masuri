@@ -8,9 +8,12 @@ import type { ReadingCard as ReadingCardType } from "@/types/notebook";
 interface ReadingCardProps {
   card: ReadingCardType;
   viMap: Record<string, string>;
+  sourcePageId?: string;
+  sourcePageTopic?: string;
+  sourcePageTitleVi?: string;
 }
 
-export function ReadingCard({ card, viMap }: ReadingCardProps) {
+export function ReadingCard({ card, viMap, sourcePageId, sourcePageTopic, sourcePageTitleVi }: ReadingCardProps) {
   // Track which sentence's VI translation is shown
   const [revealedSentence, setRevealedSentence] = useState<number | null>(null);
 
@@ -52,6 +55,9 @@ export function ReadingCard({ card, viMap }: ReadingCardProps) {
                   viMap={viMap}
                   highlights={card.vocab_highlights}
                   wordClassName="text-base"
+                  sourcePageId={sourcePageId}
+                  sourcePageTopic={sourcePageTopic}
+                  sourcePageTitleVi={sourcePageTitleVi}
                 />
               </p>
 
@@ -89,7 +95,7 @@ export function ReadingCard({ card, viMap }: ReadingCardProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        Chạm vào từ để nghe phát âm 🔊
+        Chạm từ để nghe • nhấn 📚 để lưu vào sổ
       </motion.p>
     </div>
   );

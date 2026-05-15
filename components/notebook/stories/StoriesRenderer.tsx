@@ -189,7 +189,15 @@ export function StoriesRenderer({ page }: StoriesRendererProps) {
       case "word":
         return <WordCard card={card} viMap={viMap} />;
       case "reading":
-        return <ReadingCard card={card} viMap={viMap} />;
+        return (
+          <ReadingCard
+            card={card}
+            viMap={viMap}
+            sourcePageId={page.id}
+            sourcePageTopic={page.topic}
+            sourcePageTitleVi={page.title_vi}
+          />
+        );
       case "exercise":
         return (
           <ExerciseCard card={card} onSkip={handleSkip} onTooHard={handleTooHard} />
