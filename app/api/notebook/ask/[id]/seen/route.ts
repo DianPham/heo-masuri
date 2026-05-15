@@ -28,7 +28,7 @@ export async function POST(
       .from("ask_masuri_threads")
       .update({ seen_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("from_user_id", heo.id)
+      .eq("from_user", heo.id)
       .is("seen_at", null);
 
     if (error) {

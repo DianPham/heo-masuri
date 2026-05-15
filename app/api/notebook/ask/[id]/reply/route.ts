@@ -41,7 +41,7 @@ export async function POST(
 
     const { data: thread, error: fetchErr } = await supabase
       .from("ask_masuri_threads")
-      .select("id, word_en, question_text")
+      .select("id, context_word, question_note")
       .eq("id", id)
       .single();
 
@@ -64,7 +64,7 @@ export async function POST(
       reply_text.length > 60 ? reply_text.slice(0, 60) + "…" : reply_text;
     sendPushToUser(heo.id, {
       title: `${masuri.display_name} đã trả lời 💕`,
-      body: thread.word_en ? `Về từ "${thread.word_en}": ${preview}` : preview,
+      body: thread.context_word ? `Về từ "${thread.context_word}": ${preview}` : preview,
       url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/heo/notebook/ask`,
       tag: "ask-reply",
     });

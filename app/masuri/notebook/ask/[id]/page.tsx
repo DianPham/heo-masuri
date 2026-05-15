@@ -19,8 +19,8 @@ const PAPER_BG: React.CSSProperties = {
 
 interface Thread {
   id: string;
-  word_en: string | null;
-  question_text: string;
+  context_word: string | null;
+  question_note: string;
   reply_text: string | null;
   replied_at: string | null;
   created_at: string;
@@ -136,18 +136,18 @@ export default function MasuriAskReplyPage() {
             <p className="text-xs font-semibold text-rose-700 uppercase tracking-wider mb-1">
               Heo hỏi
             </p>
-            {thread.word_en && (
+            {thread.context_word && (
               <p
                 className="text-2xl font-bold text-ink"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                {thread.word_en}
+                {thread.context_word}
               </p>
             )}
           </div>
         </div>
         <p className="text-sm text-ink leading-relaxed">
-          {thread.question_text}
+          {thread.question_note}
         </p>
       </motion.div>
 

@@ -54,10 +54,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from("ask_masuri_threads")
       .insert({
-        from_user_id: heo.id,
-        word_en,
-        question_text: question_text || `Giải thích từ "${word_en}" giúp Heo nha 💕`,
-        source_page_id,
+        from_user: heo.id,
+        context_word: word_en,
+        question_note: question_text || `Giải thích từ "${word_en}" giúp Heo nha 💕`,
       })
       .select("id")
       .single();
@@ -112,13 +111,14 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from("ask_masuri_threads")
-      .select("id, word_en, question_text, source_page_id, reply_text, replied_at, seen_at, created_at")
-      .eq("from_user_id", heo.id)
+      .select("id, context_word, question_note, reply_text, replied_at, seen_at, created_at")
+      .eq("from_user", heo.id)
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (filter === "pending") query = query.is("reply_text", null);
     else if (filter === "answered") query = query.not("reply_text", "is", null);
+    // (filter === "all" needs no extra clause)
 
     const { data, error } = await query;
 

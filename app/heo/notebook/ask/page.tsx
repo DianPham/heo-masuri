@@ -19,9 +19,8 @@ const PAPER_BG: React.CSSProperties = {
 
 interface Thread {
   id: string;
-  word_en: string | null;
-  question_text: string;
-  source_page_id: string | null;
+  context_word: string | null;
+  question_note: string;
   reply_text: string | null;
   replied_at: string | null;
   seen_at: string | null;
@@ -144,16 +143,16 @@ function ThreadCard({
       <div className="flex items-start gap-2 mb-2">
         <span className="text-rose-400 font-bold text-xs mt-0.5">Heo:</span>
         <div className="flex-1 min-w-0">
-          {thread.word_en && (
+          {thread.context_word && (
             <p
               className="text-base font-bold text-ink"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              {thread.word_en}
+              {thread.context_word}
             </p>
           )}
           <p className="text-sm text-ink-soft leading-snug">
-            {thread.question_text}
+            {thread.question_note}
           </p>
         </div>
         {unseen && (

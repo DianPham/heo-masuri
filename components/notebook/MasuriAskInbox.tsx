@@ -10,8 +10,8 @@ import { useEffect, useState } from "react";
 
 interface Thread {
   id: string;
-  word_en: string | null;
-  question_text: string;
+  context_word: string | null;
+  question_note: string;
   reply_text: string | null;
   replied_at: string | null;
   created_at: string;
@@ -89,15 +89,15 @@ function ThreadRow({ thread, urgent = false }: { thread: Thread; urgent?: boolea
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          {thread.word_en && (
+          {thread.context_word && (
             <p
               className="text-sm font-bold text-ink"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              {thread.word_en}
+              {thread.context_word}
             </p>
           )}
-          <p className="text-xs text-ink-soft truncate">{thread.question_text}</p>
+          <p className="text-xs text-ink-soft truncate">{thread.question_note}</p>
         </div>
         <span className="shrink-0 text-[10px] text-ink-soft">{date}</span>
       </div>
