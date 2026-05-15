@@ -1,7 +1,6 @@
 /**
- * /masuri/notebook — Masuri's notebook dashboard (CP2 shell)
- * Shows Heo's learning status, actions for Masuri, draft review entry.
- * Live data (streak, activity, unread asks) wired in CP3+.
+ * /masuri/notebook — Masuri's notebook dashboard (CP7)
+ * Shows Heo's live streak, actions for Masuri, ask inbox.
  */
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -9,6 +8,8 @@ import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
 import { MasuriAskInbox } from "@/components/notebook/MasuriAskInbox";
+import { MasuriEncourageButton } from "@/components/notebook/MasuriEncourageButton";
+import { createServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,32 @@ const PAPER_BG = {
   backgroundColor: "#FFF9F5",
 } as React.CSSProperties;
 
+async function fetchStreak(): Promise<{ current: number; longest: number; activeToday: boolean }> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return { current: 0, longest: 0, activeToday: false };
+
+    const { data } = await supabase
+      .from("streaks")
+      .select("current_streak, longest_streak, last_active_date")
+      .eq("user_id", heo.id)
+      .maybeSingle();
+
+    const todayVN = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+    return {
+      current: data?.current_streak ?? 0,
+      longest: data?.longest_streak ?? 0,
+      activeToday: data?.last_active_date === todayVN,
+    };
+  } catch {
+    return { current: 0, longest: 0, activeToday: false };
+  }
+}
+
 export default async function MasuriNotebookPage() {
   const t = await getTranslations("notebook.home");
+  const streak = await fetchStreak();
 
   return (
     <div style={PAPER_BG} className="min-h-dvh px-5 pb-8 pt-10">
@@ -39,24 +64,7 @@ export default async function MasuriNotebookPage() {
       </div>
 
       {/* ── Today's status card ─────────────────────────────── */}
-      <StatusCard />
-
-      {/* ── Draft review ────────────────────────────────────── */}
-      <SectionCard
-        tape="pink"
-        title="Cần duyệt"
-        icon="📝"
-        rotate={-0.5}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-ink font-medium">Trang ngày mai</p>
-            <p className="text-xs text-ink-soft mt-0.5">Chưa có trang nào cần duyệt</p>
-          </div>
-          {/* Will link to /masuri/notebook/review once CP7 builds it */}
-          <span className="text-xs text-rose-400 font-medium opacity-50">CP7</span>
-        </div>
-      </SectionCard>
+      <StatusCard streak={streak} />
 
       {/* ── Quick actions ───────────────────────────────────── */}
       <div
@@ -72,26 +80,23 @@ export default async function MasuriNotebookPage() {
         </div>
 
         <div className="flex flex-col gap-3">
+          {/* Send encouragement — live button */}
+          <MasuriEncourageButton />
+
+          {/* Future actions — dimmed */}
           <QuickAction
             href="#"
             emoji="🃏"
             label={t("writeCard")}
             dimmed
-            note="CP7"
-          />
-          <QuickAction
-            href="#"
-            emoji="💕"
-            label={t("sendEncouragement")}
-            dimmed
-            note="CP7"
+            note="Sắp có"
           />
           <QuickAction
             href="#"
             emoji="📊"
             label={t("viewProgress")}
             dimmed
-            note="CP7"
+            note="Sắp có"
           />
         </div>
       </div>
@@ -117,7 +122,11 @@ export default async function MasuriNotebookPage() {
 }
 
 // ── Today status card ─────────────────────────────────────────
-function StatusCard() {
+function StatusCard({
+  streak,
+}: {
+  streak: { current: number; longest: number; activeToday: boolean };
+}) {
   return (
     <div
       className="rounded-2xl p-5 mb-4 relative overflow-hidden"
@@ -131,12 +140,26 @@ function StatusCard() {
       </div>
 
       <p className="text-xs font-semibold text-rose-700 uppercase tracking-wide mb-3">
-        HÔM NAY
+        HEO HÔM NAY
       </p>
 
       <div className="space-y-2">
-        <StatusRow icon="📓" text="Chưa mở trang hôm nay" dim />
-        <StatusRow icon="🔥" text="Streak: 0 ngày" />
+        <StatusRow
+          icon={streak.activeToday ? "✅" : "📓"}
+          text={streak.activeToday ? "Đã học hôm nay rồi 🌸" : "Chưa mở trang hôm nay"}
+          dim={!streak.activeToday}
+        />
+        <StatusRow
+          icon="🔥"
+          text={
+            streak.current > 0
+              ? `Streak: ${streak.current} ngày${streak.current === streak.longest && streak.current > 1 ? " 🏆" : ""}`
+              : "Streak: 0 ngày"
+          }
+        />
+        {streak.longest > 1 && (
+          <StatusRow icon="⭐" text={`Kỷ lục: ${streak.longest} ngày`} dim />
+        )}
       </div>
     </div>
   );

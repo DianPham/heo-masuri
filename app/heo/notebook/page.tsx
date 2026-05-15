@@ -1,14 +1,14 @@
 /**
- * /heo/notebook — Notebook home (CP2 shell)
+ * /heo/notebook — Notebook home (CP2 shell → CP7 live streak)
  * Shows today's tile, streak, scrapbook/vocab/letter tiles.
- * No live DB calls yet — section is a visual shell until CP3.
  */
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
-import { cookies } from "next/headers";
+import { createServerClient } from "@/lib/supabase/server";
+import { ReminderToggle } from "@/components/notebook/ReminderToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +20,36 @@ const PAPER_BG = {
   backgroundColor: "#FFF9F5",
 } as React.CSSProperties;
 
+async function fetchStreak(): Promise<{ current: number; longest: number; activeToday: boolean }> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return { current: 0, longest: 0, activeToday: false };
+
+    const { data } = await supabase
+      .from("streaks")
+      .select("current_streak, longest_streak, last_active_date")
+      .eq("user_id", heo.id)
+      .maybeSingle();
+
+    const todayVN = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+    return {
+      current: data?.current_streak ?? 0,
+      longest: data?.longest_streak ?? 0,
+      activeToday: data?.last_active_date === todayVN,
+    };
+  } catch {
+    return { current: 0, longest: 0, activeToday: false };
+  }
+}
+
 export default async function HeoNotebookPage() {
   const t = await getTranslations("notebook.home");
   const tScrapbook = await getTranslations("notebook.scrapbook");
   const tVocab = await getTranslations("notebook.vocab");
   const tLetter = await getTranslations("notebook.letter");
+
+  const streak = await fetchStreak();
 
   // Determine today's date in UTC+7
   const nowVN = new Date(Date.now() + 7 * 3_600_000);
@@ -51,8 +76,11 @@ export default async function HeoNotebookPage() {
         </div>
       </div>
 
-      {/* ── Streak bar (placeholder for CP3) ───────────────── */}
-      <StreakBar />
+      {/* ── Streak bar ─────────────────────────────────────── */}
+      <StreakBar current={streak.current} longest={streak.longest} activeToday={streak.activeToday} />
+
+      {/* ── Daily reminder toggle ───────────────────────────── */}
+      <ReminderToggle />
 
       {/* ── Today's page tile ──────────────────────────────── */}
       <TodayTile openLabel={t("openToday")} todayLabel={t("todayLabel")} />
@@ -104,22 +132,48 @@ export default async function HeoNotebookPage() {
   );
 }
 
-// ── Streak bar (no data yet — shows empty state) ─────────────
-function StreakBar() {
+// ── Streak bar ────────────────────────────────────────────────
+function StreakBar({
+  current,
+  longest,
+  activeToday,
+}: {
+  current: number;
+  longest: number;
+  activeToday: boolean;
+}) {
+  const hearts = Math.min(current, 5);
+
   return (
     <div
       className="rounded-2xl px-5 py-4 mb-4 flex items-center gap-3"
-      style={{ background: "rgba(255, 201, 213, 0.25)", border: "1px solid rgba(255, 201, 213, 0.5)" }}
+      style={{
+        background: "rgba(255, 201, 213, 0.25)",
+        border: "1px solid rgba(255, 201, 213, 0.5)",
+      }}
     >
       <span style={{ fontSize: 22 }}>🔥</span>
       <div className="flex-1">
-        <p className="text-sm font-semibold text-ink">Streak: 0 ngày</p>
-        <p className="text-xs text-ink-soft">Hôm nay mình bắt đầu nha 🌸</p>
+        <p className="text-sm font-semibold text-ink">
+          Streak: {current} ngày
+          {longest > 1 && current === longest && (
+            <span className="ml-1.5 text-xs text-rose-400 font-medium">(kỷ lục!)</span>
+          )}
+        </p>
+        <p className="text-xs text-ink-soft">
+          {current === 0
+            ? "Hôm nay mình bắt đầu nha 🌸"
+            : activeToday
+            ? "Hôm nay đã học rồi 🌸"
+            : "Học hôm nay để giữ streak nha!"}
+        </p>
       </div>
-      {/* Hearts row */}
+      {/* Hearts: filled = streak days (max 5) */}
       <div className="flex gap-1">
         {[...Array(5)].map((_, i) => (
-          <span key={i} style={{ fontSize: 14, opacity: 0.25 }}>🤍</span>
+          <span key={i} style={{ fontSize: 14, opacity: i < hearts ? 1 : 0.2 }}>
+            {i < hearts ? "🩷" : "🤍"}
+          </span>
         ))}
       </div>
     </div>
