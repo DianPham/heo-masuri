@@ -66,6 +66,7 @@
   },
   "nav": {
     "home": "Trang chủ",
+    "notebook": "Sổ tay",
     "settings": "Cài đặt"
   },
   "settings": {
@@ -130,5 +131,92 @@
     "title": "Trang này không tồn tại 🐷",
     "body": "Heo không tìm thấy trang bạn đang tìm...",
     "goHome": "Về trang chủ"
+  },
+  "notebook": {
+    "home": {
+      "title": "Sổ tiếng Anh của Heo",
+      "todayLabel": "Hôm nay",
+      "openToday": "Mở trang hôm nay",
+      "completedToday": "Heo đã xong trang hôm nay rồi nè 🌸",
+      "noPageToday": "Trang hôm nay chưa sẵn sàng — quay lại sau nha 💕",
+      "vocabLabel": "Sổ từ vựng",
+      "scrapbookLabel": "Lưu niệm",
+      "lettersLabel": "Thư",
+      "streakLabel": "Streak",
+      "bestStreakLabel": "Streak tốt nhất",
+      "restAvailable": "Heo có {n} ngày nghỉ",
+      "useRestToday": "Heo nghỉ một chút 🌸",
+      "masuriTitle": "Sổ tiếng Anh của Heo",
+      "masuriSubtitle": "Theo dõi hành trình học của Heo nha",
+      "reviewDraft": "Duyệt trang ngày mai",
+      "writeCard": "Viết thiệp từ vựng",
+      "sendEncouragement": "Gửi lời động viên",
+      "viewProgress": "Xem tiến trình của Heo",
+      "answerQuestions": "Heo có câu hỏi đang chờ"
+    },
+    "stories": {
+      "tapToContinue": "Chạm để tiếp tục",
+      "swipeDownToExit": "Vuốt xuống để thoát",
+      "skip": "Bỏ qua câu này",
+      "tooHard": "Khó quá 😣",
+      "askMasuri": "Hỏi Masuri",
+      "tooHardConfirm": "Không sao đâu, mai mình thử lại 🌸"
+    },
+    "exercises": {
+      "tryAgain": "Gần được rồi! Thử lại nha 🌸",
+      "showAnswer": "Cho Heo xem",
+      "checkAnswer": "Kiểm tra",
+      "pigHelp": "Pig giúp",
+      "rateGotIt": "Heo nhớ rồi ✨",
+      "rateNeutral": "Bình thường 🌸",
+      "rateAgain": "Cho Heo coi lại 🌱"
+    },
+    "completion": {
+      "wellDone": "Heo giỏi quá!",
+      "stickerEarned": "Heo nhận được sticker mới",
+      "reviewPage": "Xem lại trang này",
+      "openVocab": "Mở sổ từ vựng",
+      "backHome": "Quay lại trang chủ sổ"
+    },
+    "scrapbook": {
+      "title": "Lưu niệm",
+      "empty": "Sổ trống trơn nè...",
+      "emptyHint": "Heo mở trang đầu tiên nha 📓",
+      "openToday": "Mở trang hôm nay"
+    },
+    "vocab": {
+      "title": "Sổ từ vựng",
+      "empty": "Chưa có từ nào trong sổ",
+      "emptyHint": "Heo lưu từ khi học mỗi ngày nha 📖",
+      "search": "Tìm từ...",
+      "savedOn": "Lưu ngày {date}",
+      "fromPage": "Từ trang \"{title}\""
+    },
+    "letter": {
+      "title": "Thư",
+      "empty": "Chưa có thư nào",
+      "emptyHint": "Masuri sẽ gửi thư cho Heo ở đây 💌",
+      "weekly": "Lá thư tuần này",
+      "writeButton": "Viết thư cho Masuri",
+      "wordCount": "Heo đã viết {n} từ",
+      "saveDraft": "Lưu nháp",
+      "send": "Gửi cho Masuri",
+      "sentToast": "Đã gửi 💕",
+      "fromMasuri": "Từ Masuri 🐷"
+    },
+    "ask": {
+      "sheetTitle": "Hỏi Masuri",
+      "placeholderQuestion": "Heo muốn hỏi gì? (không bắt buộc)",
+      "send": "Gửi cho Masuri",
+      "sentToast": "Đã gửi cho Masuri 💕",
+      "waitingReply": "Đang chờ Masuri trả lời...",
+      "replied": "Masuri đã trả lời",
+      "thankMasuri": "Cảm ơn Masuri 💕"
+    },
+    "streak": {
+      "newDay": "Bắt đầu lại nhẹ nhàng nha 🌱",
+      "restUsed": "Heo dùng một ngày nghỉ — không sao 🌸",
+      "noShame": "Heo nghỉ một chút, không sao 🌸"
+    }
   }
 }

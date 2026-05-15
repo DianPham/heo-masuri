@@ -5,15 +5,19 @@ import { usePathname } from "next/navigation";
 import { Home, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
+import { NotebookIcon } from "@/components/notebook/NotebookIcon";
+
+type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
 
 export function BottomNav({ who }: { who: "heo" | "masuri" }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const base = `/${who}`;
 
-  const links = [
-    { href: base, icon: Home, label: t("home") },
-    { href: `${base}/settings`, icon: Settings, label: t("settings") },
+  const links: { href: string; icon: NavIcon; label: string }[] = [
+    { href: base, icon: Home as NavIcon, label: t("home") },
+    { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook") },
+    { href: `${base}/settings`, icon: Settings as NavIcon, label: t("settings") },
   ];
 
   return (
@@ -27,7 +31,11 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
     >
       <div className="flex items-center justify-around px-8 pt-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))] max-w-md mx-auto">
         {links.map(({ href, icon: Icon, label }) => {
-          const active = pathname === href;
+          // Home: exact match. Notebook: starts-with (has sub-pages). Settings: exact.
+          const active =
+            href.endsWith("/notebook")
+              ? pathname.startsWith(href)
+              : pathname === href;
           return (
             <Link
               key={href}

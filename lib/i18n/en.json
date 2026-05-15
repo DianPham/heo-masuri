@@ -66,6 +66,7 @@
   },
   "nav": {
     "home": "Home",
+    "notebook": "Notebook",
     "settings": "Settings"
   },
   "settings": {
@@ -130,5 +131,92 @@
     "title": "Page not found 🐷",
     "body": "The pig couldn't find the page you're looking for...",
     "goHome": "Go home"
+  },
+  "notebook": {
+    "home": {
+      "title": "Heo's English Notebook",
+      "todayLabel": "Today",
+      "openToday": "Open today's page",
+      "completedToday": "Heo finished today's page 🌸",
+      "noPageToday": "Today's page isn't ready yet — check back soon 💕",
+      "vocabLabel": "Vocabulary",
+      "scrapbookLabel": "Scrapbook",
+      "lettersLabel": "Letters",
+      "streakLabel": "Streak",
+      "bestStreakLabel": "Best streak",
+      "restAvailable": "Heo has {n} rest days",
+      "useRestToday": "Rest today 🌸",
+      "masuriTitle": "Heo's English Notebook",
+      "masuriSubtitle": "Track Heo's learning journey",
+      "reviewDraft": "Review tomorrow's page",
+      "writeCard": "Write a vocabulary card",
+      "sendEncouragement": "Send encouragement",
+      "viewProgress": "View Heo's progress",
+      "answerQuestions": "Heo has questions waiting"
+    },
+    "stories": {
+      "tapToContinue": "Tap to continue",
+      "swipeDownToExit": "Swipe down to exit",
+      "skip": "Skip this one",
+      "tooHard": "Too hard 😣",
+      "askMasuri": "Ask Masuri",
+      "tooHardConfirm": "It's okay, we'll try again tomorrow 🌸"
+    },
+    "exercises": {
+      "tryAgain": "Almost! Try again 🌸",
+      "showAnswer": "Show me",
+      "checkAnswer": "Check",
+      "pigHelp": "Pig help",
+      "rateGotIt": "Got it ✨",
+      "rateNeutral": "Okay 🌸",
+      "rateAgain": "Show me again 🌱"
+    },
+    "completion": {
+      "wellDone": "Heo is amazing!",
+      "stickerEarned": "New sticker earned",
+      "reviewPage": "Review this page",
+      "openVocab": "Open vocabulary",
+      "backHome": "Back to notebook"
+    },
+    "scrapbook": {
+      "title": "Scrapbook",
+      "empty": "The scrapbook is empty...",
+      "emptyHint": "Open your first page to start 📓",
+      "openToday": "Open today's page"
+    },
+    "vocab": {
+      "title": "Vocabulary",
+      "empty": "No words saved yet",
+      "emptyHint": "Save words as you study each day 📖",
+      "search": "Search words...",
+      "savedOn": "Saved {date}",
+      "fromPage": "From \"{title}\""
+    },
+    "letter": {
+      "title": "Letters",
+      "empty": "No letters yet",
+      "emptyHint": "Masuri will send letters here 💌",
+      "weekly": "This week's letter",
+      "writeButton": "Write to Masuri",
+      "wordCount": "Heo wrote {n} words",
+      "saveDraft": "Save draft",
+      "send": "Send to Masuri",
+      "sentToast": "Sent 💕",
+      "fromMasuri": "From Masuri 🐷"
+    },
+    "ask": {
+      "sheetTitle": "Ask Masuri",
+      "placeholderQuestion": "What do you want to ask? (optional)",
+      "send": "Send to Masuri",
+      "sentToast": "Sent to Masuri 💕",
+      "waitingReply": "Waiting for Masuri to reply...",
+      "replied": "Masuri replied",
+      "thankMasuri": "Thank you Masuri 💕"
+    },
+    "streak": {
+      "newDay": "Fresh start, nice and easy 🌱",
+      "restUsed": "Rest day used — no worries 🌸",
+      "noShame": "Rest a little, it's okay 🌸"
+    }
   }
 }

@@ -5,6 +5,8 @@ interface NotebookIconProps {
   /** Fill color. Defaults to currentColor so it inherits from CSS. */
   color?: string;
   className?: string;
+  /** Accepted but unused — for compatibility with lucide-style nav links */
+  strokeWidth?: number;
 }
 
 /**
