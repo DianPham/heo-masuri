@@ -91,13 +91,75 @@ export const TEST_PAGE: DailyPage = {
       },
     },
 
-    // ── 8. Ask prompt ────────────────────────────────────────
+    // ── 8. spot_imposter ────────────────────────────────────────
+    {
+      type: "exercise",
+      exercise_type: "spot_imposter",
+      can_skip: true,
+      data: {
+        sentence_en: "I feel happy this morning",
+        imposter_word: "this",
+        correct_word: "today",
+        hint_vi: "Dùng từ chỉ thời gian đúng nhất ở đây là gì?",
+      },
+    },
+
+    // ── 9. pig_says ─────────────────────────────────────────────
+    {
+      type: "exercise",
+      exercise_type: "pig_says",
+      can_skip: true,
+      data: {
+        prompt_vi: "Xin chào! Hôm nay tôi cảm thấy vui.",
+        target_en: "Hello! Today I feel happy.",
+        hints: { verb: "feel", noun: "today" },
+      },
+    },
+
+    // ── 10. caption_polaroid ─────────────────────────────────────
+    {
+      type: "exercise",
+      exercise_type: "caption_polaroid",
+      can_skip: true,
+      data: {
+        image_emoji: "🌅",
+        starter_words: ["beautiful", "morning", "feel", "happy"],
+        example_en: "What a beautiful morning!",
+      },
+    },
+
+    // ── 11. sentence_remix ───────────────────────────────────────
+    {
+      type: "exercise",
+      exercise_type: "sentence_remix",
+      can_skip: true,
+      data: {
+        base_en: "I feel happy today.",
+        base_vi: "Hôm nay Heo cảm thấy vui.",
+        instruction_vi: "Đổi thành câu hỏi: 'Do you feel happy today?'",
+        target_en: "Do you feel happy today?",
+        hint_words: ["Do", "you", "feel"],
+      },
+    },
+
+    // ── 12. two_truths ───────────────────────────────────────────
+    {
+      type: "exercise",
+      exercise_type: "two_truths",
+      can_skip: true,
+      data: {
+        prompt_vi: "Viết 2 điều thật và 1 điều bịa về buổi sáng của Heo (bằng tiếng Anh nha):",
+        starter_words: ["I", "feel", "morning", "today", "happy", "hello"],
+      },
+    },
+
+    // ── 13. Ask prompt ───────────────────────────────────────────
     {
       type: "ask_prompt",
       suggestion_vi: "Có từ nào khó hiểu không? Hỏi Masuri nha 💕",
     },
 
-    // ── 9. Completion ────────────────────────────────────────
+    // ── 14. Completion ───────────────────────────────────────
     {
       type: "completion",
       vocab_to_save: ["morning", "hello", "today", "feel"],
