@@ -13,6 +13,11 @@ export async function GET() {
     .single();
 
   if (!data) return NextResponse.json(null);
+
+  // Once the reunion date is more than 24h in the past, treat it as expired
+  const targetMs = new Date(data.target_date + "T00:00:00+07:00").getTime();
+  if (Date.now() > targetMs + 24 * 60 * 60 * 1000) return NextResponse.json(null);
+
   return NextResponse.json(data);
 }
 

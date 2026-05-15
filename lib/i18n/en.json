@@ -29,18 +29,20 @@
   },
   "angry": {
     "title": "Heo is not okay",
-    "subtitle": "It's okay, Masuri will understand",
-    "needSpace": "Heo needs space",
+    "subtitle": "It's okay. Masuri will understand.",
+    "needSpace": "Heo needs a little space",
     "needPresence": "Heo needs Masuri here",
-    "needVent": "Heo just wants to vent",
-    "needFix": "Heo needs Masuri to fix something",
-    "contextPlaceholder": "What can Masuri do to help? (optional)",
-    "submit": "Send",
+    "needVent": "Heo needs to be heard",
+    "needFix": "Heo needs Masuri to help fix something",
+    "contextLabel": "Anything Heo wants to add? (optional)",
+    "contextPlaceholder": "Just a few words is fine...",
+    "submit": "Send to Masuri",
     "back": "Back",
     "sent": "Sent to Masuri",
     "waitingReply": "Waiting for Masuri to reply...",
     "okayNow": "Heo is okay now 🌸",
     "resolved": "Thank you for sharing 💕",
+    "replyReceived": "Masuri just replied",
     "danReplied": "Masuri replied:",
     "replies": {
       "sorry": "I'm sorry 🙏",
@@ -49,10 +51,10 @@
       "heard_you": "I hear you 💕"
     },
     "needLabels": {
-      "space": "needs space",
+      "space": "needs a little space",
       "presence": "needs Masuri here",
-      "vent": "just wants to vent",
-      "fix": "needs Masuri to fix something"
+      "vent": "needs to be heard",
+      "fix": "needs Masuri to help fix something"
     }
   },
   "countdown": {

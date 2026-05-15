@@ -59,10 +59,12 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
   );
 }
 
-// Check quiet hours before sending a push
+export type PrefKey = "missing_enabled" | "thinking_enabled" | "hug_kiss_enabled" | "angry_enabled";
+
+// Check pref + quiet hours before sending. Default to allow when no prefs row exists.
 export async function sendPushIfAllowed(
   userId: string,
-  prefKey: "missing_enabled" | "thinking_enabled" | "hug_kiss_enabled" | "angry_enabled",
+  prefKey: PrefKey,
   payload: PushPayload
 ) {
   const supabase = createServerClient();
@@ -72,10 +74,10 @@ export async function sendPushIfAllowed(
     .eq("user_id", userId)
     .single();
 
-  if (!prefs) return;
-  if (!prefs[prefKey]) return;
+  // No prefs row — default to sending; only block if row exists and pref is false
+  if (prefs && !prefs[prefKey]) return;
 
-  if (prefs.quiet_start && prefs.quiet_end) {
+  if (prefs && prefs.quiet_start && prefs.quiet_end) {
     const now = new Date();
     const hh = now.getUTCHours() + 7; // UTC+7
     const mm = now.getUTCMinutes();
@@ -93,6 +95,27 @@ export async function sendPushIfAllowed(
 
     if (inQuiet) return;
   }
+
+  await sendPushToUser(userId, payload);
+}
+
+// Like sendPushIfAllowed but ignores quiet hours.
+// Used for angry buzzes to Masuri — his partner's distress overrides his sleep schedule.
+// Quiet hours still apply to all other channels.
+export async function sendPushIgnoringQuietHours(
+  userId: string,
+  prefKey: PrefKey,
+  payload: PushPayload
+) {
+  const supabase = createServerClient();
+  const { data: prefs } = await supabase
+    .from("notification_prefs")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  // No prefs row — default to sending; only block if row exists and pref is false
+  if (prefs && !prefs[prefKey]) return;
 
   await sendPushToUser(userId, payload);
 }

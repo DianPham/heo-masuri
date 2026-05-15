@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { notifyAngry } from "@/lib/discord";
-import { sendPushIfAllowed } from "@/lib/push";
+import { sendPushIgnoringQuietHours } from "@/lib/push";
 import { cookies } from "next/headers";
 
 const NEED_TYPES = ["space", "presence", "vent", "fix"] as const;
+
+const NEED_PUSH_BODY: Record<string, string> = {
+  space:    "Heo cần một chút không gian",
+  presence: "Heo cần Masuri ở đây",
+  vent:     "Heo cần được lắng nghe",
+  fix:      "Heo cần Masuri giúp sửa một chuyện",
+};
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
@@ -24,6 +31,18 @@ export async function POST(req: NextRequest) {
   const { data: masuri } = await supabase.from("users").select("id").eq("slug", "masuri").single();
   if (!heo || !masuri) return NextResponse.json({ error: "Users not found" }, { status: 500 });
 
+  // Enforce single-active-buzz constraint (also enforced at DB level via partial unique index)
+  const { data: activeBuzz } = await supabase
+    .from("angry_buzzes")
+    .select("id")
+    .eq("from_user", heo.id)
+    .is("resolved_at", null)
+    .maybeSingle();
+
+  if (activeBuzz) {
+    return NextResponse.json({ active_buzz_id: activeBuzz.id }, { status: 409 });
+  }
+
   const { data: row, error } = await supabase
     .from("angry_buzzes")
     .insert({ from_user: heo.id, need_type: needType, context_note: contextNote ?? null })
@@ -42,11 +61,15 @@ export async function POST(req: NextRequest) {
     payload: { id: row.id, need_type: needType },
   });
 
-  // Push to Dân
-  sendPushIfAllowed(masuri.id, "angry_enabled", {
+  // Push to Masuri — angry buzzes bypass quiet hours. His partner's distress takes priority.
+  const pushBody = contextNote
+    ? `${NEED_PUSH_BODY[needType]} — ${contextNote.slice(0, 60)}`
+    : (NEED_PUSH_BODY[needType] ?? "Heo đang không ổn");
+
+  sendPushIgnoringQuietHours(masuri.id, "angry_enabled", {
     title: "💔 Heo đang không ổn",
-    body: "Nhấn để xem và trả lời",
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/masuri`,
+    body: pushBody,
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/masuri/angry/${row.id}`,
     tag: "angry",
   });
 

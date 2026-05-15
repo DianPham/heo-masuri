@@ -7,6 +7,7 @@ import Link from "next/link";
 import { MissingButton } from "@/components/buttons/MissingButton";
 import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 import { Countdown } from "@/components/countdown/Countdown";
+import { Pig } from "@/components/theme/Pig";
 
 export default async function HeoHome() {
   const locale = await getLocale();
@@ -41,19 +42,49 @@ export default async function HeoHome() {
     // env vars not set
   }
 
+  const targetMs = reunion ? new Date(reunion.target_date + "T00:00:00+07:00").getTime() : null;
+  const now = Date.now();
+  // countdown → celebrate (reunion day) → wait (day after) → hidden (only missing button)
+  const showCountdown = reunion !== null && targetMs !== null && now < targetMs;
+  const isCelebrating = targetMs !== null && now >= targetMs && now < targetMs + 86_400_000;
+  const isWaiting     = targetMs !== null && now >= targetMs + 86_400_000 && now < targetMs + 172_800_000;
+
   return (
     <div className="flex flex-col items-center px-5 min-h-[calc(100dvh-96px)]">
 
       {/* ── Countdown ── */}
-      {reunion && (
+      {showCountdown && (
         <div className="pt-8 pb-2 w-full flex justify-center">
           <Countdown
-            daysLeft={daysUntil(reunion.target_date)}
-            label={reunion.label}
-            labelEn={reunion.label_en}
-            progressPercent={progressPercent(reunion.created_at, reunion.target_date)}
+            daysLeft={daysUntil(reunion!.target_date)}
+            label={reunion!.label}
+            labelEn={reunion!.label_en}
+            progressPercent={progressPercent(reunion!.created_at, reunion!.target_date)}
             who="heo"
           />
+        </div>
+      )}
+
+      {/* ── Celebration: day of reunion ── */}
+      {isCelebrating && (
+        <div className="pt-8 pb-2 w-full flex flex-col items-center gap-2">
+          <Pig pose="sparkle" size={72} animate={false} />
+          <p className="font-accent text-base text-rose-400 font-semibold text-center">
+            Hôm nay mình gặp nhau rồi 🎉
+          </p>
+        </div>
+      )}
+
+      {/* ── Wait: day after reunion ── */}
+      {isWaiting && (
+        <div className="pt-8 pb-2 w-full flex flex-col items-center gap-2">
+          <p className="font-accent text-base text-rose-300 text-center">
+            Hôm qua mình đã ở bên nhau 💕
+          </p>
+          <Pig pose="sleepy" size={56} animate={false} />
+          <p className="font-accent text-sm text-ink-soft/60 text-center">
+            Đang đợi ngày kế tiếp nha 🌸
+          </p>
         </div>
       )}
 
@@ -65,7 +96,6 @@ export default async function HeoHome() {
       {/* ── Love bar ── */}
       <div className="w-full pb-8 flex flex-col gap-3">
 
-        {/* Divider with handwritten label */}
         <div className="flex items-center gap-3 px-1">
           <div className="flex-1 h-px bg-rose-200/70" />
           <span className="font-accent text-base text-rose-300/90">
@@ -74,10 +104,8 @@ export default async function HeoHome() {
           <div className="flex-1 h-px bg-rose-200/70" />
         </div>
 
-        {/* Equal-width quick-send buttons */}
         <ThinkingButtons who="heo" locale={locale} />
 
-        {/* "Not okay" — now a proper soft button, not a ghost link */}
         <Link
           href="/heo/angry"
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl

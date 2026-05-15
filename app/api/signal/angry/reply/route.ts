@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     sendPushIfAllowed(heo.id, "angry_enabled", {
       title: "Masuri đã trả lời 💕",
       body: REPLY_LABELS[reply] ?? reply,
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/heo`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/heo/angry/${id}`,
       tag: "angry-reply",
     });
   }

@@ -38,9 +38,13 @@ export function AngryForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ need_type: selected, context_note: context.trim() || null }),
       });
+      const data = await res.json();
+      if (res.status === 409) {
+        router.push(`/heo/angry/${data.active_buzz_id}`);
+        return;
+      }
       if (!res.ok) throw new Error();
-      const { id } = await res.json();
-      router.push(`/heo/angry/${id}`);
+      router.push(`/heo/angry/${data.id}`);
     } catch {
       setSubmitting(false);
     }
@@ -104,13 +108,13 @@ export function AngryForm() {
       {/* ── Context note ── */}
       <div className="flex flex-col gap-2 mb-6">
         <label className="font-accent text-sm text-ink-soft/60">
-          {t("contextPlaceholder")}
+          {t("contextLabel")}
         </label>
         <textarea
           value={context}
           onChange={e => setContext(e.target.value)}
           rows={3}
-          placeholder="..."
+          placeholder={t("contextPlaceholder")}
           className="font-accent text-base text-ink bg-white/50 border-2 border-rose-200/50 rounded-2xl px-4 py-3
                      placeholder:text-ink-soft/30 focus:outline-none focus:border-rose-300 transition-colors resize-none"
         />

@@ -21,15 +21,26 @@
   --color-sage: #9CAF88;
 
   /* Typography — must match layout.tsx font variables exactly */
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-accent: "Nunito", system-ui, sans-serif;
+  --font-display:      "Fraunces", Georgia, serif;
+  --font-body:         "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-accent:       "Nunito", system-ui, sans-serif;
+  --font-handwritten:  "Caveat", cursive;
 }
 
 :root {
   --shadow:      0 8px 24px -8px rgba(168, 50, 79, 0.18);
   --shadow-card: 0 16px 48px -12px rgba(168, 50, 79, 0.24), 0 2px 8px rgba(168, 50, 79, 0.06);
   --shadow-lift: 0 4px 16px -6px rgba(168, 50, 79, 0.18);
+
+  /* Notebook accents */
+  --washi-pink:        #FFC9D5;
+  --washi-mint:        #C5E0CB;
+  --washi-butter:      #FAE8B8;
+  --washi-lilac:       #D7C9E8;
+  --paper-grid:        rgba(168, 50, 79, 0.06);
+  --polaroid-bg:       #FFFFFB;
+  --polaroid-shadow:   0 12px 24px -12px rgba(58, 33, 41, 0.25);
+  --tape-shadow:       0 2px 4px rgba(58, 33, 41, 0.12);
 }
 
 /*
