@@ -1,9 +1,8 @@
 /**
  * GET /api/cron/reminder
- * Vercel cron job — runs every hour.
- * Sends a daily reminder push to Heo if:
- *   - reminder_enabled = true
- *   - current VN hour matches reminder_time hour
+ * Vercel cron job — fires daily at 13:00 UTC (20:00 VN).
+ * Sends a push reminder to Heo if:
+ *   - reminder_enabled = true in notebook_prefs
  *   - hasn't already studied today (last_active_date != today)
  *
  * Secured by CRON_SECRET header (set in Vercel env).
@@ -24,10 +23,7 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createServerClient();
 
-    // Current VN hour (UTC+7)
-    const nowVN = new Date(Date.now() + 7 * 3_600_000);
-    const currentHour = nowVN.getUTCHours(); // already shifted to VN
-    const todayVN = nowVN.toISOString().slice(0, 10);
+    const todayVN = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
 
     // Get heo user
     const { data: heo } = await supabase
@@ -37,24 +33,18 @@ export async function GET(req: NextRequest) {
       .single();
     if (!heo) return NextResponse.json({ sent: false, reason: "no heo user" });
 
-    // Check prefs
+    // Check if reminder is enabled
     const { data: prefs } = await supabase
       .from("notebook_prefs")
-      .select("reminder_enabled, reminder_time")
+      .select("reminder_enabled")
       .eq("user_id", heo.id)
       .maybeSingle();
 
-    if (!prefs?.reminder_enabled || !prefs.reminder_time) {
+    if (!prefs?.reminder_enabled) {
       return NextResponse.json({ sent: false, reason: "reminder disabled" });
     }
 
-    // reminder_time is stored as "HH:MM:SS" — check hour matches
-    const reminderHour = parseInt(prefs.reminder_time.slice(0, 2), 10);
-    if (reminderHour !== currentHour) {
-      return NextResponse.json({ sent: false, reason: "not reminder hour" });
-    }
-
-    // Check if already studied today
+    // Skip if already studied today
     const { data: streak } = await supabase
       .from("streaks")
       .select("last_active_date")

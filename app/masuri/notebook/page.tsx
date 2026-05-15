@@ -20,6 +20,26 @@ const PAPER_BG = {
   backgroundColor: "#FFF9F5",
 } as React.CSSProperties;
 
+async function fetchPendingDrafts(): Promise<{ id: string; title_vi: string; scheduled_for: string }[]> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return [];
+
+    const { data } = await supabase
+      .from("daily_pages")
+      .select("id, title_vi, scheduled_for")
+      .eq("for_user", heo.id)
+      .eq("status", "draft")
+      .order("scheduled_for", { ascending: true })
+      .limit(5);
+
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 async function fetchStreak(): Promise<{ current: number; longest: number; activeToday: boolean }> {
   try {
     const supabase = createServerClient();
@@ -45,7 +65,7 @@ async function fetchStreak(): Promise<{ current: number; longest: number; active
 
 export default async function MasuriNotebookPage() {
   const t = await getTranslations("notebook.home");
-  const streak = await fetchStreak();
+  const [streak, pendingDrafts] = await Promise.all([fetchStreak(), fetchPendingDrafts()]);
 
   return (
     <div style={PAPER_BG} className="min-h-dvh px-5 pb-8 pt-10">
@@ -62,6 +82,30 @@ export default async function MasuriNotebookPage() {
           <p className="text-sm text-ink-soft mt-0.5">{t("masuriSubtitle")}</p>
         </div>
       </div>
+
+      {/* ── Pending drafts banner ───────────────────────────── */}
+      {pendingDrafts.length > 0 && (
+        <div className="mb-4 space-y-2">
+          {pendingDrafts.map((draft) => (
+            <Link
+              key={draft.id}
+              href={`/m/notebook/approve/${draft.id}`}
+              className="flex items-center gap-3 rounded-2xl px-4 py-3 active:scale-[0.98] transition-transform"
+              style={{
+                background: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)",
+                boxShadow: "0 4px 14px rgba(209,77,111,0.25)",
+              }}
+            >
+              <span className="text-xl">📓</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-rose-800 truncate">{draft.title_vi}</p>
+                <p className="text-xs text-rose-600">{draft.scheduled_for} · chờ duyệt</p>
+              </div>
+              <span className="text-rose-600 font-bold text-sm shrink-0">Duyệt →</span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* ── Today's status card ─────────────────────────────── */}
       <StatusCard streak={streak} />

@@ -122,17 +122,10 @@ export async function POST(req: NextRequest) {
             `**${page.title_vi}** / ${page.title_en}\n` +
             `Topic: \`${page.topic}\` • Độ khó: ${page.difficulty}/3\n` +
             `${cardCount} thẻ` +
-            (newVocab.length > 0 ? ` • Từ mới: _${newVocab.join(", ")}_` : ""),
+            (newVocab.length > 0 ? ` • Từ mới: _${newVocab.join(", ")}_` : "") +
+            `\n\n[👀 Duyệt nhanh](${approveUrl})`,
           color: 0xf8b4c4,
           fields: [{ name: "Ngày", value: page.scheduled_for, inline: true }],
-        }],
-        components: [{
-          type: 1,
-          components: [{
-            type: 2, style: 5,
-            label: "Duyệt nhanh 👀",
-            url: approveUrl,
-          }],
         }],
       }),
     }).catch(() => {});
