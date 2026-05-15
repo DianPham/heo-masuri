@@ -3,10 +3,6 @@
     {
       "path": "/api/notebook/admin/publish-due",
       "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/cron/reminder",
-      "schedule": "0 * * * *"
     }
   ]
 }
