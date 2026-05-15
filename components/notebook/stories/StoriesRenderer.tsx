@@ -152,14 +152,19 @@ export function StoriesRenderer({ page }: StoriesRendererProps) {
 
   // ── Click handler (tap navigation) ───────────────────────────
   // Uses onClick so e.target is reliable on iOS (unlike pointerup).
-  // data-no-nav on any ancestor suppresses navigation for that tap.
+  // Skips navigation for: interactive elements (button/input/textarea/a/label)
+  // and anything marked data-no-nav. Empty card space still navigates.
   function onTapNav(e: React.MouseEvent<HTMLDivElement>) {
     if (gestureHandled.current) {
       gestureHandled.current = false;
       return;
     }
     const target = e.target as HTMLElement;
-    if (target.closest("[data-no-nav]")) return;
+    if (
+      target.closest(
+        "[data-no-nav], button, input, textarea, select, a, label, [contenteditable]"
+      )
+    ) return;
 
     const pct = e.clientX / window.innerWidth;
     if (pct <= 0.35 && current > 0) {

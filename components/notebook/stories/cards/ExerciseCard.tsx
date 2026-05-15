@@ -60,10 +60,7 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
   }
 
   return (
-    <div
-      className="flex flex-col h-full px-7 py-8"
-      data-no-nav="true"
-    >
+    <div className="flex flex-col h-full px-7 py-8">
       {/* Header */}
       <motion.div
         className="mb-5"
