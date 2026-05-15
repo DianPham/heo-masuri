@@ -162,13 +162,13 @@ function PigFace({ pose, blinking }: { pose: PigPose; blinking: boolean }) {
     case "sleepy":
       return (
         <>
-          {/* Droopy half-closed eyes */}
-          <path d="M25 42 Q29 39 33 42" stroke={STROKE} strokeWidth="2.2" strokeLinecap="round" fill="none" />
-          <path d="M47 42 Q51 39 55 42" stroke={STROKE} strokeWidth="2.2" strokeLinecap="round" fill="none" />
-          {/* ZZZ bubbles */}
-          <text x="57" y="21" fontSize="9"   fill={STROKE} opacity="0.45" fontFamily="Georgia,serif" fontStyle="italic">z</text>
-          <text x="63" y="14" fontSize="7"   fill={STROKE} opacity="0.30" fontFamily="Georgia,serif" fontStyle="italic">z</text>
-          <text x="68" y="9"  fontSize="5.5" fill={STROKE} opacity="0.20" fontFamily="Georgia,serif" fontStyle="italic">z</text>
+          {/* Heavy drooping lids — arcs bow DOWNWARD (control pt below endpoints = closed-eye look) */}
+          <path d="M25 41 Q29 46 33 41" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M47 41 Q51 46 55 41" stroke={STROKE} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          {/* ZZZ — bold and clearly readable */}
+          <text x="56" y="23" fontSize="12" fill={STROKE} opacity="0.75" fontFamily="Georgia,serif" fontStyle="italic" fontWeight="bold">Z</text>
+          <text x="63" y="15" fontSize="9"  fill={STROKE} opacity="0.50" fontFamily="Georgia,serif" fontStyle="italic">Z</text>
+          <text x="69" y="9"  fontSize="6.5" fill={STROKE} opacity="0.30" fontFamily="Georgia,serif" fontStyle="italic">Z</text>
         </>
       );
 
