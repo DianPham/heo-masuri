@@ -140,22 +140,16 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
         )}
       </div>
 
-      {/* ── Card preview ────────────────────────────────────── */}
-      <div className="px-5 space-y-3 mt-2">
-        {page.cards.map((card, i) => (
-          <CardPreview key={i} card={card} index={i} />
-        ))}
-      </div>
-
-      {/* ── Mode: Edit fields ────────────────────────────────── */}
+      {/* ── Mode: Edit / Regenerate panels (above cards) ─────── */}
       <AnimatePresence>
         {mode === "edit" && (
           <motion.div
             key="edit"
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            className="px-5 mt-4 space-y-3"
+            exit={{ opacity: 0, y: -8 }}
+            className="mx-5 mt-3 mb-1 rounded-2xl bg-white border border-rose-200 p-4 space-y-3"
+            style={{ boxShadow: "0 2px 12px rgba(209,77,111,0.12)" }}
           >
             <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Sửa tiêu đề</p>
             <div>
@@ -163,7 +157,7 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
               <input
                 value={titleVi}
                 onChange={(e) => setTitleVi(e.target.value)}
-                className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-white"
+                className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-rose-50"
               />
             </div>
             <div>
@@ -171,7 +165,7 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
               <input
                 value={titleEn}
                 onChange={(e) => setTitleEn(e.target.value)}
-                className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-white"
+                className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-rose-50"
               />
             </div>
           </motion.div>
@@ -180,10 +174,11 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
         {mode === "regenerate" && (
           <motion.div
             key="regen"
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            className="px-5 mt-4"
+            exit={{ opacity: 0, y: -8 }}
+            className="mx-5 mt-3 mb-1 rounded-2xl bg-white border border-rose-200 p-4"
+            style={{ boxShadow: "0 2px 12px rgba(209,77,111,0.12)" }}
           >
             <p className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-2">
               Gợi ý cho Routine (không bắt buộc)
@@ -193,11 +188,18 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
               onChange={(e) => setHint(e.target.value)}
               placeholder="VD: Heo hỏi về đồ ăn hôm qua — tập trung vào food nha"
               rows={3}
-              className="w-full rounded-xl border border-rose-200 px-3 py-2.5 text-sm text-ink placeholder:text-rose-200 outline-none focus:border-rose-400 resize-none bg-white"
+              className="w-full rounded-xl border border-rose-200 px-3 py-2.5 text-sm text-ink placeholder:text-rose-200 outline-none focus:border-rose-400 resize-none bg-rose-50"
             />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Card preview ────────────────────────────────────── */}
+      <div className="px-5 space-y-3 mt-2">
+        {page.cards.map((card, i) => (
+          <CardPreview key={i} card={card} index={i} />
+        ))}
+      </div>
 
       {/* ── Action bar ──────────────────────────────────────── */}
       <div
