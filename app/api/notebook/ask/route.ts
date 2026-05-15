@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       .from("ask_masuri_threads")
       .insert({
         from_user: heo.id,
+        to_user: masuri.id,
         context_word: word_en,
         question_note: question_text || `Giải thích từ "${word_en}" giúp Heo nha 💕`,
       })
