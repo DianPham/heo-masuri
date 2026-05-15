@@ -26,6 +26,13 @@ export function middleware(req: NextRequest) {
     }
   }
 
+  // Notebook approval route — Masuri only
+  if (path.match(/^\/m\/notebook\/approve\//)) {
+    if (who !== "masuri") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+  }
+
   return NextResponse.next();
 }
 

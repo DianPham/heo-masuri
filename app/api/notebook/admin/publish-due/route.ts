@@ -1,0 +1,113 @@
+/**
+ * POST /api/notebook/admin/publish-due
+ * Vercel Cron — runs daily at 06:00 Asia/Ho_Chi_Minh (23:00 UTC).
+ * Publishes any approved (or stale draft) pages where scheduled_for = today.
+ * Fires a Discord alert if a draft is auto-published without Masuri's approval.
+ *
+ * Secured by CRON_SECRET header.
+ */
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+function todayVN(): string {
+  return new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+}
+
+export async function POST(req: NextRequest) {
+  const secret = req.headers.get("authorization")?.replace("Bearer ", "");
+  if (secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabase = createServerClient();
+  const today = todayVN();
+  const now = new Date().toISOString();
+
+  // Find all pages scheduled for today that aren't published yet
+  const { data: due, error } = await supabase
+    .from("daily_pages")
+    .select("id, title_vi, status, for_user")
+    .eq("scheduled_for", today)
+    .in("status", ["approved", "draft"])
+    .neq("status", "archived");
+
+  if (error) {
+    console.error("[publish-due]", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!due || due.length === 0) {
+    return NextResponse.json({ published: 0, note: "No pages due today" });
+  }
+
+  const published: string[] = [];
+  const unapproved: string[] = [];
+
+  for (const page of due) {
+    const { error: pubErr } = await supabase
+      .from("daily_pages")
+      .update({ status: "published", published_at: now })
+      .eq("id", page.id);
+
+    if (!pubErr) {
+      published.push(page.id);
+      if (page.status === "draft") {
+        unapproved.push(page.title_vi);
+      }
+    }
+  }
+
+  // Alert if any draft was auto-published without approval
+  if (unapproved.length > 0) {
+    const webhookUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW;
+    if (webhookUrl) {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "Sổ tiếng Anh",
+          embeds: [
+            {
+              title: "⚠️ Trang tự động xuất bản chưa duyệt",
+              description:
+                `Các trang sau đã được xuất bản tự động lúc 6am mà Masuri chưa duyệt:\n` +
+                unapproved.map((t) => `• ${t}`).join("\n") +
+                `\n\nKiểm tra và sửa ngay nếu cần nha.`,
+              color: 0xff9999,
+            },
+          ],
+        }),
+      }).catch(() => {});
+    }
+  }
+
+  // Also send the daily reminder push to Heo (she just got a new page)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (appUrl && published.length > 0) {
+    const REMINDER_COPIES = [
+      "Trang sổ mới đến rồi 📬 5 phút thôi nha",
+      "Pig đang đợi Heo nè 🐷✨",
+      "Hôm nay học gì mới? Mở sổ ra coi 📓",
+      "Heo ơi, sổ đang mở chờ Heo 💕",
+    ];
+    const body = REMINDER_COPIES[Math.floor(Math.random() * REMINDER_COPIES.length)];
+
+    await fetch(`${appUrl}/api/notebook/admin/notify-heo-push`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.CRON_SECRET ?? ""}`,
+      },
+      body: JSON.stringify({
+        title: "Trang hôm nay đã sẵn sàng 📓",
+        body,
+        url: `${appUrl}/heo/notebook/today`,
+        tag: "daily-page",
+      }),
+    }).catch(() => {});
+  }
+
+  return NextResponse.json({ published: published.length, unapproved: unapproved.length });
+}
