@@ -4,14 +4,33 @@
 
 Everything goes through the deployed app's API — no direct database access needed.
 
+## ⚠️ IMPORTANT — fail-fast rules
+
+- If any `curl` call returns a non-200 status or fails: **stop immediately**, print the error, and do nothing else.
+- Do NOT attempt to debug, read source files, check git logs, modify code, or commit anything.
+- Do NOT try alternative approaches. Just report what failed and exit.
+- Your only job is: read state → generate JSON → save draft. Nothing else.
+
 ---
 
 ## Steps
 
+### STEP 0 — Pre-flight check
+
+```bash
+APP_URL="${NEXT_PUBLIC_APP_URL%/}"   # strip trailing slash if any
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$APP_URL/api/notebook/routine/state" \
+  -H "Authorization: Bearer $CRON_SECRET")
+echo "Status: $STATUS"
+```
+
+If status is not `200`: print `ERROR: API returned $STATUS. Stopping.` and stop. Do not continue.
+
 ### STEP 1 — Read Heo's current state
 
 ```bash
-curl -s "$NEXT_PUBLIC_APP_URL/api/notebook/routine/state" \
+APP_URL="${NEXT_PUBLIC_APP_URL%/}"
+curl -s "$APP_URL/api/notebook/routine/state" \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 
@@ -123,11 +142,14 @@ Fix any issues before proceeding.
 POST the page JSON to the app. This saves it as a draft AND sends the Discord ping + push to Masuri automatically:
 
 ```bash
-curl -s -X POST "$NEXT_PUBLIC_APP_URL/api/notebook/routine/draft" \
+APP_URL="${NEXT_PUBLIC_APP_URL%/}"
+curl -s -X POST "$APP_URL/api/notebook/routine/draft" \
   -H "Authorization: Bearer $CRON_SECRET" \
   -H "Content-Type: application/json" \
   -d '<your page JSON here>'
 ```
+
+If the response does not contain `page_id`: print the response as an error and stop.
 
 The response will contain `{ "page_id": "...", "approve_url": "..." }`. That's it — done.
 
