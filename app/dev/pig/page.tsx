@@ -17,7 +17,7 @@ const POSES: { pose: PigPose; label: string; vi: string; usage: string }[] = [
     pose: "sleepy",
     label: "Sleepy",
     vi: "Ngủ gật",
-    usage: "Empty states · No recent activity",
+    usage: "Empty states · No recent activity · Wait state (day after reunion)",
   },
   {
     pose: "heart-eyes",
@@ -35,7 +35,25 @@ const POSES: { pose: PigPose; label: string; vi: string; usage: string }[] = [
     pose: "sparkle",
     label: "Sparkle",
     vi: "Tỏa sáng",
-    usage: 'Countdown hits zero · "Heo ổn rồi" resolution',
+    usage: 'Countdown hits zero · "Heo ổn rồi" resolution · Celebration day',
+  },
+  {
+    pose: "studying",
+    label: "Studying",
+    vi: "Đang học",
+    usage: "Notebook / Daily page · Vocabulary study states",
+  },
+  {
+    pose: "cheering",
+    label: "Cheering",
+    vi: "Cổ vũ",
+    usage: "Streak milestones · Quiz correct · Celebration moments",
+  },
+  {
+    pose: "thinking",
+    label: "Thinking",
+    vi: "Đang nghĩ",
+    usage: "Ask Masuri thread · Loading / processing states",
   },
 ];
 
@@ -63,9 +81,8 @@ export default function PigReviewPage() {
             Pig SVG — Checkpoint 1 review 🐷
           </h1>
           <p style={{ color: "#6B4453", fontSize: 14 }}>
-            Five poses used across the app. Animated versions on the left (idle
-            float + blink), static on the right. Please review before
-            proceeding.
+            Eight poses — five original + three new notebook poses (studying,
+            cheering, thinking). Animated left (idle float + blink), static right.
           </p>
         </div>
 
