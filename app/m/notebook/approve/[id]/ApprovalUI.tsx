@@ -46,8 +46,8 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
   const meta = page.generation_meta ?? {};
   const newVocab = Array.isArray(meta.new_vocab) ? (meta.new_vocab as string[]) : [];
 
-  function updateCard(index: number, patch: Partial<Card>) {
-    setEditCards((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  function updateCard(index: number, patch: Record<string, unknown>) {
+    setEditCards((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } as Card : c)));
   }
 
   function updateCardData(index: number, dataPatch: Record<string, unknown>) {
