@@ -29,9 +29,10 @@ export async function GET() {
       .eq("user_id", heo.id)
       .maybeSingle();
 
-    return NextResponse.json({
-      preferred_topics: data?.preferred_topics ?? [],
-    });
+    return NextResponse.json(
+      { preferred_topics: data?.preferred_topics ?? [] },
+      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" } }
+    );
   } catch (err) {
     console.error("[notebook/prefs GET]", err);
     return NextResponse.json({ preferred_topics: [] });

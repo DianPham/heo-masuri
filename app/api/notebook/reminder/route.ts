@@ -26,10 +26,13 @@ export async function GET() {
       .eq("user_id", heo.id)
       .maybeSingle();
 
-    return NextResponse.json({
-      enabled: data?.reminder_enabled ?? false,
-      time: data?.reminder_time ? data.reminder_time.slice(0, 5) : null, // "HH:MM"
-    });
+    return NextResponse.json(
+      {
+        enabled: data?.reminder_enabled ?? false,
+        time: data?.reminder_time ? data.reminder_time.slice(0, 5) : null, // "HH:MM"
+      },
+      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" } }
+    );
   } catch (err) {
     console.error("[reminder GET]", err);
     return NextResponse.json({ enabled: false, time: null });

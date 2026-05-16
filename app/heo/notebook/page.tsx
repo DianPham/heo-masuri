@@ -206,16 +206,17 @@ function StreakBar({
 
         {/* Rest day flowers + use-rest button */}
         <div className="flex items-center gap-2 ml-auto">
-          {restDays > 0 && (
+          {/* Only show "Heo nghỉ" button if not already active today and has rest days */}
+          {!activeToday && restDays > 0 ? (
+            <UseRestButton restDays={restDays} />
+          ) : restDays > 0 ? (
             <div className="flex items-center gap-1">
-              <span className="text-xs text-ink-soft">Ngày nghỉ:</span>
+              <span className="text-xs text-ink-soft">Phép nghỉ:</span>
               {[...Array(restDays)].map((_, i) => (
                 <span key={i} style={{ fontSize: 14 }}>🌸</span>
               ))}
             </div>
-          )}
-          {/* Only show "Heo nghỉ" button if not already active today and has rest days */}
-          {!activeToday && restDays > 0 && <UseRestButton />}
+          ) : null}
         </div>
       </div>
     </div>
