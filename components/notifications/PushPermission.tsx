@@ -23,7 +23,6 @@ export function PushPermission() {
     if (sessionStorage.getItem("push_later")) return;
 
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

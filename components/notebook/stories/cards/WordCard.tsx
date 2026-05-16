@@ -14,7 +14,7 @@ const POS_VI: Record<string, string> = {
   interjection: "thán từ",
 };
 
-export function WordCard({ card, viMap }: { card: WordCardType; viMap: Record<string, string> }) {
+export function WordCard({ card }: { card: WordCardType; viMap?: Record<string, string> }) {
   const { speak } = useTTS();
 
   return (

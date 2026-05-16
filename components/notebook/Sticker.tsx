@@ -254,15 +254,9 @@ function StickerShape({ type }: { type: StickerType }) {
 
 // ── Star ─────────────────────────────────────────────────────
 function StarShape({ filled }: { filled: boolean }) {
-  const pts = [0, 72, 144, 216, 288].map((deg, i) => {
-    const rad = (deg * Math.PI) / 180;
-    const r = i % 2 === 0 ? 12 : 5;
-    return `${16 + r * Math.sin(rad)},${16 - r * Math.cos(rad)}`;
-  });
-  const path = pts.join(" ");
-  // interleave inner points for proper 5-point star
+  // interleave outer + inner points for proper 5-point star
   const allPts: string[] = [];
-  [0, 72, 144, 216, 288].forEach((deg, i) => {
+  [0, 72, 144, 216, 288].forEach((deg) => {
     const rOuter = 12, rInner = 5;
     const outer = (deg * Math.PI) / 180;
     const inner = ((deg + 36) * Math.PI) / 180;
@@ -281,7 +275,7 @@ function StarShape({ filled }: { filled: boolean }) {
 }
 
 // ── Bow ──────────────────────────────────────────────────────
-function BowShape({ color, center, knot }: { color: string; center: string; knot: string }) {
+function BowShape({ color, knot }: { color: string; center?: string; knot: string }) {
   return (
     <>
       {/* Left wing */}
