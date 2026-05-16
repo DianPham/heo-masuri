@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { Tape } from "@/components/notebook/Tape";
 import { LetterSeenMarker } from "@/components/notebook/LetterSeenMarker";
+import { ThankButton } from "@/components/notebook/ThankButton";
 import Link from "next/link";
 
 export const revalidate = 30;
@@ -144,7 +145,7 @@ export default async function LetterViewPage({ params }: { params: Promise<{ id:
             )}
 
             {/* Thank button */}
-            <ThankButton />
+            <ThankButton letterId={id} />
           </div>
         ) : (
           <div className="text-center py-6 text-sm text-ink-soft">
@@ -195,16 +196,3 @@ function TwoTruthsView({
   );
 }
 
-// ── Thank button ──────────────────────────────────────────────
-function ThankButton() {
-  return (
-    <div className="mt-4 text-center">
-      <Link
-        href="/heo/notebook/letter"
-        className="inline-flex items-center gap-2 text-sm font-medium text-rose-400 underline underline-offset-2"
-      >
-        Cảm ơn Masuri 💕
-      </Link>
-    </div>
-  );
-}
