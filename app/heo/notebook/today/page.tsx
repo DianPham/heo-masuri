@@ -1,7 +1,7 @@
 /**
  * /heo/notebook/today — Daily Stories renderer.
- * Server component: fetches today's published page, falls back to the
- * hard-coded Day 1 test page when no DB page exists (CP3 review phase).
+ * Fetches today's published page, or the most recent unfinished carry-over lesson.
+ * Falls back to the hard-coded test page when no DB page exists.
  */
 import type { DailyPage } from "@/types/notebook";
 import { TEST_PAGE } from "@/lib/notebook/test-page";
@@ -9,26 +9,51 @@ import { StoriesRenderer } from "@/components/notebook/stories/StoriesRenderer";
 
 export const revalidate = 60;
 
-async function fetchTodayPage(): Promise<DailyPage | null> {
+type TodayResponse = {
+  page: DailyPage | null;
+  completed: boolean;
+  carry_over: boolean;
+};
+
+async function fetchTodayPage(): Promise<TodayResponse> {
   try {
     const base =
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
-    const res = await fetch(`${base}/api/notebook/today`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const { page } = (await res.json()) as { page: DailyPage | null };
-    return page;
+    const res = await fetch(`${base}/api/notebook/today`, { cache: "no-store" });
+    if (!res.ok) return { page: null, completed: false, carry_over: false };
+    return (await res.json()) as TodayResponse;
   } catch {
-    return null;
+    return { page: null, completed: false, carry_over: false };
   }
 }
 
 export default async function TodayPage() {
-  // Try DB first; fall back to test page so CP3 review always has content
-  const page = (await fetchTodayPage()) ?? TEST_PAGE;
+  const { page, carry_over } = await fetchTodayPage();
+  const resolved = page ?? TEST_PAGE;
 
-  return <StoriesRenderer page={page} />;
+  return (
+    <div className="relative">
+      {/* Carry-over banner — shows when Heo is catching up on a missed lesson */}
+      {carry_over && page && (
+        <div
+          className="sticky top-0 z-50 flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-center"
+          style={{ backgroundColor: "rgba(255,201,213,0.92)", backdropFilter: "blur(6px)" }}
+        >
+          <span>📖</span>
+          <span>
+            Bài từ {formatDate(page.scheduled_for)} chưa xong — hoàn thành nha Heo 🌸
+          </span>
+        </div>
+      )}
+      <StoriesRenderer page={resolved} />
+    </div>
+  );
+}
+
+function formatDate(dateStr: string): string {
+  // "2026-05-15" → "15/05"
+  const [, m, d] = dateStr.split("-");
+  return `${d}/${m}`;
 }

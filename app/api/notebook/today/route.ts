@@ -1,9 +1,13 @@
 /**
  * GET /api/notebook/today
- * Returns today's published daily page for Heo (UTC+7), or null if none.
- * Response: { page: DailyPage | null, completed: boolean }
+ * Returns the active daily page for Heo (UTC+7), or null if none.
  *
- * Falls back gracefully if the daily_pages table doesn't exist yet (CP3 phase).
+ * Priority:
+ *   1. Today's published page (normal case)
+ *   2. Most recent unfinished published page from before today (carry-over)
+ *      — shown when Heo rested / skipped and didn't complete the previous lesson
+ *
+ * Response: { page: DailyPage | null, completed: boolean, carry_over: boolean }
  */
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
@@ -19,7 +23,6 @@ export async function GET() {
   try {
     const supabase = createServerClient();
 
-    // Get heo's user id
     const { data: heo } = await supabase
       .from("users")
       .select("id")
@@ -27,12 +30,13 @@ export async function GET() {
       .single();
 
     if (!heo) {
-      return NextResponse.json({ page: null, completed: false });
+      return NextResponse.json({ page: null, completed: false, carry_over: false });
     }
 
     const today = todayVN();
 
-    const { data: row, error } = await supabase
+    // 1 — today's published page (normal path)
+    const { data: todayRow, error: todayErr } = await supabase
       .from("daily_pages")
       .select("*")
       .eq("for_user", heo.id)
@@ -40,37 +44,56 @@ export async function GET() {
       .eq("status", "published")
       .maybeSingle();
 
-    // Table may not exist yet (pre-CP3 migration) — return null gracefully
-    if (error) {
-      if (error.code === "42P01") {
-        // table does not exist
-        return NextResponse.json({ page: null, completed: false });
-      }
-      console.error("[notebook/today]", error);
-      return NextResponse.json({ page: null, completed: false });
+    if (todayErr) {
+      if (todayErr.code === "42P01") return NextResponse.json({ page: null, completed: false, carry_over: false });
+      console.error("[notebook/today]", todayErr);
+      return NextResponse.json({ page: null, completed: false, carry_over: false });
     }
 
-    if (!row) {
-      return NextResponse.json({ page: null, completed: false });
+    if (todayRow) {
+      return NextResponse.json({
+        page: toPage(todayRow),
+        completed: Boolean(todayRow.completed_at),
+        carry_over: false,
+      });
     }
 
-    const page: DailyPage = {
-      id: row.id,
-      title_vi: row.title_vi,
-      title_en: row.title_en,
-      topic: row.topic,
-      difficulty: row.difficulty,
-      cards: row.cards,
-      scheduled_for: row.scheduled_for,
-      completed_at: row.completed_at,
-    };
+    // 2 — carry-over: most recent unfinished published page before today
+    const { data: carryRow } = await supabase
+      .from("daily_pages")
+      .select("*")
+      .eq("for_user", heo.id)
+      .eq("status", "published")
+      .is("completed_at", null)
+      .lt("scheduled_for", today)
+      .order("scheduled_for", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    return NextResponse.json({
-      page,
-      completed: Boolean(row.completed_at),
-    });
+    if (carryRow) {
+      return NextResponse.json({
+        page: toPage(carryRow),
+        completed: false,
+        carry_over: true,
+      });
+    }
+
+    return NextResponse.json({ page: null, completed: false, carry_over: false });
   } catch (err) {
     console.error("[notebook/today]", err);
-    return NextResponse.json({ page: null, completed: false });
+    return NextResponse.json({ page: null, completed: false, carry_over: false });
   }
+}
+
+function toPage(row: Record<string, unknown>): DailyPage {
+  return {
+    id: row.id as string,
+    title_vi: row.title_vi as string,
+    title_en: row.title_en as string,
+    topic: row.topic as string,
+    difficulty: row.difficulty as 1 | 2 | 3 | 4 | 5,
+    cards: row.cards as DailyPage["cards"],
+    scheduled_for: row.scheduled_for as string,
+    completed_at: row.completed_at as string | null,
+  };
 }

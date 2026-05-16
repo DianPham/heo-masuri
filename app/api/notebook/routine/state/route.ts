@@ -31,6 +31,17 @@ export async function GET(req: NextRequest) {
     .toISOString()
     .slice(0, 10);
 
+  // Check for unfinished published lesson — if present, routine should skip today
+  const { data: unfinishedPage } = await supabase
+    .from("daily_pages")
+    .select("id, title_vi, scheduled_for")
+    .eq("for_user", heoId)
+    .eq("status", "published")
+    .is("completed_at", null)
+    .order("scheduled_for", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   // Last 7 published pages
   const { data: lastPages } = await supabase
     .from("daily_pages")
@@ -81,6 +92,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     heo_id: heoId,
     tomorrow: tomorrowVN,
+    unfinished_page: unfinishedPage ?? null,
     last_pages: lastPages ?? [],
     recent_vocab: (recentVocab ?? []).map((w) => ({
       word_en: w.word_en,

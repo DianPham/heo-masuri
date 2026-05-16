@@ -35,12 +35,17 @@ curl -s "$APP_URL/api/notebook/routine/state" \
 ```
 
 Parse the JSON output. You will receive:
+- `unfinished_page` — **check this first.** If not null, Heo has not finished a previous lesson.
 - `tomorrow` — the date string to use for `scheduled_for`
 - `last_pages` — recent 7 published pages (avoid repeating topic immediately)
 - `recent_vocab` — words she has saved (bias content to use these — recognition is rewarding)
 - `low_confidence_vocab` — words she rated "show me again" (weave in invisibly)
 - `preferred_topics` — her preferred topic tags
 - `[MASURI_HINT]` — if present, this is Masuri's instruction for today's page. **Honor it.**
+
+**⚠️ If `unfinished_page` is not null: stop immediately.**
+Print: `SKIP — Heo chưa hoàn thành bài "${unfinished_page.title_vi}" (${unfinished_page.scheduled_for}). Không tạo bài mới.`
+Do not proceed to Step 2. Do nothing else.
 
 ### STEP 2 — Plan tomorrow's page
 
