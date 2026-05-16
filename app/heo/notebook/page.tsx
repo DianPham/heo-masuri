@@ -11,15 +11,6 @@ import { UseRestButton } from "@/components/notebook/UseRestButton";
 
 export const revalidate = 60;
 
-// ── Letter nudge helpers ──────────────────────────────────────
-function getISOWeek(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-}
-
 async function fetchLetterNudge(): Promise<{ hasLetterThisWeek: boolean; isSunday: boolean }> {
   try {
     const supabase = createServerClient();
@@ -28,17 +19,19 @@ async function fetchLetterNudge(): Promise<{ hasLetterThisWeek: boolean; isSunda
 
     const nowVN = new Date(Date.now() + 7 * 3_600_000);
     const isSunday = nowVN.getUTCDay() === 0;
-    const weekNum = getISOWeek(nowVN);
-    const year = nowVN.getUTCFullYear();
-    const weekStart = `${year}-W${String(weekNum).padStart(2, "0")}`;
 
-    // Check if Heo sent a letter this ISO week
+    // Monday of the current ISO week (Mon=1 … Sun=0 treated as 7)
+    const dayOfWeek = nowVN.getUTCDay() || 7; // 1=Mon … 7=Sun
+    const mondayUTC = new Date(nowVN);
+    mondayUTC.setUTCDate(nowVN.getUTCDate() - (dayOfWeek - 1));
+    mondayUTC.setUTCHours(0, 0, 0, 0);
+
     const { data: letters } = await supabase
       .from("letters")
       .select("id")
       .eq("from_user", heo.id)
       .in("kind", ["weekly_letter", "two_truths"])
-      .gte("created_at", new Date(nowVN.getFullYear(), 0, 1 + (weekNum - 1) * 7 - (nowVN.getUTCDay() || 7) + 1).toISOString())
+      .gte("created_at", mondayUTC.toISOString())
       .limit(1);
 
     return { hasLetterThisWeek: (letters?.length ?? 0) > 0, isSunday };

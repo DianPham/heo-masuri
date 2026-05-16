@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
@@ -103,6 +104,10 @@ export async function POST(req: NextRequest) {
       console.error("[letter POST]", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Bust caches so inbox + home nudge card update immediately
+    revalidatePath("/heo/notebook/letter");
+    revalidatePath("/heo/notebook");
 
     // Push to Masuri
     const title = kind === "two_truths"
