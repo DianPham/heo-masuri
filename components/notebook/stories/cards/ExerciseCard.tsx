@@ -6,6 +6,7 @@
  * Blueprint §8 / CP5.
  */
 import { motion } from "motion/react";
+import { InfoTip } from "@/components/notebook/InfoTip";
 import type { ExerciseCard as ExerciseCardType } from "@/types/notebook";
 import type {
   WordTrainData,
@@ -96,13 +97,19 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <button
-          type="button"
-          onClick={onTooHard}
-          className="text-xs text-rose-300 font-medium py-2 px-3 rounded-xl active:bg-rose-50"
-        >
-          Khó quá 😣
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={onTooHard}
+            className="text-xs text-rose-300 font-medium py-2 px-3 rounded-xl active:bg-rose-50"
+          >
+            Khó quá 😣
+          </button>
+          <InfoTip
+            text="Nhấn khi bài khó quá — Masuri sẽ được báo và có thể hỗ trợ Heo. Heo vẫn tiếp tục bài bình thường, không mất điểm."
+            position="top"
+          />
+        </div>
         {card.can_skip && (
           <button
             type="button"

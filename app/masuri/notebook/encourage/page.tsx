@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 import { Pig } from "@/components/theme/Pig";
+import { InfoTip } from "@/components/notebook/InfoTip";
 
 const PAPER_BG: React.CSSProperties = {
   backgroundImage:
@@ -174,9 +175,15 @@ export default function MasuriEncouragePage() {
 
             {/* Presets */}
             <div>
-              <p className="text-xs font-semibold text-rose-400 uppercase tracking-widest mb-2.5">
-                Gợi ý nhanh
-              </p>
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <p className="text-xs font-semibold text-rose-400 uppercase tracking-widest">
+                  Gợi ý nhanh
+                </p>
+                <InfoTip
+                  text="Nhấn một gợi ý để điền vào ô bên dưới. Heo sẽ nhận thông báo ngay sau khi Masuri gửi."
+                  position="bottom"
+                />
+              </div>
               <div className="flex flex-wrap gap-2">
                 {PRESETS.map((p) => (
                   <button

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
+import { InfoTip } from "@/components/notebook/InfoTip";
 import type { CompletionCard as CompletionCardType, WordCard } from "@/types/notebook";
 
 interface CompletionCardProps {
@@ -153,9 +154,15 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
               border: "1px solid rgba(255,201,213,0.4)",
             }}
           >
-            <p className="text-xs font-semibold text-rose-500 mb-2 text-center">
-              Đã lưu {card.vocab_to_save.length} từ mới vào sổ 📖
-            </p>
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              <p className="text-xs font-semibold text-rose-500">
+                Đã lưu {card.vocab_to_save.length} từ mới vào sổ 📖
+              </p>
+              <InfoTip
+                text="Những từ này đã tự động lưu vào sổ từ vựng của Heo. Heo có thể ôn tập chúng bất kỳ lúc nào trong mục 📖 Từ vựng."
+                position="top"
+              />
+            </div>
             <div className="flex flex-wrap gap-2 justify-center">
               {card.vocab_to_save.map((word) => (
                 <span

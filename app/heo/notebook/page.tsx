@@ -8,6 +8,8 @@ import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
 import { createServerClient } from "@/lib/supabase/server";
 import { UseRestButton } from "@/components/notebook/UseRestButton";
+import { TourGuide } from "@/components/notebook/TourGuide";
+import { InfoTip } from "@/components/notebook/InfoTip";
 
 export const revalidate = 60;
 
@@ -243,6 +245,9 @@ export default async function HeoNotebookPage() {
         <Sticker type="sparkle" size={26} />
         <Sticker type="flower_daisy" size={28} />
       </div>
+
+      {/* ── First-run tour guide ─────────────────────────────── */}
+      <TourGuide />
     </div>
   );
 }
@@ -276,12 +281,18 @@ function StreakBar({
       <div className="flex items-center gap-3 mb-2">
         <span style={{ fontSize: 22 }}>🔥</span>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-ink">
-            Streak: {current} ngày
-            {longest > 1 && current === longest && (
-              <span className="ml-1.5 text-xs text-rose-400 font-medium">(kỷ lục!)</span>
-            )}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-semibold text-ink">
+              Streak: {current} ngày
+              {longest > 1 && current === longest && (
+                <span className="ml-1.5 text-xs text-rose-400 font-medium">(kỷ lục!)</span>
+              )}
+            </p>
+            <InfoTip
+              text="Streak là số ngày liên tiếp Heo học bài. Bỏ một ngày sẽ mất streak — trừ khi dùng ngày nghỉ!"
+              position="bottom"
+            />
+          </div>
           <p className="text-xs text-ink-soft">{subtext}</p>
         </div>
         {/* Heart dots — current streak vs max 7 */}
@@ -304,6 +315,10 @@ function StreakBar({
 
         {/* Rest day flowers + use-rest button */}
         <div className="flex items-center gap-2 ml-auto">
+          <InfoTip
+            text="Ngày nghỉ cho phép Heo bỏ qua một ngày mà không bị mất streak. Masuri cấp mỗi tuần một ngày nghỉ 🌸"
+            position="top"
+          />
           {/* Only show "Heo nghỉ" button if not already active today and has rest days */}
           {!activeToday && restDays > 0 ? (
             <UseRestButton restDays={restDays} />

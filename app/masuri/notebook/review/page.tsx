@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { Pig } from "@/components/theme/Pig";
 import { Tape } from "@/components/notebook/Tape";
+import { InfoTip } from "@/components/notebook/InfoTip";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const revalidate = 30;
@@ -108,13 +109,19 @@ export default async function MasuriReviewPage() {
             />
           </svg>
         </Link>
-        <div>
-          <h1
-            className="text-2xl font-bold text-ink leading-tight"
-            style={{ fontFamily: "var(--font-handwritten)" }}
-          >
-            Duyệt trang học
-          </h1>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <h1
+              className="text-2xl font-bold text-ink leading-tight"
+              style={{ fontFamily: "var(--font-handwritten)" }}
+            >
+              Duyệt trang học
+            </h1>
+            <InfoTip
+              text="Quy trình: Draft → Masuri duyệt → Approved → Tự phát hành lúc 6am. Khi duyệt, Masuri có thể chỉnh sửa nội dung hoặc nhấn nút tái tạo."
+              position="bottom"
+            />
+          </div>
           <p className="text-xs text-ink-soft mt-0.5">
             {pages.length === 0
               ? "Không có trang nào chờ duyệt 🌸"
