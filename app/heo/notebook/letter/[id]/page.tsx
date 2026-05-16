@@ -199,12 +199,12 @@ function TwoTruthsView({
 function ThankButton() {
   return (
     <div className="mt-4 text-center">
-      <a
+      <Link
         href="/heo/notebook/letter"
         className="inline-flex items-center gap-2 text-sm font-medium text-rose-400 underline underline-offset-2"
       >
         Cảm ơn Masuri 💕
-      </a>
+      </Link>
     </div>
   );
 }
