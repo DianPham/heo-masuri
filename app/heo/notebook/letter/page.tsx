@@ -1,6 +1,6 @@
 /**
  * /heo/notebook/letter — Letter inbox (CP9)
- * Shows received letters from Masuri + Heo's own sent weekly letters.
+ * Shows Heo's sent letters + received letters from Masuri.
  */
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
@@ -29,24 +29,24 @@ type Letter = {
   hasReply: boolean;
 };
 
-async function fetchLetters(): Promise<Letter[]> {
+async function fetchLetters(): Promise<{ letters: Letter[]; heoId: string | null }> {
   try {
     const supabase = createServerClient();
     const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
-    if (!heo) return [];
+    if (!heo) return { letters: [], heoId: null };
 
     const { data } = await supabase
       .from("letters")
       .select("id, from_user, to_user, kind, body, in_reply_to, delivered_at, seen_at, created_at")
       .or(`to_user.eq.${heo.id},from_user.eq.${heo.id}`)
       .lte("delivered_at", new Date().toISOString())
-      .is("in_reply_to", null)        // top-level only (replies shown inside parent)
+      .is("in_reply_to", null)        // top-level only
       .order("delivered_at", { ascending: false })
       .limit(50);
 
-    if (!data || data.length === 0) return [];
+    if (!data || data.length === 0) return { letters: [], heoId: heo.id };
 
-    // Check which letters have a reply from Masuri
+    // Check which of Heo's letters have a reply
     const ids = data.map((l) => l.id);
     const { data: replies } = await supabase
       .from("letters")
@@ -55,9 +55,12 @@ async function fetchLetters(): Promise<Letter[]> {
 
     const repliedSet = new Set((replies ?? []).map((r) => r.in_reply_to));
 
-    return data.map((l) => ({ ...l, hasReply: repliedSet.has(l.id) })) as Letter[];
+    return {
+      letters: data.map((l) => ({ ...l, hasReply: repliedSet.has(l.id) })) as Letter[],
+      heoId: heo.id,
+    };
   } catch {
-    return [];
+    return { letters: [], heoId: null };
   }
 }
 
@@ -66,30 +69,34 @@ function isSunday(): boolean {
 }
 
 function kindLabel(kind: string, fromHeo: boolean): { icon: string; label: string } {
-  if (kind === "weekly_letter" || kind === "two_truths") {
-    return fromHeo
-      ? { icon: "📨", label: "Thư của Heo" }
-      : { icon: "💌", label: "Masuri trả lời" };
-  }
+  if (kind === "two_truths")    return fromHeo ? { icon: "🎭", label: "Two Truths của Heo" }    : { icon: "🎭", label: "Masuri trả lời" };
+  if (kind === "weekly_letter") return fromHeo ? { icon: "📨", label: "Thư của Heo" }            : { icon: "💌", label: "Thư từ Masuri" };
   if (kind === "encouragement") return { icon: "💕", label: "Động viên từ Masuri" };
   if (kind === "vocab_card")    return { icon: "📖", label: "Thiệp từ vựng từ Masuri" };
   return { icon: "✉️", label: "Thư" };
 }
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("vi-VN", { day: "numeric", month: "long", timeZone: "Asia/Ho_Chi_Minh" });
+  return new Date(iso).toLocaleDateString("vi-VN", {
+    day: "numeric", month: "long",
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
 }
 
 export default async function LetterPage() {
-  const letters = await fetchLetters();
+  const { letters, heoId } = await fetchLetters();
   const sunday = isSunday();
-  const unread = letters.filter((l) => !l.seen_at && l.to_user !== undefined).length;
+
+  // Unread = letters FROM Masuri that Heo hasn't opened yet
+  const unread = letters.filter((l) => l.from_user !== heoId && !l.seen_at).length;
 
   return (
     <div style={PAPER_BG} className="min-h-dvh">
       {/* ── Header ──────────────────────────────────────────── */}
       <div className="relative px-5 pt-10 pb-4">
+        <Link href="/heo/notebook" className="absolute left-5 top-11 text-ink-soft text-sm">
+          ← Sổ
+        </Link>
         <div className="absolute top-4 left-1/2 -translate-x-1/2">
           <Tape color="lilac" width={100} length={22} rotate={-1} />
         </div>
@@ -101,14 +108,15 @@ export default async function LetterPage() {
         </h1>
         {unread > 0 && (
           <p className="text-center text-xs text-rose-400 font-medium mt-1">
-            {unread} thư chưa đọc
+            {unread} thư chưa đọc 💌
           </p>
         )}
       </div>
 
       <div className="px-5 pb-8 space-y-4">
-        {/* ── Sunday letter card ────────────────────────────── */}
-        {sunday && (
+        {/* ── Write card ────────────────────────────────────── */}
+        {sunday ? (
+          // Big Sunday card
           <Link href="/heo/notebook/letter/write" className="block active:scale-[0.98] transition-transform">
             <div
               className="relative rounded-2xl p-5 overflow-hidden"
@@ -132,16 +140,23 @@ export default async function LetterPage() {
               </div>
             </div>
           </Link>
-        )}
-
-        {/* If not Sunday, show a quieter "write" link */}
-        {!sunday && (
-          <Link
-            href="/heo/notebook/letter/write"
-            className="flex items-center gap-2 text-sm text-ink-soft px-1"
-          >
-            <span>📨</span>
-            <span className="underline underline-offset-2">Viết thư cho Masuri</span>
+        ) : (
+          // Quiet non-Sunday card
+          <Link href="/heo/notebook/letter/write" className="block active:scale-[0.98] transition-transform">
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3"
+              style={{
+                backgroundColor: "rgba(237,232,245,0.4)",
+                border: "1px solid rgba(196,168,220,0.35)",
+              }}
+            >
+              <span style={{ fontSize: 22 }}>📨</span>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-ink">Viết thư cho Masuri</p>
+                <p className="text-xs text-ink-soft mt-0.5">Kể về tuần này hoặc chơi Two Truths</p>
+              </div>
+              <span className="text-xs text-purple-400 font-medium">Viết →</span>
+            </div>
           </Link>
         )}
 
@@ -151,10 +166,13 @@ export default async function LetterPage() {
         ) : (
           <div className="space-y-3">
             {letters.map((letter) => {
-              const fromHeo = letter.kind !== "encouragement" && letter.kind !== "vocab_card";
+              const fromHeo = letter.from_user === heoId;
               const meta = kindLabel(letter.kind, fromHeo);
-              // Highlight if: letter from Masuri (unread) OR Heo's letter that got a reply
-              const highlight = (!letter.seen_at && !fromHeo) || (fromHeo && letter.hasReply);
+              // Highlight: reply arrived from Masuri (Heo's letter got a reply)
+              //            OR unread letter from Masuri
+              const hasNewContent =
+                (fromHeo && letter.hasReply) ||
+                (!fromHeo && !letter.seen_at);
 
               return (
                 <Link
@@ -165,9 +183,11 @@ export default async function LetterPage() {
                   <div
                     className="relative rounded-2xl px-4 py-3"
                     style={{
-                      backgroundColor: highlight ? "rgba(237,232,245,0.7)" : "rgba(255,249,245,0.9)",
-                      border: `1px solid ${highlight ? "rgba(196,168,220,0.6)" : "rgba(255,201,213,0.3)"}`,
-                      boxShadow: highlight ? "0 2px 12px rgba(196,168,220,0.2)" : undefined,
+                      backgroundColor: hasNewContent
+                        ? "rgba(237,232,245,0.7)"
+                        : "rgba(255,249,245,0.9)",
+                      border: `1px solid ${hasNewContent ? "rgba(196,168,220,0.6)" : "rgba(255,201,213,0.3)"}`,
+                      boxShadow: hasNewContent ? "0 2px 12px rgba(196,168,220,0.2)" : undefined,
                     }}
                   >
                     <div className="flex items-start gap-2.5">
@@ -179,13 +199,20 @@ export default async function LetterPage() {
                         </p>
                         <p className="text-xs text-ink-soft mt-1.5">{formatDate(letter.delivered_at)}</p>
                       </div>
+                      {/* Status badge */}
                       {fromHeo && (
                         <span
                           className="text-xs font-semibold shrink-0 mt-0.5"
                           style={{ color: letter.hasReply ? "#8B5CF6" : "#ccc" }}
                         >
-                          {letter.hasReply ? "✓ Có trả lời" : "Chờ..."}
+                          {letter.hasReply ? "✓ Masuri trả lời" : "Chờ..."}
                         </span>
+                      )}
+                      {!fromHeo && !letter.seen_at && (
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0 mt-1.5"
+                          style={{ backgroundColor: "#C4667A" }}
+                        />
                       )}
                     </div>
                   </div>
@@ -204,7 +231,11 @@ function EmptyState() {
     <div className="flex flex-col items-center pt-8 pb-16 px-8">
       <div
         className="relative w-44 h-36 mb-8 flex items-center justify-center rounded-2xl"
-        style={{ backgroundColor: "#EDE8F5", boxShadow: "var(--polaroid-shadow)", transform: "rotate(-2deg)" }}
+        style={{
+          backgroundColor: "#EDE8F5",
+          boxShadow: "var(--polaroid-shadow)",
+          transform: "rotate(-2deg)",
+        }}
       >
         <div className="absolute top-[-10px] left-1/2 -translate-x-1/2">
           <Tape color="lilac" width={56} length={16} rotate={1} />
@@ -224,7 +255,7 @@ function EmptyState() {
         Chưa có thư nào
       </p>
       <p className="text-sm text-ink-soft text-center mb-6 max-w-xs">
-        Mỗi Chủ nhật, Heo có thể viết thư kể về tuần vừa rồi cho Masuri đọc 💕
+        Viết thư kể cho Masuri nghe về tuần vừa rồi, hoặc thử chơi Two Truths and a Lie 💕
       </p>
 
       <Link

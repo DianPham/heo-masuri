@@ -9,6 +9,8 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+type Reply = { id: string; body: string; delivered_at: string };
+
 async function fetchLetter(id: string) {
   try {
     const supabase = createServerClient();
@@ -20,14 +22,13 @@ async function fetchLetter(id: string) {
 
     if (!letter) return null;
 
-    // Check if already replied
     const { data: reply } = await supabase
       .from("letters")
-      .select("id")
+      .select("id, body, delivered_at")
       .eq("in_reply_to", id)
       .maybeSingle();
 
-    return { letter, hasReply: !!reply };
+    return { letter, reply: reply as Reply | null };
   } catch {
     return null;
   }
@@ -50,11 +51,10 @@ export default async function MasuriLetterPage({ params }: { params: Promise<{ i
   const result = await fetchLetter(id);
   if (!result) notFound();
 
-  const { letter, hasReply } = result;
+  const { letter, reply } = result;
   const sentences = letter.kind === "two_truths"
     ? letter.body.split("\n").filter(Boolean)
     : null;
-  const lieIndex = (letter.attachments as { truths_lie_index?: number } | null)?.truths_lie_index ?? null;
 
   return (
     <div className="min-h-dvh pb-8 px-5" style={{ backgroundColor: "#FFF9F5" }}>
@@ -81,7 +81,6 @@ export default async function MasuriLetterPage({ params }: { params: Promise<{ i
         <p className="text-xs text-ink-soft mb-3 mt-1">{formatDate(letter.delivered_at)}</p>
 
         {sentences ? (
-          // Two truths display for Masuri
           <div className="space-y-2">
             <p className="text-xs text-ink-soft mb-3">
               2 câu thật, 1 câu bịa — Masuri đoán câu nào?
@@ -98,21 +97,44 @@ export default async function MasuriLetterPage({ params }: { params: Promise<{ i
         )}
       </div>
 
-      {/* Reply form */}
-      {hasReply ? (
-        <div className="text-center py-8 text-sm text-ink-soft">
-          <span className="text-2xl block mb-2">✅</span>
-          Masuri đã trả lời rồi 💕
-          <br />
-          <Link href="/masuri/notebook" className="text-rose-400 underline mt-3 block">
+      {/* Reply section */}
+      {reply ? (
+        // Already replied — show what Masuri wrote
+        <div>
+          <p className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">
+            Masuri đã trả lời
+          </p>
+          <div
+            className="relative rounded-2xl px-5 py-5 overflow-hidden mb-4"
+            style={{
+              backgroundColor: "rgba(237,232,245,0.5)",
+              border: "1px solid rgba(196,168,220,0.4)",
+              boxShadow: "var(--shadow-card)",
+            }}
+          >
+            <div className="absolute top-0 right-6 -translate-y-1/2">
+              <Tape color="lilac" width={48} length={14} rotate={2} />
+            </div>
+            <p
+              className="text-sm leading-relaxed whitespace-pre-wrap mt-1"
+              style={{ fontFamily: "var(--font-handwritten)", fontSize: 16, color: "#4B3A5A" }}
+            >
+              {reply.body}
+            </p>
+            <p className="text-xs text-ink-soft mt-3">{formatDate(reply.delivered_at)}</p>
+          </div>
+          <Link
+            href="/masuri/notebook"
+            className="block text-center text-sm text-rose-400 underline underline-offset-2"
+          >
             Quay lại sổ
           </Link>
         </div>
       ) : (
+        // Not yet replied — show reply form
         <MasuriLetterReply
           letterId={id}
           isTwoTruths={letter.kind === "two_truths"}
-          lieIndex={lieIndex}
         />
       )}
     </div>

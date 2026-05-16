@@ -171,7 +171,6 @@ function TwoTruthsView({
       {sentences.map((s, i) => {
         const n = i + 1;
         const isLie = lieIndex === n;
-        const masuriFailed = masuriGuess !== null && masuriGuess !== lieIndex;
         return (
           <div key={i} className="flex items-start gap-2">
             <span className="text-xs font-bold text-ink-soft w-4 shrink-0 mt-0.5">{n}.</span>
@@ -196,12 +195,12 @@ function TwoTruthsView({
   );
 }
 
-// ── Thank button (client) ─────────────────────────────────────
+// ── Thank button ──────────────────────────────────────────────
 function ThankButton() {
   return (
     <div className="mt-4 text-center">
       <a
-        href="/heo"
+        href="/heo/notebook/letter"
         className="inline-flex items-center gap-2 text-sm font-medium text-rose-400 underline underline-offset-2"
       >
         Cảm ơn Masuri 💕

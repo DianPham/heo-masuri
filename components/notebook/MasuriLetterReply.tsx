@@ -3,6 +3,7 @@
 /**
  * MasuriLetterReply — Masuri's reply form for Heo's letter.
  * Supports weekly_letter (with optional corrections) and two_truths (guess picker).
+ * lieIndex is intentionally NOT passed here — Masuri must guess blind.
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,11 +17,9 @@ type Correction = {
 export function MasuriLetterReply({
   letterId,
   isTwoTruths,
-  lieIndex,
 }: {
   letterId: string;
   isTwoTruths: boolean;
-  lieIndex: number | null;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
@@ -82,8 +81,10 @@ export function MasuriLetterReply({
     return (
       <div className="text-center py-10 space-y-3">
         <span className="text-4xl block">💕</span>
-        <p className="text-base font-semibold text-ink"
-           style={{ fontFamily: "var(--font-handwritten)", fontSize: 20 }}>
+        <p
+          className="font-semibold text-ink"
+          style={{ fontFamily: "var(--font-handwritten)", fontSize: 20 }}
+        >
           Đã gửi cho Heo rồi!
         </p>
         <button
@@ -100,43 +101,38 @@ export function MasuriLetterReply({
 
   return (
     <div className="space-y-5">
-      {/* Two truths guess */}
+      {/* Two truths guess — Masuri picks blind, no hints */}
       {isTwoTruths && (
         <div
           className="rounded-2xl px-4 py-4"
-          style={{ backgroundColor: "rgba(237,232,245,0.5)", border: "1px solid rgba(196,168,220,0.4)" }}
+          style={{
+            backgroundColor: "rgba(237,232,245,0.5)",
+            border: "1px solid rgba(196,168,220,0.4)",
+          }}
         >
           <p className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-3">
             Masuri đoán câu nào là bịa?
           </p>
           <div className="flex gap-2">
-            {([1, 2, 3] as const).map((n) => {
-              const isGuessed = guess === n;
-              const isActualLie = lieIndex === n;
-              return (
-                <button
-                  key={n}
-                  onClick={() => setGuess(n)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{
-                    backgroundColor: isGuessed
-                      ? "rgba(196,168,220,0.6)"
-                      : "rgba(255,249,245,0.9)",
-                    border: `1px solid ${isGuessed ? "rgba(196,168,220,0.8)" : "rgba(255,201,213,0.3)"}`,
-                    color: isGuessed ? "#6B21A8" : "#888",
-                  }}
-                >
-                  Câu {n}
-                  {lieIndex !== null && isActualLie && (
-                    <span className="block text-xs font-normal text-rose-400 mt-0.5">bịa</span>
-                  )}
-                </button>
-              );
-            })}
+            {([1, 2, 3] as const).map((n) => (
+              <button
+                key={n}
+                onClick={() => setGuess(n)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                style={{
+                  backgroundColor:
+                    guess === n ? "rgba(196,168,220,0.6)" : "rgba(255,249,245,0.9)",
+                  border: `1px solid ${guess === n ? "rgba(196,168,220,0.8)" : "rgba(255,201,213,0.3)"}`,
+                  color: guess === n ? "#6B21A8" : "#888",
+                }}
+              >
+                Câu {n}
+              </button>
+            ))}
           </div>
-          {guess !== null && lieIndex !== null && (
+          {guess !== null && (
             <p className="text-xs text-center mt-2 text-ink-soft">
-              {guess === lieIndex ? "Masuri đoán đúng rồi! 🎉" : "Masuri đoán sai 😂 Heo thắng!"}
+              Masuri đoán câu {guess} là bịa — Heo sẽ biết kết quả sau khi Masuri gửi 🎭
             </p>
           )}
         </div>
@@ -163,7 +159,7 @@ export function MasuriLetterReply({
         />
       </div>
 
-      {/* Grammar corrections */}
+      {/* Grammar corrections — only for regular letters */}
       {!isTwoTruths && (
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -171,10 +167,7 @@ export function MasuriLetterReply({
               Gợi ý tiếng Anh (không bắt buộc)
             </p>
             {corrections.length < 3 && (
-              <button
-                onClick={addCorrection}
-                className="text-xs text-purple-500 font-medium"
-              >
+              <button onClick={addCorrection} className="text-xs text-purple-500 font-medium">
                 + Thêm
               </button>
             )}
@@ -191,32 +184,49 @@ export function MasuriLetterReply({
               <div
                 key={i}
                 className="rounded-xl px-3 py-3 space-y-2"
-                style={{ backgroundColor: "rgba(255,249,245,0.9)", border: "1px solid rgba(255,201,213,0.3)" }}
+                style={{
+                  backgroundColor: "rgba(255,249,245,0.9)",
+                  border: "1px solid rgba(255,201,213,0.3)",
+                }}
               >
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-medium text-rose-400">Gợi ý {i + 1}</p>
-                  <button onClick={() => removeCorrection(i)} className="text-xs text-ink-soft">✕</button>
+                  <button onClick={() => removeCorrection(i)} className="text-xs text-ink-soft">
+                    ✕
+                  </button>
                 </div>
                 <input
                   value={c.original_en}
                   onChange={(e) => updateCorrection(i, "original_en", e.target.value)}
                   placeholder="Câu gốc của Heo..."
                   className="w-full text-xs px-2.5 py-1.5 rounded-lg outline-none"
-                  style={{ backgroundColor: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,201,213,0.3)", color: "#888" }}
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.8)",
+                    border: "1px solid rgba(255,201,213,0.3)",
+                    color: "#888",
+                  }}
                 />
                 <input
                   value={c.suggested_en}
                   onChange={(e) => updateCorrection(i, "suggested_en", e.target.value)}
                   placeholder="Gợi ý sửa..."
                   className="w-full text-xs px-2.5 py-1.5 rounded-lg outline-none"
-                  style={{ backgroundColor: "rgba(255,255,255,0.8)", border: "1px solid rgba(196,168,220,0.3)", color: "#4B3A5A" }}
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.8)",
+                    border: "1px solid rgba(196,168,220,0.3)",
+                    color: "#4B3A5A",
+                  }}
                 />
                 <input
                   value={c.vi_explanation}
                   onChange={(e) => updateCorrection(i, "vi_explanation", e.target.value)}
                   placeholder="Giải thích bằng tiếng Việt (tuỳ chọn)..."
                   className="w-full text-xs px-2.5 py-1.5 rounded-lg outline-none"
-                  style={{ backgroundColor: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,201,213,0.2)", color: "#888" }}
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.8)",
+                    border: "1px solid rgba(255,201,213,0.2)",
+                    color: "#888",
+                  }}
                 />
               </div>
             ))}
@@ -224,7 +234,7 @@ export function MasuriLetterReply({
         </div>
       )}
 
-      {/* Send button */}
+      {/* Send */}
       <button
         onClick={send}
         disabled={sending || !canSend}

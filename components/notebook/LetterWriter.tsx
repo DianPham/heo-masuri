@@ -31,23 +31,38 @@ export function LetterWriter() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
 
+  // Load prompt + restore draft on mount
   useEffect(() => {
-    // Load prompt
     fetch("/api/notebook/letter/prompts/today")
       .then((r) => r.json())
       .then(({ prompt: p }) => setPrompt(p))
       .catch(() => {});
 
-    // Restore draft from localStorage
     const saved = localStorage.getItem("letter_draft");
     if (saved) {
       try {
-        const { body: b, mode: m } = JSON.parse(saved);
-        if (b) { setBody(b); setDraft(true); }
-        if (m) setMode(m);
+        const parsed = JSON.parse(saved);
+        if (parsed.mode) setMode(parsed.mode);
+        if (parsed.body) { setBody(parsed.body); setDraft(true); }
+        if (Array.isArray(parsed.truths)) { setTruths(parsed.truths); setDraft(true); }
+        if (parsed.lieIndex) setLieIndex(parsed.lieIndex);
       } catch { /* ignore */ }
     }
   }, []);
+
+  // Auto-save draft 1s after any content change
+  useEffect(() => {
+    const isEmpty = !body.trim() && truths.every((t) => !t.trim());
+    if (isEmpty) return;
+    const timer = setTimeout(() => {
+      localStorage.setItem(
+        "letter_draft",
+        JSON.stringify({ mode, body, truths, lieIndex })
+      );
+      setDraft(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [body, truths, lieIndex, mode]);
 
   function wordCount(text: string) {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -275,7 +290,7 @@ function LetterMode({
       </p>
 
       {draft && (
-        <p className="text-xs text-ink-soft text-center">✓ Đã lưu nháp</p>
+        <p className="text-xs text-ink-soft text-center">✓ Tự động lưu nháp</p>
       )}
 
       {/* Buttons */}
