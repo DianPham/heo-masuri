@@ -54,7 +54,7 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
     setEditCards((prev) =>
       prev.map((c, i) => {
         if (i !== index || c.type !== "exercise") return c;
-        return { ...c, data: { ...(c.data as Record<string, unknown>), ...dataPatch } };
+        return { ...c, data: { ...(c.data as Record<string, unknown>), ...dataPatch } } as unknown as Card;
       })
     );
   }
