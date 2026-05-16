@@ -1,14 +1,15 @@
 "use client";
 
 /**
- * ApprovalUI — Masuri's 15-second page review UI.
- * Three actions: Duyệt / Sửa / Tạo lại.
- * Opened from a Discord link or push notification.
+ * ApprovalUI — Masuri's page review UI.
+ * Three actions: Duyệt / Sửa (inline card editing) / Tạo lại.
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
-import type { Card } from "@/types/notebook";
+import type {
+  Card, IntroCard, WordCard, ReadingCard, ExerciseCard, AskPromptCard, CompletionCard,
+} from "@/types/notebook";
 
 interface DraftPage {
   id: string;
@@ -29,16 +30,36 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
   const [mode, setMode] = useState<"review" | "edit" | "regenerate" | "done">("review");
   const [submitting, setSubmitting] = useState(false);
 
-  // Edit state
+  // Top-level title edits
   const [titleVi, setTitleVi] = useState(page.title_vi);
   const [titleEn, setTitleEn] = useState(page.title_en);
+
+  // Per-card edits (deep copy so mutations don't affect original)
+  const [editCards, setEditCards] = useState<Card[]>(() =>
+    JSON.parse(JSON.stringify(page.cards))
+  );
+
+  // Regenerate hint
   const [hint, setHint] = useState("");
 
   const alreadyApproved = page.status === "approved" || page.status === "published";
   const meta = page.generation_meta ?? {};
   const newVocab = Array.isArray(meta.new_vocab) ? (meta.new_vocab as string[]) : [];
 
-  async function handleApprove(edits?: { title_vi?: string; title_en?: string }) {
+  function updateCard(index: number, patch: Partial<Card>) {
+    setEditCards((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  }
+
+  function updateCardData(index: number, dataPatch: Record<string, unknown>) {
+    setEditCards((prev) =>
+      prev.map((c, i) => {
+        if (i !== index || c.type !== "exercise") return c;
+        return { ...c, data: { ...(c.data as Record<string, unknown>), ...dataPatch } };
+      })
+    );
+  }
+
+  async function handleApprove(edits?: { title_vi?: string; title_en?: string; cards?: Card[] }) {
     if (submitting) return;
     setSubmitting(true);
     try {
@@ -88,11 +109,9 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
           animate={{ scale: 1, opacity: 1 }}
           className="text-5xl"
         >
-          {submitting ? "⏳" : "✅"}
+          ✅
         </motion.div>
-        <p className="text-lg font-bold text-ink">
-          {mode === "done" && !submitting ? "Xong rồi 💕" : "Đang xử lý..."}
-        </p>
+        <p className="text-lg font-bold text-ink">Xong rồi 💕</p>
         <p className="text-sm text-ink-soft">Đang quay về trang sổ...</p>
       </div>
     );
@@ -140,11 +159,11 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
         )}
       </div>
 
-      {/* ── Mode: Edit / Regenerate panels (above cards) ─────── */}
+      {/* ── Edit / Regenerate panels (above cards) ───────────── */}
       <AnimatePresence>
         {mode === "edit" && (
           <motion.div
-            key="edit"
+            key="edit-titles"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -152,22 +171,20 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
             style={{ boxShadow: "0 2px 12px rgba(209,77,111,0.12)" }}
           >
             <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Sửa tiêu đề</p>
-            <div>
-              <label className="text-xs text-ink-soft mb-1 block">Tiêu đề VI</label>
+            <Field label="Tiêu đề VI">
               <input
                 value={titleVi}
                 onChange={(e) => setTitleVi(e.target.value)}
-                className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-rose-50"
+                className="field-input"
               />
-            </div>
-            <div>
-              <label className="text-xs text-ink-soft mb-1 block">Tiêu đề EN</label>
+            </Field>
+            <Field label="Tiêu đề EN">
               <input
                 value={titleEn}
                 onChange={(e) => setTitleEn(e.target.value)}
-                className="w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-rose-50"
+                className="field-input"
               />
-            </div>
+            </Field>
           </motion.div>
         )}
 
@@ -194,11 +211,21 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
         )}
       </AnimatePresence>
 
-      {/* ── Card preview ────────────────────────────────────── */}
+      {/* ── Card list ────────────────────────────────────────── */}
       <div className="px-5 space-y-3 mt-2">
-        {page.cards.map((card, i) => (
-          <CardPreview key={i} card={card} index={i} />
-        ))}
+        {(mode === "edit" ? editCards : page.cards).map((card, i) =>
+          mode === "edit" ? (
+            <EditableCard
+              key={i}
+              card={card}
+              index={i}
+              onChange={(patch) => updateCard(i, patch as Partial<Card>)}
+              onDataChange={(patch) => updateCardData(i, patch)}
+            />
+          ) : (
+            <CardPreview key={i} card={card} index={i} />
+          )
+        )}
       </div>
 
       {/* ── Action bar ──────────────────────────────────────── */}
@@ -245,7 +272,9 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
             </button>
             <button
               type="button"
-              onClick={() => handleApprove({ title_vi: titleVi, title_en: titleEn })}
+              onClick={() =>
+                handleApprove({ title_vi: titleVi, title_en: titleEn, cards: editCards })
+              }
               disabled={submitting}
               className="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-rose-500 disabled:opacity-50 active:scale-95 transition-transform"
               style={{ boxShadow: "0 4px 12px rgba(209,77,111,0.35)" }}
@@ -280,17 +309,33 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
   );
 }
 
-// ── Card preview component ────────────────────────────────────
-function CardPreview({ card, index }: { card: Card; index: number }) {
-  const bg: Record<string, string> = {
-    intro: "#FFE4EA",
-    word: "#FFF9F5",
-    reading: "#F0F7F1",
-    exercise: "#FAF1EA",
-    ask_prompt: "#EDE8F5",
-    completion: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)",
-  };
+// ── Shared field wrapper ──────────────────────────────────────
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-xs text-ink-soft mb-1 block">{label}</label>
+      {children}
+    </div>
+  );
+}
 
+const inputCls =
+  "w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-rose-50";
+const textareaCls =
+  "w-full rounded-xl border border-rose-200 px-3 py-2 text-sm text-ink outline-none focus:border-rose-400 bg-rose-50 resize-none";
+
+// ── Editable card ─────────────────────────────────────────────
+function EditableCard({
+  card,
+  index,
+  onChange,
+  onDataChange,
+}: {
+  card: Card;
+  index: number;
+  onChange: (patch: Record<string, unknown>) => void;
+  onDataChange: (patch: Record<string, unknown>) => void;
+}) {
   const label: Record<string, string> = {
     intro: "Giới thiệu",
     word: "Từ vựng",
@@ -300,13 +345,315 @@ function CardPreview({ card, index }: { card: Card; index: number }) {
     completion: "Hoàn thành",
   };
 
+  const cardBg: Record<string, string> = {
+    intro: "#FFE4EA",
+    word: "#FFF9F5",
+    reading: "#F0F7F1",
+    exercise: "#FAF1EA",
+    ask_prompt: "#EDE8F5",
+    completion: "#FFF0F3",
+  };
+
+  return (
+    <div
+      className="rounded-2xl p-4 space-y-3"
+      style={{ background: cardBg[card.type] ?? "#FFF9F5", boxShadow: "0 2px 8px rgba(58,33,41,0.08)" }}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">
+          {index + 1}. {label[card.type] ?? card.type}
+        </span>
+        {card.type === "exercise" && (
+          <span className="text-xs text-ink-soft">· {card.exercise_type}</span>
+        )}
+      </div>
+
+      {card.type === "intro" && (
+        <IntroEdit card={card} onChange={onChange} />
+      )}
+      {card.type === "word" && (
+        <WordEdit card={card} onChange={onChange} />
+      )}
+      {card.type === "reading" && (
+        <ReadingEdit card={card} onChange={onChange} />
+      )}
+      {card.type === "exercise" && (
+        <ExerciseEdit card={card} onDataChange={onDataChange} />
+      )}
+      {card.type === "ask_prompt" && (
+        <AskPromptEdit card={card} onChange={onChange} />
+      )}
+      {card.type === "completion" && (
+        <CompletionEdit card={card} onChange={onChange} />
+      )}
+    </div>
+  );
+}
+
+function IntroEdit({ card, onChange }: { card: IntroCard; onChange: (p: Record<string, unknown>) => void }) {
+  return (
+    <>
+      <Field label="Tiêu đề VI">
+        <input className={inputCls} value={card.title_vi}
+          onChange={(e) => onChange({ title_vi: e.target.value })} />
+      </Field>
+      <Field label="Phụ đề VI">
+        <input className={inputCls} value={card.subtitle_vi ?? ""}
+          onChange={(e) => onChange({ subtitle_vi: e.target.value })} />
+      </Field>
+    </>
+  );
+}
+
+function WordEdit({ card, onChange }: { card: WordCard; onChange: (p: Record<string, unknown>) => void }) {
+  return (
+    <>
+      <div className="flex gap-2">
+        <Field label="Emoji">
+          <input className={inputCls} value={card.image_emoji ?? ""}
+            onChange={(e) => onChange({ image_emoji: e.target.value })}
+            style={{ width: 64 }} />
+        </Field>
+        <div className="flex-1">
+          <Field label="Từ EN">
+            <input className={inputCls} value={card.word_en}
+              onChange={(e) => onChange({ word_en: e.target.value })} />
+          </Field>
+        </div>
+      </div>
+      <Field label="Nghĩa VI">
+        <input className={inputCls} value={card.word_vi}
+          onChange={(e) => onChange({ word_vi: e.target.value })} />
+      </Field>
+      <Field label="Ví dụ EN">
+        <textarea className={textareaCls} rows={2} value={card.example_en}
+          onChange={(e) => onChange({ example_en: e.target.value })} />
+      </Field>
+      <Field label="Ví dụ VI">
+        <textarea className={textareaCls} rows={2} value={card.example_vi}
+          onChange={(e) => onChange({ example_vi: e.target.value })} />
+      </Field>
+    </>
+  );
+}
+
+function ReadingEdit({ card, onChange }: { card: ReadingCard; onChange: (p: Record<string, unknown>) => void }) {
+  function updateSentenceEn(i: number, val: string) {
+    const next = [...card.sentences_en];
+    next[i] = val;
+    onChange({ sentences_en: next });
+  }
+  function updateSentenceVi(i: number, val: string) {
+    const next = [...card.sentences_vi];
+    next[i] = val;
+    onChange({ sentences_vi: next });
+  }
+  return (
+    <>
+      {card.sentences_en.map((_, i) => (
+        <div key={i} className="space-y-2">
+          <Field label={`Câu ${i + 1} EN`}>
+            <textarea className={textareaCls} rows={2} value={card.sentences_en[i]}
+              onChange={(e) => updateSentenceEn(i, e.target.value)} />
+          </Field>
+          <Field label={`Câu ${i + 1} VI`}>
+            <textarea className={textareaCls} rows={2} value={card.sentences_vi[i] ?? ""}
+              onChange={(e) => updateSentenceVi(i, e.target.value)} />
+          </Field>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function ExerciseEdit({
+  card,
+  onDataChange,
+}: {
+  card: ExerciseCard;
+  onDataChange: (p: Record<string, unknown>) => void;
+}) {
+  const d = card.data as Record<string, unknown>;
+
+  if (card.exercise_type === "word_train") {
+    return (
+      <>
+        <Field label="Câu mục tiêu EN">
+          <textarea className={textareaCls} rows={2} value={d.target_sentence_en as string ?? ""}
+            onChange={(e) => onDataChange({ target_sentence_en: e.target.value })} />
+        </Field>
+        <Field label="Từ xáo trộn (cách nhau bởi dấu phẩy)">
+          <input className={inputCls}
+            value={(d.shuffled_words as string[] ?? []).join(", ")}
+            onChange={(e) =>
+              onDataChange({ shuffled_words: e.target.value.split(",").map((w) => w.trim()).filter(Boolean) })
+            } />
+        </Field>
+        <Field label="Gợi ý VI">
+          <input className={inputCls} value={d.hint_vi as string ?? ""}
+            onChange={(e) => onDataChange({ hint_vi: e.target.value })} />
+        </Field>
+      </>
+    );
+  }
+
+  if (card.exercise_type === "spot_imposter") {
+    return (
+      <>
+        <Field label="Câu EN (có từ sai)">
+          <textarea className={textareaCls} rows={2} value={d.sentence_en as string ?? ""}
+            onChange={(e) => onDataChange({ sentence_en: e.target.value })} />
+        </Field>
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <Field label="Từ sai">
+              <input className={inputCls} value={d.imposter_word as string ?? ""}
+                onChange={(e) => onDataChange({ imposter_word: e.target.value })} />
+            </Field>
+          </div>
+          <div className="flex-1">
+            <Field label="Từ đúng">
+              <input className={inputCls} value={d.correct_word as string ?? ""}
+                onChange={(e) => onDataChange({ correct_word: e.target.value })} />
+            </Field>
+          </div>
+        </div>
+        <Field label="Gợi ý VI">
+          <input className={inputCls} value={d.hint_vi as string ?? ""}
+            onChange={(e) => onDataChange({ hint_vi: e.target.value })} />
+        </Field>
+      </>
+    );
+  }
+
+  if (card.exercise_type === "pig_says") {
+    return (
+      <>
+        <Field label="Gợi ý VI">
+          <input className={inputCls} value={d.prompt_vi as string ?? ""}
+            onChange={(e) => onDataChange({ prompt_vi: e.target.value })} />
+        </Field>
+        <Field label="Câu đúng EN">
+          <textarea className={textareaCls} rows={2} value={d.target_en as string ?? ""}
+            onChange={(e) => onDataChange({ target_en: e.target.value })} />
+        </Field>
+      </>
+    );
+  }
+
+  if (card.exercise_type === "caption_polaroid") {
+    return (
+      <>
+        <Field label="Emoji ảnh">
+          <input className={inputCls} value={d.image_emoji as string ?? ""}
+            onChange={(e) => onDataChange({ image_emoji: e.target.value })} style={{ width: 80 }} />
+        </Field>
+        <Field label="Từ gợi ý (cách nhau bởi dấu phẩy)">
+          <input className={inputCls}
+            value={(d.starter_words as string[] ?? []).join(", ")}
+            onChange={(e) =>
+              onDataChange({ starter_words: e.target.value.split(",").map((w) => w.trim()).filter(Boolean) })
+            } />
+        </Field>
+        <Field label="Ví dụ EN">
+          <textarea className={textareaCls} rows={2} value={d.example_en as string ?? ""}
+            onChange={(e) => onDataChange({ example_en: e.target.value })} />
+        </Field>
+      </>
+    );
+  }
+
+  if (card.exercise_type === "sentence_remix") {
+    return (
+      <>
+        <Field label="Câu gốc EN">
+          <textarea className={textareaCls} rows={2} value={d.base_en as string ?? ""}
+            onChange={(e) => onDataChange({ base_en: e.target.value })} />
+        </Field>
+        <Field label="Câu gốc VI">
+          <input className={inputCls} value={d.base_vi as string ?? ""}
+            onChange={(e) => onDataChange({ base_vi: e.target.value })} />
+        </Field>
+        <Field label="Hướng dẫn VI">
+          <input className={inputCls} value={d.instruction_vi as string ?? ""}
+            onChange={(e) => onDataChange({ instruction_vi: e.target.value })} />
+        </Field>
+        <Field label="Câu đích EN">
+          <textarea className={textareaCls} rows={2} value={d.target_en as string ?? ""}
+            onChange={(e) => onDataChange({ target_en: e.target.value })} />
+        </Field>
+        <Field label="Từ gợi ý (cách nhau bởi dấu phẩy)">
+          <input className={inputCls}
+            value={(d.hint_words as string[] ?? []).join(", ")}
+            onChange={(e) =>
+              onDataChange({ hint_words: e.target.value.split(",").map((w) => w.trim()).filter(Boolean) })
+            } />
+        </Field>
+      </>
+    );
+  }
+
+  // Fallback for unknown exercise types
+  return <p className="text-xs text-ink-soft">Loại bài tập: {card.exercise_type}</p>;
+}
+
+function AskPromptEdit({ card, onChange }: { card: AskPromptCard; onChange: (p: Record<string, unknown>) => void }) {
+  return (
+    <Field label="Gợi ý VI">
+      <input className={inputCls} value={card.suggestion_vi}
+        onChange={(e) => onChange({ suggestion_vi: e.target.value })} />
+    </Field>
+  );
+}
+
+function CompletionEdit({ card, onChange }: { card: CompletionCard; onChange: (p: Record<string, unknown>) => void }) {
+  return (
+    <>
+      <Field label="Từ lưu vào kho (cách nhau bởi dấu phẩy)">
+        <input className={inputCls}
+          value={card.vocab_to_save.join(", ")}
+          onChange={(e) =>
+            onChange({ vocab_to_save: e.target.value.split(",").map((w) => w.trim()).filter(Boolean) })
+          } />
+      </Field>
+      <Field label="Sticker">
+        <select
+          className={inputCls}
+          value={card.sticker_kind}
+          onChange={(e) => onChange({ sticker_kind: e.target.value })}
+        >
+          {[
+            "heart_filled","heart_outline","star_filled","star_outline","sparkle",
+            "bow_pink","bow_butter","flower_rose","flower_daisy","cloud","sun","moon",
+            "coffee_cup","book","pencil","letter","pig_mini",
+          ].map((k) => (
+            <option key={k} value={k}>{k}</option>
+          ))}
+        </select>
+      </Field>
+    </>
+  );
+}
+
+// ── Read-only card preview (review mode) ─────────────────────
+function CardPreview({ card, index }: { card: Card; index: number }) {
+  const bg: Record<string, string> = {
+    intro: "#FFE4EA",
+    word: "#FFF9F5",
+    reading: "#F0F7F1",
+    exercise: "#FAF1EA",
+    ask_prompt: "#EDE8F5",
+    completion: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)",
+  };
+  const label: Record<string, string> = {
+    intro: "Giới thiệu", word: "Từ vựng", reading: "Đọc hiểu",
+    exercise: "Bài tập", ask_prompt: "Gợi ý hỏi", completion: "Hoàn thành",
+  };
+
   return (
     <div
       className="rounded-2xl p-4"
-      style={{
-        background: bg[card.type] ?? "#FFF9F5",
-        boxShadow: "0 2px 8px rgba(58,33,41,0.08)",
-      }}
+      style={{ background: bg[card.type] ?? "#FFF9F5", boxShadow: "0 2px 8px rgba(58,33,41,0.08)" }}
     >
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xs font-bold text-rose-400 uppercase tracking-wider">
@@ -323,7 +670,6 @@ function CardPreview({ card, index }: { card: Card; index: number }) {
           {card.subtitle_vi && <p className="text-sm text-ink-soft mt-0.5">{card.subtitle_vi}</p>}
         </div>
       )}
-
       {card.type === "word" && (
         <div>
           <p className="text-lg font-bold text-ink" style={{ fontFamily: "var(--font-display)" }}>
@@ -335,26 +681,16 @@ function CardPreview({ card, index }: { card: Card; index: number }) {
           <p className="text-xs text-ink-soft">{card.example_vi}</p>
         </div>
       )}
-
       {card.type === "reading" && (
         <div className="space-y-1">
           {card.title_vi && <p className="text-sm font-semibold text-ink">{card.title_vi}</p>}
-          {card.sentences_en.map((s, i) => (
-            <p key={i} className="text-sm text-ink">
-              {s}
-            </p>
-          ))}
+          {card.sentences_en.map((s, i) => <p key={i} className="text-sm text-ink">{s}</p>)}
         </div>
       )}
-
-      {card.type === "exercise" && (
-        <ExercisePreview card={card} />
-      )}
-
+      {card.type === "exercise" && <ExercisePreview card={card} />}
       {card.type === "ask_prompt" && (
         <p className="text-sm text-ink-soft">{card.suggestion_vi}</p>
       )}
-
       {card.type === "completion" && (
         <div>
           <p className="text-sm font-semibold text-rose-700 mb-1">
@@ -362,11 +698,8 @@ function CardPreview({ card, index }: { card: Card; index: number }) {
           </p>
           <div className="flex flex-wrap gap-1.5">
             {card.vocab_to_save.map((w) => (
-              <span
-                key={w}
-                className="text-xs px-2 py-0.5 rounded-full font-medium text-rose-600"
-                style={{ backgroundColor: "rgba(255,201,213,0.3)" }}
-              >
+              <span key={w} className="text-xs px-2 py-0.5 rounded-full font-medium text-rose-600"
+                style={{ backgroundColor: "rgba(255,201,213,0.3)" }}>
                 {w}
               </span>
             ))}
@@ -379,7 +712,6 @@ function CardPreview({ card, index }: { card: Card; index: number }) {
 
 function ExercisePreview({ card }: { card: Extract<Card, { type: "exercise" }> }) {
   const data = card.data as Record<string, unknown>;
-
   return (
     <div className="text-sm text-ink space-y-1">
       {card.exercise_type === "word_train" && (
@@ -393,8 +725,9 @@ function ExercisePreview({ card }: { card: Extract<Card, { type: "exercise" }> }
         <>
           <p>{data.sentence_en as string}</p>
           <p className="text-xs text-ink-soft">
-            Từ sai: <span className="line-through text-rose-400">{data.imposter_word as string}</span>{" "}
-            → <span className="text-green-600">{data.correct_word as string}</span>
+            Từ sai: <span className="line-through text-rose-400">{data.imposter_word as string}</span>
+            {" → "}
+            <span className="text-green-600">{data.correct_word as string}</span>
           </p>
         </>
       )}
@@ -407,9 +740,7 @@ function ExercisePreview({ card }: { card: Extract<Card, { type: "exercise" }> }
       {card.exercise_type === "caption_polaroid" && (
         <>
           <p className="text-2xl">{data.image_emoji as string}</p>
-          <p className="text-xs text-ink-soft">
-            Từ gợi ý: {(data.starter_words as string[])?.join(", ")}
-          </p>
+          <p className="text-xs text-ink-soft">Từ gợi ý: {(data.starter_words as string[])?.join(", ")}</p>
           <p className="text-xs italic">Ví dụ: {data.example_en as string}</p>
         </>
       )}
@@ -420,7 +751,6 @@ function ExercisePreview({ card }: { card: Extract<Card, { type: "exercise" }> }
           <p className="text-xs font-medium text-green-700">→ {data.target_en as string}</p>
         </>
       )}
-      {card.exercise_type === "pig_says" && null}
       {card.exercise_type === "two_truths" && (
         <p className="text-xs text-ink-soft">{data.prompt_vi as string}</p>
       )}
