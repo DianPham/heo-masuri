@@ -15,6 +15,8 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
+const PRIVATE_CACHE = { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" };
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(req: NextRequest) {
@@ -129,7 +131,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ threads: [] });
     }
 
-    return NextResponse.json({ threads: data ?? [] });
+    return NextResponse.json({ threads: data ?? [] }, { headers: PRIVATE_CACHE });
   } catch (err) {
     console.error("[ask GET]", err);
     return NextResponse.json({ threads: [] });

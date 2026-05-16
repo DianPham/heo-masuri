@@ -16,6 +16,8 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
+const PRIVATE_CACHE = { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" };
+
 const SOURCE_KINDS = ["page", "masuri_card", "ask_masuri", "letter"] as const;
 
 export async function GET(req: NextRequest) {
@@ -78,7 +80,7 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ words });
+    return NextResponse.json({ words }, { headers: PRIVATE_CACHE });
   } catch (err) {
     console.error("[vocab GET]", err);
     return NextResponse.json({ words: [] });

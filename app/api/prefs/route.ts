@@ -17,7 +17,9 @@ export async function GET() {
     .eq("user_id", user.id)
     .single();
 
-  return NextResponse.json(data);
+  return NextResponse.json(data, {
+    headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" },
+  });
 }
 
 export async function PUT(req: NextRequest) {
