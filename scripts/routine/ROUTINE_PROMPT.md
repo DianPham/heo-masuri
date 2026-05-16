@@ -1,6 +1,6 @@
 # Claude Code Routine — Heo & Masuri Sổ tiếng Anh
 
-**Schedule:** Daily at 21:00 Asia/Ho_Chi_Minh (14:00 UTC)
+**Schedule:** Daily at 06:00 Asia/Ho_Chi_Minh (23:00 UTC previous day)
 
 Everything goes through the deployed app's API — no direct database access needed.
 
