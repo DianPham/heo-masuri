@@ -31,7 +31,7 @@ export async function POST() {
 
     const { data: row } = await supabase
       .from("streaks")
-      .select("current_streak, longest_streak, last_active_date, rest_days_remaining, rest_replenished_at")
+      .select("current_streak, longest_streak, rest_days_remaining")
       .eq("user_id", heo.id)
       .maybeSingle();
 
@@ -46,20 +46,22 @@ export async function POST() {
 
     const new_rest = current_rest + 1;
 
-    const { error } = await supabase
-      .from("streaks")
-      .upsert(
-        {
-          user_id: heo.id,
-          current_streak: row?.current_streak ?? 0,
-          longest_streak: row?.longest_streak ?? 0,
-          last_active_date: row?.last_active_date ?? null,
-          rest_days_remaining: new_rest,
-          rest_replenished_at: row?.rest_replenished_at ?? new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
+    // Only update rest_days_remaining — don't touch last_active_date or streak counts
+    let dbError;
+    if (row) {
+      const { error } = await supabase
+        .from("streaks")
+        .update({ rest_days_remaining: new_rest, updated_at: new Date().toISOString() })
+        .eq("user_id", heo.id);
+      dbError = error;
+    } else {
+      // No streak row yet — create a minimal one
+      const { error } = await supabase
+        .from("streaks")
+        .insert({ user_id: heo.id, rest_days_remaining: new_rest, updated_at: new Date().toISOString() });
+      dbError = error;
+    }
+    const error = dbError;
 
     if (error) {
       console.error("[grant-rest]", error);
