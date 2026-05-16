@@ -26,6 +26,7 @@ type Letter = {
   delivered_at: string;
   seen_at: string | null;
   created_at: string;
+  hasReply: boolean;
 };
 
 async function fetchLetters(): Promise<Letter[]> {
@@ -43,7 +44,18 @@ async function fetchLetters(): Promise<Letter[]> {
       .order("delivered_at", { ascending: false })
       .limit(50);
 
-    return (data ?? []) as Letter[];
+    if (!data || data.length === 0) return [];
+
+    // Check which letters have a reply from Masuri
+    const ids = data.map((l) => l.id);
+    const { data: replies } = await supabase
+      .from("letters")
+      .select("in_reply_to")
+      .in("in_reply_to", ids);
+
+    const repliedSet = new Set((replies ?? []).map((r) => r.in_reply_to));
+
+    return data.map((l) => ({ ...l, hasReply: repliedSet.has(l.id) })) as Letter[];
   } catch {
     return [];
   }
@@ -141,7 +153,8 @@ export default async function LetterPage() {
             {letters.map((letter) => {
               const fromHeo = letter.kind !== "encouragement" && letter.kind !== "vocab_card";
               const meta = kindLabel(letter.kind, fromHeo);
-              const isUnread = !letter.seen_at && !fromHeo;
+              // Highlight if: letter from Masuri (unread) OR Heo's letter that got a reply
+              const highlight = (!letter.seen_at && !fromHeo) || (fromHeo && letter.hasReply);
 
               return (
                 <Link
@@ -152,17 +165,11 @@ export default async function LetterPage() {
                   <div
                     className="relative rounded-2xl px-4 py-3"
                     style={{
-                      backgroundColor: isUnread ? "rgba(237,232,245,0.7)" : "rgba(255,249,245,0.9)",
-                      border: `1px solid ${isUnread ? "rgba(196,168,220,0.6)" : "rgba(255,201,213,0.3)"}`,
-                      boxShadow: isUnread ? "0 2px 12px rgba(196,168,220,0.2)" : undefined,
+                      backgroundColor: highlight ? "rgba(237,232,245,0.7)" : "rgba(255,249,245,0.9)",
+                      border: `1px solid ${highlight ? "rgba(196,168,220,0.6)" : "rgba(255,201,213,0.3)"}`,
+                      boxShadow: highlight ? "0 2px 12px rgba(196,168,220,0.2)" : undefined,
                     }}
                   >
-                    {isUnread && (
-                      <span
-                        className="absolute top-3 right-3 w-2 h-2 rounded-full"
-                        style={{ backgroundColor: "#C4667A" }}
-                      />
-                    )}
                     <div className="flex items-start gap-2.5">
                       <span style={{ fontSize: 20, flexShrink: 0 }}>{meta.icon}</span>
                       <div className="flex-1 min-w-0">
@@ -172,6 +179,14 @@ export default async function LetterPage() {
                         </p>
                         <p className="text-xs text-ink-soft mt-1.5">{formatDate(letter.delivered_at)}</p>
                       </div>
+                      {fromHeo && (
+                        <span
+                          className="text-xs font-semibold shrink-0 mt-0.5"
+                          style={{ color: letter.hasReply ? "#8B5CF6" : "#ccc" }}
+                        >
+                          {letter.hasReply ? "✓ Có trả lời" : "Chờ..."}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>
