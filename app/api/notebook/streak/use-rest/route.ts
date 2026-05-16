@@ -4,9 +4,8 @@
  *
  * Effect:
  *   - Decrements rest_days_remaining by 1 (must have ≥ 1 to use)
- *   - Appends today to rest_days_used_at[]
  *   - Sets last_active_date = today so tomorrow the streak continues
- *   - Does NOT increment current_streak (a rest is not a study day)
+ *   - Does NOT change current_streak
  *
  * Idempotent: if last_active_date == today already, returns current state.
  */
@@ -38,22 +37,25 @@ export async function POST() {
 
     const today = todayVN();
 
+    // Only select the stable core columns — avoids schema-cache errors on newer columns
     const { data: row } = await supabase
       .from("streaks")
-      .select("current_streak, longest_streak, last_active_date, rest_days_remaining, rest_days_used_at")
+      .select("current_streak, longest_streak, last_active_date, rest_days_remaining")
       .eq("user_id", heo.id)
       .maybeSingle();
 
     // Idempotent — already rested or studied today
     if (row?.last_active_date === today) {
       return NextResponse.json({
-        current_streak: row.current_streak,
-        rest_days_remaining: row.rest_days_remaining ?? 0,
+        current_streak: row.current_streak ?? 0,
+        rest_days_remaining: row.rest_days_remaining ?? 1,
         already_used: true,
       });
     }
 
-    const current_rest = row?.rest_days_remaining ?? 1; // default 1 if column not yet populated
+    const current_streak = row?.current_streak ?? 0;
+    const current_rest = row?.rest_days_remaining ?? 1;
+
     if (current_rest <= 0) {
       return NextResponse.json(
         { error: "Heo không còn ngày nghỉ nào nữa 🥺" },
@@ -61,34 +63,45 @@ export async function POST() {
       );
     }
 
-    const used_at: string[] = Array.isArray(row?.rest_days_used_at)
-      ? [...row.rest_days_used_at, today]
-      : [today];
+    const new_rest = current_rest - 1;
+    const now = new Date().toISOString();
 
-    const { error } = await supabase
-      .from("streaks")
-      .upsert(
-        {
+    let dbError;
+    if (row) {
+      // Row exists — only update the fields we care about
+      const { error } = await supabase
+        .from("streaks")
+        .update({
+          last_active_date: today,
+          rest_days_remaining: new_rest,
+          updated_at: now,
+        })
+        .eq("user_id", heo.id);
+      dbError = error;
+    } else {
+      // No streak row yet — create one (keeps streak at 0, just marks today)
+      const { error } = await supabase
+        .from("streaks")
+        .insert({
           user_id: heo.id,
-          current_streak: row?.current_streak ?? 0,
-          longest_streak: row?.longest_streak ?? 0,
-          last_active_date: today,        // keeps streak alive for tomorrow
-          rest_days_remaining: current_rest - 1,
-          rest_days_used_at: used_at,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
+          current_streak: 0,
+          longest_streak: 0,
+          last_active_date: today,
+          rest_days_remaining: new_rest,
+          updated_at: now,
+        });
+      dbError = error;
+    }
 
-    if (error) {
-      console.error("[use-rest]", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) {
+      console.error("[use-rest]", dbError);
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
     revalidatePath("/heo/notebook");
     return NextResponse.json({
-      current_streak: row?.current_streak ?? 0,
-      rest_days_remaining: current_rest - 1,
+      current_streak,
+      rest_days_remaining: new_rest,
       already_used: false,
     });
   } catch (err) {
