@@ -20,7 +20,7 @@ const PAPER_BG = {
   backgroundColor: "#FFF9F5",
 } as React.CSSProperties;
 
-async function fetchPendingDrafts(): Promise<{ id: string; title_vi: string; scheduled_for: string }[]> {
+async function fetchPendingPages(): Promise<{ id: string; title_vi: string; scheduled_for: string; status: string }[]> {
   try {
     const supabase = createServerClient();
     const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
@@ -28,11 +28,11 @@ async function fetchPendingDrafts(): Promise<{ id: string; title_vi: string; sch
 
     const { data } = await supabase
       .from("daily_pages")
-      .select("id, title_vi, scheduled_for")
+      .select("id, title_vi, scheduled_for, status")
       .eq("for_user", heo.id)
-      .eq("status", "draft")
+      .in("status", ["draft", "approved"])
       .order("scheduled_for", { ascending: true })
-      .limit(5);
+      .limit(10);
 
     return data ?? [];
   } catch {
@@ -65,7 +65,7 @@ async function fetchStreak(): Promise<{ current: number; longest: number; active
 
 export default async function MasuriNotebookPage() {
   const t = await getTranslations("notebook.home");
-  const [streak, pendingDrafts] = await Promise.all([fetchStreak(), fetchPendingDrafts()]);
+  const [streak, pendingDrafts] = await Promise.all([fetchStreak(), fetchPendingPages()]);
 
   return (
     <div style={PAPER_BG} className="min-h-dvh px-5 pb-8 pt-10">
@@ -83,27 +83,37 @@ export default async function MasuriNotebookPage() {
         </div>
       </div>
 
-      {/* ── Pending drafts banner ───────────────────────────── */}
+      {/* ── Draft / approved pages banner ───────────────────── */}
       {pendingDrafts.length > 0 && (
         <div className="mb-4 space-y-2">
-          {pendingDrafts.map((draft) => (
-            <Link
-              key={draft.id}
-              href={`/m/notebook/approve/${draft.id}`}
-              className="flex items-center gap-3 rounded-2xl px-4 py-3 active:scale-[0.98] transition-transform"
-              style={{
-                background: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)",
-                boxShadow: "0 4px 14px rgba(209,77,111,0.25)",
-              }}
-            >
-              <span className="text-xl">📓</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose-800 truncate">{draft.title_vi}</p>
-                <p className="text-xs text-rose-600">{draft.scheduled_for} · chờ duyệt</p>
-              </div>
-              <span className="text-rose-600 font-bold text-sm shrink-0">Duyệt →</span>
-            </Link>
-          ))}
+          {pendingDrafts.map((p) => {
+            const isDraft = p.status === "draft";
+            return (
+              <Link
+                key={p.id}
+                href={`/m/notebook/approve/${p.id}`}
+                className="flex items-center gap-3 rounded-2xl px-4 py-3 active:scale-[0.98] transition-transform"
+                style={
+                  isDraft
+                    ? { background: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)", boxShadow: "0 4px 14px rgba(209,77,111,0.25)" }
+                    : { background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)", boxShadow: "0 4px 14px rgba(16,185,129,0.15)" }
+                }
+              >
+                <span className="text-xl">{isDraft ? "📓" : "✅"}</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-bold truncate ${isDraft ? "text-rose-800" : "text-green-800"}`}>
+                    {p.title_vi}
+                  </p>
+                  <p className={`text-xs ${isDraft ? "text-rose-600" : "text-green-600"}`}>
+                    {p.scheduled_for} · {isDraft ? "chờ duyệt" : "đã duyệt · chờ phát hành 6am"}
+                  </p>
+                </div>
+                <span className={`text-sm font-bold shrink-0 ${isDraft ? "text-rose-600" : "text-green-600"}`}>
+                  {isDraft ? "Duyệt →" : "Xem →"}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       )}
 

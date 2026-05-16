@@ -29,6 +29,9 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
   const router = useRouter();
   const [mode, setMode] = useState<"review" | "edit" | "regenerate" | "done">("review");
   const [submitting, setSubmitting] = useState(false);
+  const [approved, setApproved] = useState(
+    page.status === "approved" || page.status === "published"
+  );
 
   // Top-level title edits
   const [titleVi, setTitleVi] = useState(page.title_vi);
@@ -42,7 +45,7 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
   // Regenerate hint
   const [hint, setHint] = useState("");
 
-  const alreadyApproved = page.status === "approved" || page.status === "published";
+  const alreadyApproved = approved;
   const meta = page.generation_meta ?? {};
   const newVocab = Array.isArray(meta.new_vocab) ? (meta.new_vocab as string[]) : [];
 
@@ -69,8 +72,8 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
         body: JSON.stringify({ page_id: page.id, edits }),
       });
       if (res.ok) {
-        setMode("done");
-        setTimeout(() => router.push("/masuri/notebook"), 2000);
+        setApproved(true);
+        setMode("review");
       }
     } finally {
       setSubmitting(false);
@@ -102,6 +105,7 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
   };
 
   if (mode === "done") {
+    // Regenerate submitted — brief confirmation then back
     return (
       <div style={PAPER_BG} className="min-h-dvh flex flex-col items-center justify-center gap-4 px-6 text-center">
         <motion.div
@@ -109,10 +113,17 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
           animate={{ scale: 1, opacity: 1 }}
           className="text-5xl"
         >
-          ✅
+          🔄
         </motion.div>
-        <p className="text-lg font-bold text-ink">Xong rồi 💕</p>
-        <p className="text-sm text-ink-soft">Đang quay về trang sổ...</p>
+        <p className="text-lg font-bold text-ink">Đã gửi yêu cầu tạo lại 💕</p>
+        <p className="text-sm text-ink-soft">Routine sẽ tạo trang mới vào 9pm tối nay</p>
+        <button
+          type="button"
+          onClick={() => router.push("/masuri/notebook")}
+          className="mt-2 px-6 py-3 rounded-2xl text-sm font-semibold text-rose-500 border-2 border-rose-200"
+        >
+          ← Về trang sổ
+        </button>
       </div>
     );
   }
@@ -233,7 +244,7 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
         className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4"
         style={{ backgroundColor: "rgba(255,249,245,0.95)", backdropFilter: "blur(8px)" }}
       >
-        {mode === "review" && (
+        {mode === "review" && !approved && (
           <div className="flex gap-3">
             <button
               type="button"
@@ -257,6 +268,21 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
               style={{ boxShadow: "0 4px 12px rgba(209,77,111,0.35)" }}
             >
               {submitting ? "..." : "✓ Duyệt"}
+            </button>
+          </div>
+        )}
+
+        {mode === "review" && approved && (
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm font-semibold text-green-700">
+              ✅ Đã duyệt — Heo sẽ thấy lúc 6am nha 🌸
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/masuri/notebook")}
+              className="w-full py-3 rounded-2xl text-sm font-semibold text-rose-500 border-2 border-rose-200 active:scale-95 transition-transform"
+            >
+              ← Về trang sổ
             </button>
           </div>
         )}
