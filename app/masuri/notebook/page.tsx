@@ -8,7 +8,6 @@ import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
 import { MasuriAskInbox } from "@/components/notebook/MasuriAskInbox";
-import { MasuriEncourageButton } from "@/components/notebook/MasuriEncourageButton";
 import { MasuriGrantRestButton } from "@/components/notebook/MasuriGrantRestButton";
 import { createServerClient } from "@/lib/supabase/server";
 
@@ -82,6 +81,54 @@ async function fetchPendingPages(): Promise<{ id: string; title_vi: string; sche
   }
 }
 
+type TodayActivity = {
+  pageCompleted: boolean;
+  pageTitle: string | null;
+  vocabSaved: number;
+  asksToday: number;
+};
+
+async function fetchTodayActivity(): Promise<TodayActivity> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return { pageCompleted: false, pageTitle: null, vocabSaved: 0, asksToday: 0 };
+
+    const todayVN = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+    const todayStart = `${todayVN}T00:00:00+07:00`;
+
+    const [pageRes, vocabRes, askRes] = await Promise.all([
+      supabase
+        .from("daily_pages")
+        .select("title_vi, completed_at")
+        .eq("for_user", heo.id)
+        .gte("completed_at", todayStart)
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("vocabulary")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", heo.id)
+        .gte("created_at", todayStart),
+      supabase
+        .from("ask_masuri_threads")
+        .select("id", { count: "exact", head: true })
+        .eq("from_user", heo.id)
+        .gte("created_at", todayStart),
+    ]);
+
+    return {
+      pageCompleted: Boolean(pageRes.data?.completed_at),
+      pageTitle: (pageRes.data?.title_vi as string) ?? null,
+      vocabSaved: vocabRes.count ?? 0,
+      asksToday: askRes.count ?? 0,
+    };
+  } catch {
+    return { pageCompleted: false, pageTitle: null, vocabSaved: 0, asksToday: 0 };
+  }
+}
+
 async function fetchStreak(): Promise<{ current: number; longest: number; activeToday: boolean; restDays: number }> {
   try {
     const supabase = createServerClient();
@@ -108,10 +155,11 @@ async function fetchStreak(): Promise<{ current: number; longest: number; active
 
 export default async function MasuriNotebookPage() {
   const t = await getTranslations("notebook.home");
-  const [streak, pendingDrafts, heoLetters] = await Promise.all([
+  const [streak, pendingDrafts, heoLetters, todayActivity] = await Promise.all([
     fetchStreak(),
     fetchPendingPages(),
     fetchHeoLetters(),
+    fetchTodayActivity(),
   ]);
 
   return (
@@ -132,40 +180,54 @@ export default async function MasuriNotebookPage() {
 
       {/* ── Draft / approved pages banner ───────────────────── */}
       {pendingDrafts.length > 0 && (
-        <div className="mb-4 space-y-2">
-          {pendingDrafts.map((p) => {
-            const isDraft = p.status === "draft";
-            return (
-              <Link
-                key={p.id}
-                href={`/m/notebook/approve/${p.id}`}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 active:scale-[0.98] transition-transform"
-                style={
-                  isDraft
-                    ? { background: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)", boxShadow: "0 4px 14px rgba(209,77,111,0.25)" }
-                    : { background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)", boxShadow: "0 4px 14px rgba(16,185,129,0.15)" }
-                }
-              >
-                <span className="text-xl">{isDraft ? "📓" : "✅"}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-bold truncate ${isDraft ? "text-rose-800" : "text-green-800"}`}>
-                    {p.title_vi}
-                  </p>
-                  <p className={`text-xs ${isDraft ? "text-rose-600" : "text-green-600"}`}>
-                    {p.scheduled_for} · {isDraft ? "chờ duyệt" : "đã duyệt · chờ phát hành 6am"}
-                  </p>
-                </div>
-                <span className={`text-sm font-bold shrink-0 ${isDraft ? "text-rose-600" : "text-green-600"}`}>
-                  {isDraft ? "Duyệt →" : "Xem →"}
-                </span>
-              </Link>
-            );
-          })}
+        <div className="mb-4">
+          <div className="space-y-2">
+            {pendingDrafts.slice(0, 3).map((p) => {
+              const isDraft = p.status === "draft";
+              return (
+                <Link
+                  key={p.id}
+                  href={`/m/notebook/approve/${p.id}`}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 active:scale-[0.98] transition-transform"
+                  style={
+                    isDraft
+                      ? { background: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)", boxShadow: "0 4px 14px rgba(209,77,111,0.25)" }
+                      : { background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)", boxShadow: "0 4px 14px rgba(16,185,129,0.15)" }
+                  }
+                >
+                  <span className="text-xl">{isDraft ? "📓" : "✅"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-bold truncate ${isDraft ? "text-rose-800" : "text-green-800"}`}>
+                      {p.title_vi}
+                    </p>
+                    <p className={`text-xs ${isDraft ? "text-rose-600" : "text-green-600"}`}>
+                      {p.scheduled_for} · {isDraft ? "chờ duyệt" : "đã duyệt · chờ phát hành 6am"}
+                    </p>
+                  </div>
+                  <span className={`text-sm font-bold shrink-0 ${isDraft ? "text-rose-600" : "text-green-600"}`}>
+                    {isDraft ? "Duyệt →" : "Xem →"}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          {/* Link to full review list */}
+          <Link
+            href="/masuri/notebook/review"
+            className="flex items-center justify-center gap-1.5 mt-2 py-2 rounded-xl text-xs font-semibold text-rose-500 active:opacity-60"
+            style={{ backgroundColor: "rgba(255,201,213,0.12)", border: "1px dashed rgba(255,201,213,0.5)" }}
+          >
+            <span>Xem tất cả trang ({pendingDrafts.length})</span>
+            <span>→</span>
+          </Link>
         </div>
       )}
 
       {/* ── Today's status card ─────────────────────────────── */}
       <StatusCard streak={streak} />
+
+      {/* ── I2: Today activity summary ──────────────────────── */}
+      <TodayActivityCard activity={todayActivity} />
 
       {/* ── Quick actions ───────────────────────────────────── */}
       <div
@@ -181,8 +243,12 @@ export default async function MasuriNotebookPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          {/* Send encouragement — live button */}
-          <MasuriEncourageButton />
+          {/* Send encouragement — full page */}
+          <QuickAction
+            href="/masuri/notebook/encourage"
+            emoji="💕"
+            label="Gửi động lực cho Heo"
+          />
 
           {/* Grant rest day to Heo */}
           <MasuriGrantRestButton currentRestDays={streak.restDays} />
@@ -192,6 +258,14 @@ export default async function MasuriNotebookPage() {
             href="/masuri/notebook/card/new"
             emoji="📖"
             label="Viết thiệp từ vựng cho Heo"
+          />
+
+          {/* Review queued pages */}
+          <QuickAction
+            href="/masuri/notebook/review"
+            emoji="📋"
+            label="Duyệt trang học"
+            note={pendingDrafts.length > 0 ? `${pendingDrafts.length} chờ duyệt` : undefined}
           />
 
           {/* Progress */}
@@ -322,6 +396,67 @@ function StatusRow({ icon, text, dim = false }: { icon: string; text: string; di
     <div className={`flex items-center gap-2.5 ${dim ? "opacity-55" : ""}`}>
       <span style={{ fontSize: 16 }}>{icon}</span>
       <p className="text-sm font-medium text-ink">{text}</p>
+    </div>
+  );
+}
+
+// ── Today activity card (I2) ─────────────────────────────────
+function TodayActivityCard({ activity }: { activity: TodayActivity }) {
+  const { pageCompleted, pageTitle, vocabSaved, asksToday } = activity;
+  const hasAnyActivity = pageCompleted || vocabSaved > 0 || asksToday > 0;
+
+  return (
+    <div
+      className="rounded-2xl p-4 mb-4"
+      style={{
+        backgroundColor: "rgba(237,232,245,0.5)",
+        border: "1px solid rgba(196,168,220,0.35)",
+        boxShadow: "var(--shadow)",
+      }}
+    >
+      <p className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-3">
+        HÔM NAY HEO ĐÃ
+      </p>
+
+      {!hasAnyActivity ? (
+        <p className="text-sm text-ink-soft italic">Heo chưa làm gì hôm nay... 😴</p>
+      ) : (
+        <div className="space-y-2">
+          <ActivityRow
+            icon={pageCompleted ? "✅" : "📓"}
+            text={
+              pageCompleted
+                ? `Hoàn thành trang học${pageTitle ? ` "${pageTitle}"` : ""}`
+                : "Chưa học trang hôm nay"
+            }
+            dim={!pageCompleted}
+          />
+          <ActivityRow
+            icon="📖"
+            text={
+              vocabSaved > 0
+                ? `Lưu ${vocabSaved} từ vựng mới`
+                : "Chưa lưu từ nào"
+            }
+            dim={vocabSaved === 0}
+          />
+          {asksToday > 0 && (
+            <ActivityRow
+              icon="💬"
+              text={`Hỏi Masuri ${asksToday} câu`}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActivityRow({ icon, text, dim = false }: { icon: string; text: string; dim?: boolean }) {
+  return (
+    <div className={`flex items-center gap-2.5 ${dim ? "opacity-45" : ""}`}>
+      <span style={{ fontSize: 15 }}>{icon}</span>
+      <p className="text-sm text-ink">{text}</p>
     </div>
   );
 }

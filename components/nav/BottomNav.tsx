@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Home, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
@@ -10,11 +10,39 @@ import { NotebookIcon } from "@/components/notebook/NotebookIcon";
 
 type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
 
+/** G3: poll for unseen ask replies and show a badge dot on the notebook icon. */
+function useUnseenAskCount(who: "heo" | "masuri") {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (who !== "heo") return;
+
+    let cancelled = false;
+    async function poll() {
+      try {
+        const r = await fetch("/api/notebook/ask/unseen", { cache: "no-store" });
+        if (!cancelled && r.ok) {
+          const d = await r.json();
+          setCount(d.count ?? 0);
+        }
+      } catch { /* ignore */ }
+    }
+
+    poll();
+    // Re-check every 90 seconds while the app is open
+    const id = setInterval(poll, 90_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [who]);
+
+  return count;
+}
+
 export function BottomNav({ who }: { who: "heo" | "masuri" }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const router = useRouter();
   const base = `/${who}`;
+  const unseenAsks = useUnseenAskCount(who);
 
   const links: { href: string; icon: NavIcon; label: string }[] = [
     { href: base, icon: Home as NavIcon, label: t("home") },
@@ -44,6 +72,9 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
             href.endsWith("/notebook")
               ? pathname.startsWith(href)
               : pathname === href;
+          const isNotebook = href.endsWith("/notebook");
+          const showBadge = isNotebook && unseenAsks > 0;
+
           return (
             <Link
               key={href}
@@ -63,6 +94,16 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
                   strokeWidth={active ? 2.2 : 1.6}
                   className={`transition-colors duration-200 ${active ? "text-rose-500" : "text-rose-300"}`}
                 />
+                {/* G3: unseen ask-reply badge */}
+                {showBadge && (
+                  <span
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold"
+                    style={{ backgroundColor: "#E97A95", fontSize: 9, lineHeight: 1 }}
+                    aria-label={`${unseenAsks} câu trả lời mới`}
+                  >
+                    {unseenAsks > 9 ? "9+" : unseenAsks}
+                  </span>
+                )}
               </span>
               <span
                 className={`relative z-10 text-sm font-accent transition-colors duration-200 ${

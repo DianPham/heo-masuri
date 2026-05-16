@@ -17,6 +17,7 @@ const PAPER_BG = {
 } as React.CSSProperties;
 
 type Letter = {
+  _type: "letter";
   id: string;
   from_user: string;
   to_user: string;
@@ -27,40 +28,88 @@ type Letter = {
   seen_at: string | null;
   created_at: string;
   hasReply: boolean;
+  sortDate: string;
 };
 
-async function fetchLetters(): Promise<{ letters: Letter[]; heoId: string | null }> {
+type AskReply = {
+  _type: "ask";
+  id: string;
+  context_word: string | null;
+  question_note: string;
+  reply_text: string;
+  replied_at: string;
+  seen_at: string | null;
+  sortDate: string;
+};
+
+type FeedItem = Letter | AskReply;
+
+async function fetchFeed(): Promise<{ items: FeedItem[]; heoId: string | null }> {
   try {
     const supabase = createServerClient();
     const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
-    if (!heo) return { letters: [], heoId: null };
+    if (!heo) return { items: [], heoId: null };
 
-    const { data } = await supabase
-      .from("letters")
-      .select("id, from_user, to_user, kind, body, in_reply_to, delivered_at, seen_at, created_at")
-      .or(`to_user.eq.${heo.id},from_user.eq.${heo.id}`)
-      .lte("delivered_at", new Date().toISOString())
-      .is("in_reply_to", null)        // top-level only
-      .order("delivered_at", { ascending: false })
-      .limit(50);
+    const [lettersRes, asksRes] = await Promise.all([
+      supabase
+        .from("letters")
+        .select("id, from_user, to_user, kind, body, in_reply_to, delivered_at, seen_at, created_at")
+        .or(`to_user.eq.${heo.id},from_user.eq.${heo.id}`)
+        .lte("delivered_at", new Date().toISOString())
+        .is("in_reply_to", null)
+        .order("delivered_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("ask_masuri_threads")
+        .select("id, context_word, question_note, reply_text, replied_at, seen_at")
+        .eq("from_user", heo.id)
+        .not("reply_text", "is", null)
+        .order("replied_at", { ascending: false })
+        .limit(30),
+    ]);
 
-    if (!data || data.length === 0) return { letters: [], heoId: heo.id };
+    const letterData = lettersRes.data ?? [];
+    const askData = asksRes.data ?? [];
 
-    // Check which of Heo's letters have a reply
-    const ids = data.map((l) => l.id);
-    const { data: replies } = await supabase
-      .from("letters")
-      .select("in_reply_to")
-      .in("in_reply_to", ids);
+    // Check which letters have replies
+    let repliedSet = new Set<string>();
+    if (letterData.length > 0) {
+      const ids = letterData.map((l) => l.id);
+      const { data: replies } = await supabase
+        .from("letters")
+        .select("in_reply_to")
+        .in("in_reply_to", ids);
+      repliedSet = new Set((replies ?? []).map((r) => r.in_reply_to as string));
+    }
 
-    const repliedSet = new Set((replies ?? []).map((r) => r.in_reply_to));
+    const letters: Letter[] = letterData.map((l) => ({
+      _type: "letter" as const,
+      ...l,
+      hasReply: repliedSet.has(l.id),
+      sortDate: l.delivered_at,
+    })) as Letter[];
 
-    return {
-      letters: data.map((l) => ({ ...l, hasReply: repliedSet.has(l.id) })) as Letter[],
-      heoId: heo.id,
-    };
+    const asks: AskReply[] = (askData ?? [])
+      .filter((a) => a.reply_text && a.replied_at)
+      .map((a) => ({
+        _type: "ask" as const,
+        id: a.id,
+        context_word: a.context_word,
+        question_note: a.question_note,
+        reply_text: a.reply_text!,
+        replied_at: a.replied_at!,
+        seen_at: a.seen_at,
+        sortDate: a.replied_at!,
+      }));
+
+    // Merge and sort by date descending
+    const items: FeedItem[] = [...letters, ...asks].sort(
+      (a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime()
+    );
+
+    return { items, heoId: heo.id };
   } catch {
-    return { letters: [], heoId: null };
+    return { items: [], heoId: null };
   }
 }
 
@@ -84,11 +133,16 @@ function formatDate(iso: string): string {
 }
 
 export default async function LetterPage() {
-  const { letters, heoId } = await fetchLetters();
+  const { items, heoId } = await fetchFeed();
   const sunday = isSunday();
 
-  // Unread = letters FROM Masuri that Heo hasn't opened yet
-  const unread = letters.filter((l) => l.from_user !== heoId && !l.seen_at).length;
+  // Unread = letters FROM Masuri unseen + ask replies unseen
+  const unread =
+    items.filter(
+      (item) =>
+        (item._type === "letter" && item.from_user !== heoId && !item.seen_at) ||
+        (item._type === "ask" && !item.seen_at)
+    ).length;
 
   return (
     <div style={PAPER_BG} className="min-h-dvh">
@@ -104,11 +158,11 @@ export default async function LetterPage() {
           className="text-3xl font-bold text-ink text-center mt-4"
           style={{ fontFamily: "var(--font-handwritten)" }}
         >
-          Thư
+          Thư & Trả lời
         </h1>
         {unread > 0 && (
           <p className="text-center text-xs text-rose-400 font-medium mt-1">
-            {unread} thư chưa đọc 💌
+            {unread} chưa đọc 💌
           </p>
         )}
       </div>
@@ -160,24 +214,69 @@ export default async function LetterPage() {
           </Link>
         )}
 
-        {/* ── Letter list ───────────────────────────────────── */}
-        {letters.length === 0 ? (
+        {/* ── Unified feed ─────────────────────────────────── */}
+        {items.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="space-y-3">
-            {letters.map((letter) => {
-              const fromHeo = letter.from_user === heoId;
-              const meta = kindLabel(letter.kind, fromHeo);
-              // Highlight: reply arrived from Masuri (Heo's letter got a reply)
-              //            OR unread letter from Masuri
+            {items.map((item) => {
+              if (item._type === "ask") {
+                // Ask reply in the feed
+                const unseen = !item.seen_at;
+                const preview =
+                  item.reply_text.length > 80
+                    ? item.reply_text.slice(0, 80) + "…"
+                    : item.reply_text;
+                return (
+                  <Link
+                    key={`ask-${item.id}`}
+                    href="/heo/notebook/ask"
+                    className="block active:scale-[0.98] transition-transform"
+                  >
+                    <div
+                      className="relative rounded-2xl px-4 py-3"
+                      style={{
+                        backgroundColor: unseen
+                          ? "rgba(232,242,233,0.8)"
+                          : "rgba(255,249,245,0.9)",
+                        border: `1px solid ${unseen ? "rgba(156,175,136,0.5)" : "rgba(255,201,213,0.3)"}`,
+                        boxShadow: unseen ? "0 2px 12px rgba(156,175,136,0.15)" : undefined,
+                      }}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span style={{ fontSize: 20, flexShrink: 0 }}>💬</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-green-700">
+                            Masuri trả lời câu hỏi
+                            {item.context_word ? ` về "${item.context_word}"` : ""}
+                          </p>
+                          <p className="text-sm text-ink mt-0.5 leading-relaxed">{preview}</p>
+                          <p className="text-xs text-ink-soft mt-1.5">
+                            {formatDate(item.replied_at)}
+                          </p>
+                        </div>
+                        {unseen && (
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0 mt-1.5"
+                            style={{ backgroundColor: "#3A6B2A" }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              }
+
+              // Letter in the feed
+              const fromHeo = item.from_user === heoId;
+              const meta = kindLabel(item.kind, fromHeo);
               const hasNewContent =
-                (fromHeo && letter.hasReply) ||
-                (!fromHeo && !letter.seen_at);
+                (fromHeo && item.hasReply) || (!fromHeo && !item.seen_at);
 
               return (
                 <Link
-                  key={letter.id}
-                  href={`/heo/notebook/letter/${letter.id}`}
+                  key={`letter-${item.id}`}
+                  href={`/heo/notebook/letter/${item.id}`}
                   className="block active:scale-[0.98] transition-transform"
                 >
                   <div
@@ -195,20 +294,20 @@ export default async function LetterPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-ink-soft">{meta.label}</p>
                         <p className="text-sm text-ink mt-0.5 line-clamp-2 leading-relaxed">
-                          {letter.body}
+                          {item.body}
                         </p>
-                        <p className="text-xs text-ink-soft mt-1.5">{formatDate(letter.delivered_at)}</p>
+                        <p className="text-xs text-ink-soft mt-1.5">{formatDate(item.delivered_at)}</p>
                       </div>
                       {/* Status badge */}
                       {fromHeo && (
                         <span
                           className="text-xs font-semibold shrink-0 mt-0.5"
-                          style={{ color: letter.hasReply ? "#8B5CF6" : "#ccc" }}
+                          style={{ color: item.hasReply ? "#8B5CF6" : "#ccc" }}
                         >
-                          {letter.hasReply ? "✓ Masuri trả lời" : "Chờ..."}
+                          {item.hasReply ? "✓ Masuri trả lời" : "Chờ..."}
                         </span>
                       )}
-                      {!fromHeo && !letter.seen_at && (
+                      {!fromHeo && !item.seen_at && (
                         <span
                           className="w-2 h-2 rounded-full shrink-0 mt-1.5"
                           style={{ backgroundColor: "#C4667A" }}

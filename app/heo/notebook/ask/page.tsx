@@ -25,6 +25,7 @@ interface Thread {
   replied_at: string | null;
   seen_at: string | null;
   created_at: string;
+  thanked?: boolean; // client-only, set after tapping Cảm ơn
 }
 
 export default function AskHistoryPage() {
@@ -47,6 +48,13 @@ export default function AskHistoryPage() {
     await fetch(`/api/notebook/ask/${id}/seen`, { method: "POST" }).catch(() => {});
     setThreads((prev) =>
       prev.map((t) => (t.id === id ? { ...t, seen_at: new Date().toISOString() } : t))
+    );
+  }
+
+  async function thankMasuri(id: string) {
+    await fetch(`/api/notebook/ask/${id}/thank`, { method: "POST" }).catch(() => {});
+    setThreads((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, thanked: true, seen_at: t.seen_at ?? new Date().toISOString() } : t))
     );
   }
 
@@ -93,6 +101,7 @@ export default function AskHistoryPage() {
               thread={t}
               index={i}
               onMarkSeen={() => markSeen(t.id)}
+              onThank={() => thankMasuri(t.id)}
             />
           ))}
         </div>
@@ -106,10 +115,12 @@ function ThreadCard({
   thread,
   index,
   onMarkSeen,
+  onThank,
 }: {
   thread: Thread;
   index: number;
   onMarkSeen: () => void;
+  onThank: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasReply = !!thread.reply_text;
@@ -186,6 +197,28 @@ function ThreadCard({
           <Pig pose="thinking" size={16} />
           <span>Masuri đang nghĩ câu trả lời...</span>
         </div>
+      )}
+
+      {/* G4: Thank button — appears after reply is seen */}
+      {hasReply && expanded && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onThank();
+          }}
+          disabled={thread.thanked}
+          className="mt-2 w-full py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
+          style={{
+            backgroundColor: thread.thanked
+              ? "rgba(156,175,136,0.15)"
+              : "rgba(255,201,213,0.2)",
+            border: `1px solid ${thread.thanked ? "rgba(156,175,136,0.3)" : "rgba(255,201,213,0.4)"}`,
+            color: thread.thanked ? "#3A6B2A" : "#C4667A",
+          }}
+        >
+          {thread.thanked ? "💕 Đã cảm ơn Masuri rồi!" : "Cảm ơn Masuri 🤗"}
+        </button>
       )}
 
       {/* Meta */}
