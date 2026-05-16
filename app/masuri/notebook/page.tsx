@@ -213,11 +213,11 @@ export default async function MasuriNotebookPage() {
                 className="flex items-center gap-3 rounded-xl px-3 py-2.5 active:scale-[0.98] transition-transform"
                 style={{
                   backgroundColor: l.hasReply
-                    ? "rgba(255,249,245,0.7)"
-                    : "rgba(255,201,213,0.2)",
+                    ? "rgba(237,232,245,0.7)"
+                    : "rgba(255,249,245,0.5)",
                   border: l.hasReply
-                    ? "1px solid rgba(255,201,213,0.2)"
-                    : "1px solid rgba(255,201,213,0.5)",
+                    ? "1px solid rgba(196,168,220,0.5)"
+                    : "1px solid rgba(255,201,213,0.2)",
                 }}
               >
                 <span style={{ fontSize: 18 }}>
@@ -233,9 +233,9 @@ export default async function MasuriNotebookPage() {
                 </div>
                 <span
                   className="text-xs font-semibold shrink-0"
-                  style={{ color: l.hasReply ? "#aaa" : "#C4667A" }}
+                  style={{ color: l.hasReply ? "#8B5CF6" : "#aaa" }}
                 >
-                  {l.hasReply ? "✓" : "Trả lời →"}
+                  {l.hasReply ? "✓ Đã trả lời" : "Chưa trả lời"}
                 </span>
               </Link>
             ))}
