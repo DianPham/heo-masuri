@@ -17,6 +17,14 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
   experimental: {
     // Next.js 15 defaults staleTimes.dynamic to 0, meaning the client-side
     // router cache never holds RSC payloads for non-static pages — every

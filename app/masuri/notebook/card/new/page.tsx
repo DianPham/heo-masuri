@@ -123,7 +123,7 @@ export default function NewCardPage() {
           }}
         >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Tape color="pink" width={72} length={18} rotate={-1} />
+            <Tape color="pink" width={18} length={72} rotate={-1} />
           </div>
 
           <p

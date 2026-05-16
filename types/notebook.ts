@@ -34,6 +34,8 @@ export type PigSaysData = {
 };
 export type CaptionPolaroidData = {
   image_emoji: string;
+  /** Optional real image URL attached by the Routine. Takes priority over image_emoji. */
+  image_url?: string;
   starter_words: string[];
   example_en: string;
 };

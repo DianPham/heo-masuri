@@ -152,7 +152,7 @@ export default async function LetterPage() {
           ← Sổ
         </Link>
         <div className="absolute top-4 left-1/2 -translate-x-1/2">
-          <Tape color="lilac" width={100} length={22} rotate={-1} />
+          <Tape color="lilac" width={22} length={100} rotate={-1} />
         </div>
         <h1
           className="text-3xl font-bold text-ink text-center mt-4"
@@ -180,7 +180,7 @@ export default async function LetterPage() {
               }}
             >
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <Tape color="lilac" width={56} length={16} rotate={2} />
+                <Tape color="lilac" width={16} length={56} rotate={2} />
               </div>
               <div className="flex items-center gap-4 mt-2">
                 <span style={{ fontSize: 36 }}>📨</span>
@@ -337,7 +337,7 @@ function EmptyState() {
         }}
       >
         <div className="absolute top-[-10px] left-1/2 -translate-x-1/2">
-          <Tape color="lilac" width={56} length={16} rotate={1} />
+          <Tape color="lilac" width={16} length={56} rotate={1} />
         </div>
         <span style={{ fontSize: 48 }}>💌</span>
         <div className="absolute -bottom-3 -left-3 -rotate-12 opacity-60">

@@ -5,6 +5,9 @@
  * Used on /heo/notebook/settings.
  */
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+const TOUR_LS_KEY = "nb_tour_v2_done";
 
 // Topics that Heo can pick from (must match routine generation options)
 const ALL_TOPICS = [
@@ -27,6 +30,7 @@ type Prefs = {
 };
 
 export function NotebookSettings() {
+  const router = useRouter();
   const [prefs, setPrefs] = useState<Prefs>({
     reminder_enabled: false,
     reminder_time: "20:00",
@@ -207,6 +211,27 @@ export function NotebookSettings() {
           Đã lưu 🌸
         </p>
       )}
+
+      {/* ── Tour guide reset ─────────────────────────────────── */}
+      <section className="pt-2 border-t border-rose-100">
+        <p className="text-xs font-semibold text-ink-soft uppercase tracking-widest mb-3">
+          Hướng dẫn
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            try { localStorage.removeItem(TOUR_LS_KEY); } catch { /* ignore */ }
+            router.push("/heo/notebook");
+          }}
+          className="w-full py-3 rounded-2xl text-sm font-semibold text-purple-600 active:scale-95 transition-transform"
+          style={{
+            backgroundColor: "rgba(196,168,220,0.15)",
+            border: "1px solid rgba(196,168,220,0.4)",
+          }}
+        >
+          🗺️ Xem lại hướng dẫn tính năng
+        </button>
+      </section>
     </div>
   );
 }

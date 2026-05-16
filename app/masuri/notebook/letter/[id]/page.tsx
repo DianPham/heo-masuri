@@ -76,7 +76,7 @@ export default async function MasuriLetterPage({ params }: { params: Promise<{ i
         }}
       >
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <Tape color="pink" width={56} length={16} rotate={-2} />
+          <Tape color="pink" width={16} length={56} rotate={-2} />
         </div>
         <p className="text-xs text-ink-soft mb-3 mt-1">{formatDate(letter.delivered_at)}</p>
 
@@ -113,7 +113,7 @@ export default async function MasuriLetterPage({ params }: { params: Promise<{ i
             }}
           >
             <div className="absolute top-0 right-6 -translate-y-1/2">
-              <Tape color="lilac" width={48} length={14} rotate={2} />
+              <Tape color="lilac" width={14} length={48} rotate={2} />
             </div>
             <p
               className="text-sm leading-relaxed whitespace-pre-wrap mt-1"

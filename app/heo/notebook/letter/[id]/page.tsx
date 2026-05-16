@@ -87,7 +87,7 @@ export default async function LetterViewPage({ params }: { params: Promise<{ id:
           }}
         >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Tape color="lilac" width={56} length={16} rotate={-1} />
+            <Tape color="lilac" width={16} length={56} rotate={-1} />
           </div>
 
           <p className="text-xs text-ink-soft mb-3 mt-1">{formatDate(letter.delivered_at)}</p>
@@ -116,7 +116,7 @@ export default async function LetterViewPage({ params }: { params: Promise<{ id:
               }}
             >
               <div className="absolute top-0 right-6 -translate-y-1/2">
-                <Tape color="lilac" width={48} length={14} rotate={2} />
+                <Tape color="lilac" width={14} length={48} rotate={2} />
               </div>
               <p className="text-sm leading-relaxed whitespace-pre-wrap mt-1"
                  style={{ fontFamily: "var(--font-handwritten)", fontSize: 16, color: "#4B3A5A" }}>

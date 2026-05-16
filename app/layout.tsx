@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans, Nunito, Caveat } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans, Nunito, Kalam } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
@@ -24,10 +24,11 @@ const nunito = Nunito({
   display: "swap",
 });
 
-// Caveat: handwritten feel for notebook scrapbook titles and Masuri's letters.
-// Vietnamese diacritics have limited coverage — fall back to Plus Jakarta Sans italic in those contexts.
-const caveat = Caveat({
-  subsets: ["latin"],
+// Kalam: handwritten feel with full Vietnamese support — notebook titles, Masuri's letters, tour guide.
+// Weights: 300 (light), 400 (regular), 700 (bold). All Vietnamese diacritics covered.
+const kalam = Kalam({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "700"],
   variable: "--font-handwritten",
   display: "swap",
 });
@@ -69,7 +70,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${fraunces.variable} ${plusJakartaSans.variable} ${nunito.variable} ${caveat.variable}`}
+      className={`${fraunces.variable} ${plusJakartaSans.variable} ${nunito.variable} ${kalam.variable}`}
     >
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>

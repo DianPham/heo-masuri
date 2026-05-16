@@ -387,7 +387,7 @@ function TodayTile({
       style={{ background: gradient, boxShadow: "var(--shadow-card)" }}
     >
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <Tape color="butter" width={64} length={18} rotate={-3} />
+        <Tape color="butter" width={16} length={56} rotate={-3} />
       </div>
 
       <div className="px-6 pt-8 pb-6 flex items-center gap-5">
@@ -478,8 +478,11 @@ function SectionTile({
         transformOrigin: "center center",
       }}
     >
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%]">
-        <Tape color={tapeColor} width={52} length={14} rotate={0} />
+      {/* Tape: width=short axis (height of strip), length=long axis (width of strip).
+          SVG renders as length×width px. Keep the strip short so it only peeks ~8px
+          into the card — well above the emoji which sits at ~28px from top. */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <Tape color={tapeColor} width={16} length={48} rotate={0} />
       </div>
 
       <span style={{ fontSize: 28 }} className="mt-2">{emoji}</span>

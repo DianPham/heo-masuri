@@ -238,7 +238,7 @@ export default async function MasuriNotebookPage() {
         }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Tape color="butter" width={48} length={14} rotate={-2} />
+          <Tape color="butter" width={14} length={48} rotate={-2} />
           <h2 className="text-base font-bold text-ink ml-2">Hành động nhanh</h2>
         </div>
 
@@ -357,7 +357,7 @@ function StatusCard({
       }}
     >
       <div className="absolute top-[-8px] right-6">
-        <Tape color="pink" width={56} length={16} rotate={-3} />
+        <Tape color="pink" width={16} length={56} rotate={-3} />
       </div>
 
       <p className="text-xs font-semibold text-rose-700 uppercase tracking-wide mb-3">
@@ -486,7 +486,7 @@ function SectionCard({
       }}
     >
       <div className="flex items-center gap-3 mb-3">
-        <Tape color={tape} width={48} length={14} rotate={rotate * -1} />
+        <Tape color={tape} width={14} length={48} rotate={rotate * -1} />
         <span style={{ fontSize: 18 }}>{icon}</span>
         <h2 className="text-base font-bold text-ink">{title}</h2>
       </div>

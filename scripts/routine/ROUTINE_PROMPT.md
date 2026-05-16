@@ -1,6 +1,6 @@
 # Claude Code Routine — Heo & Masuri Sổ tiếng Anh
 
-**Schedule:** Daily at 06:00 Asia/Ho_Chi_Minh (23:00 UTC previous day)
+**Schedule:** Daily at 07:00 Asia/Ho_Chi_Minh (23:00 UTC previous day)
 
 Everything goes through the deployed app's API — no direct database access needed.
 
@@ -110,7 +110,9 @@ Build a JSON object with this exact structure:
             "hints": { "verb": "feel", "noun": "happy" } } }
 
 { "type": "exercise", "exercise_type": "caption_polaroid", "can_skip": true,
-  "data": { "image_emoji": "☕", "starter_words": ["I","drink","morning"],
+  "data": { "image_emoji": "☕",
+            "image_url": "https://images.unsplash.com/photo-xxx?w=600&q=80",
+            "starter_words": ["I","drink","morning"],
             "example_en": "I drink coffee every morning" } }
 
 { "type": "exercise", "exercise_type": "sentence_remix", "can_skip": true,
@@ -127,6 +129,28 @@ Build a JSON object with this exact structure:
 ```
 
 Valid `sticker_kind` values: `heart_filled`, `heart_outline`, `star_filled`, `star_outline`, `sparkle`, `bow_pink`, `bow_butter`, `flower_rose`, `flower_daisy`, `cloud`, `sun`, `moon`, `coffee_cup`, `book`, `pencil`, `letter`, `pig_mini`
+
+### STEP 3b — Fetch image for caption_polaroid (optional but preferred)
+
+If the page includes a `caption_polaroid` exercise, try to find a real photo that fits the scene.
+
+**How to find one:**
+1. Use WebSearch or WebFetch to search Unsplash for a relevant photo:
+   ```
+   https://unsplash.com/s/photos/{keyword}
+   ```
+2. Open the photo page and copy the **direct image URL** — it looks like:
+   ```
+   https://images.unsplash.com/photo-XXXXXXXXXXXX-XXXXXXXXXXXX?w=600&q=80
+   ```
+   Always append `?w=600&q=80` to keep the file small.
+3. Add this as `image_url` in the `caption_polaroid` data.
+
+**Rules:**
+- Only use images from Unsplash (unsplash.com) — they are free for all uses
+- The photo must be safe, warm, and match the exercise scene (food, cafe, nature, etc.)
+- If you cannot find a suitable photo in one attempt, skip `image_url` entirely — the emoji fallback will show instead. Do NOT delay or retry.
+- `image_url` is optional. A missing `image_url` is fine. A broken or wrong URL is not.
 
 ### STEP 4 — Self-critique checklist
 

@@ -138,7 +138,7 @@ export default async function MasuriReviewPage() {
           {drafts.length > 0 && (
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <Tape color="pink" width={40} length={12} rotate={-1} />
+                <Tape color="pink" width={12} length={40} rotate={-1} />
                 <h2 className="text-sm font-bold text-rose-600 uppercase tracking-wide">
                   📓 Chờ duyệt ({drafts.length})
                 </h2>
@@ -155,7 +155,7 @@ export default async function MasuriReviewPage() {
           {approved.length > 0 && (
             <section>
               <div className="flex items-center gap-2 mb-3">
-                <Tape color="mint" width={40} length={12} rotate={1} />
+                <Tape color="mint" width={12} length={40} rotate={1} />
                 <h2 className="text-sm font-bold text-green-700 uppercase tracking-wide">
                   ✅ Đã duyệt ({approved.length})
                 </h2>

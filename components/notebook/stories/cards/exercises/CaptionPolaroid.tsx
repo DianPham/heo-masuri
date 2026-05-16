@@ -3,9 +3,12 @@
 /**
  * CaptionPolaroid — write a creative English caption for an emoji scene.
  * No right/wrong answer — purely creative. Starter word chips help.
+ * If image_url is provided by the Routine, it shows as a real photo.
+ * Falls back to image_emoji if image_url is absent or fails to load.
  */
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
+import Image from "next/image";
 import type { CaptionPolaroidData } from "@/types/notebook";
 
 interface Props {
@@ -14,9 +17,10 @@ interface Props {
 }
 
 export function CaptionPolaroid({ data, onContinue }: Props) {
-  const { image_emoji, starter_words, example_en } = data;
+  const { image_emoji, image_url, starter_words, example_en } = data;
   const [caption, setCaption] = useState("");
   const [shared, setShared] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   function insertWord(w: string) {
     setCaption((prev) => {
@@ -38,12 +42,26 @@ export function CaptionPolaroid({ data, onContinue }: Props) {
           className="relative bg-white rounded-lg px-4 pt-4 pb-8 shadow-md"
           style={{ width: 160, transform: "rotate(-1.5deg)", boxShadow: "0 6px 20px rgba(58,33,41,0.18)" }}
         >
-          <div
-            className="w-full aspect-square rounded flex items-center justify-center text-6xl"
-            style={{ backgroundColor: "rgba(255,249,245,0.8)" }}
-          >
-            {image_emoji}
-          </div>
+          {/* Real photo if Routine attached one; emoji fallback otherwise */}
+          {image_url && !imgError ? (
+            <div className="w-full aspect-square rounded overflow-hidden relative">
+              <Image
+                src={image_url}
+                alt={image_emoji}
+                fill
+                className="object-cover"
+                onError={() => setImgError(true)}
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div
+              className="w-full aspect-square rounded flex items-center justify-center text-6xl"
+              style={{ backgroundColor: "rgba(255,249,245,0.8)" }}
+            >
+              {image_emoji}
+            </div>
+          )}
           <div
             className="absolute bottom-0 left-0 right-0 h-7 rounded-b-lg"
             style={{ backgroundColor: "rgba(255,201,213,0.15)" }}

@@ -129,7 +129,7 @@ export default async function MasuriProgressPage() {
             }}
           >
             <div className="absolute top-[-8px] right-6">
-              <Tape color="pink" width={56} length={16} rotate={-3} />
+              <Tape color="pink" width={16} length={56} rotate={-3} />
             </div>
             <p className="text-xs font-semibold text-rose-700 uppercase tracking-wide mb-4">
               Streak 🔥
@@ -291,7 +291,7 @@ function Section({
       }}
     >
       <div className="flex items-center gap-3 mb-4">
-        <Tape color={tape} width={40} length={12} rotate={-1} />
+        <Tape color={tape} width={12} length={40} rotate={-1} />
         <span style={{ fontSize: 18 }}>{icon}</span>
         <h2 className="text-base font-bold text-ink">{title}</h2>
       </div>

@@ -79,7 +79,7 @@ export default function VocabPage() {
       {/* ── Header ──────────────────────────────────────────── */}
       <div className="relative px-5 pt-10 pb-4">
         <div className="absolute top-4 left-1/2 -translate-x-1/2">
-          <Tape color="butter" width={100} length={22} rotate={1} />
+          <Tape color="butter" width={22} length={100} rotate={1} />
         </div>
         <h1
           className="text-3xl font-bold text-ink text-center mt-4"
@@ -203,7 +203,7 @@ function TopicView({
       {Object.entries(groups).map(([topic, words]) => (
         <div key={topic}>
           <div className="flex items-center gap-2 mb-3">
-            <Tape color="mint" width={40} length={12} rotate={-1} />
+            <Tape color="mint" width={12} length={40} rotate={-1} />
             <h2 className="text-sm font-bold text-ink-soft uppercase tracking-wide">
               {TOPIC_LABEL[topic] ?? topic}
             </h2>

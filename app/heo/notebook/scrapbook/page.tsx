@@ -138,7 +138,7 @@ export default async function ScrapbookPage() {
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="relative px-5 pt-10 pb-6">
         <div className="absolute top-4 left-1/2 -translate-x-1/2">
-          <Tape color="pink" width={100} length={22} rotate={-1} />
+          <Tape color="pink" width={22} length={100} rotate={-1} />
         </div>
         <h1
           className="text-3xl font-bold text-ink text-center mt-4"
@@ -186,7 +186,7 @@ export default async function ScrapbookPage() {
                     >
                       {/* Tape across top */}
                       <div className="absolute top-[-10px] left-1/2 -translate-x-1/2">
-                        <Tape color={tapeColor} width={56} length={16} rotate={rot * -0.5} />
+                        <Tape color={tapeColor} width={16} length={56} rotate={rot * -0.5} />
                       </div>
 
                       {/* Photo area */}
@@ -245,7 +245,7 @@ function EmptyState({ t }: { t: Awaited<ReturnType<typeof getTranslations>> }) {
     <div style={PAPER_BG} className="min-h-dvh">
       <div className="relative px-5 pt-10 pb-6">
         <div className="absolute top-4 left-1/2 -translate-x-1/2">
-          <Tape color="pink" width={100} length={22} rotate={-1} />
+          <Tape color="pink" width={22} length={100} rotate={-1} />
         </div>
         <h1
           className="text-3xl font-bold text-ink text-center mt-4"
@@ -271,7 +271,7 @@ function EmptyState({ t }: { t: Awaited<ReturnType<typeof getTranslations>> }) {
             style={{ backgroundColor: "var(--polaroid-bg)", padding: "12px 12px 36px" }}
           >
             <div className="absolute top-[-10px] left-1/2 -translate-x-1/2">
-              <Tape color="mint" width={64} length={18} rotate={2} />
+              <Tape color="mint" width={18} length={64} rotate={2} />
             </div>
             <div
               className="w-full aspect-square rounded-xl flex items-center justify-center mb-3"
