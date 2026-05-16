@@ -10,7 +10,7 @@ import { Tape } from "@/components/notebook/Tape";
 import { createServerClient } from "@/lib/supabase/server";
 import { ReminderToggle } from "@/components/notebook/ReminderToggle";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 // Paper-dot grid background (CSS radial-gradient dots)
 const PAPER_BG = {

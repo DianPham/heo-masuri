@@ -9,6 +9,7 @@
  *   else                        → reset to 1
  */
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
@@ -81,6 +82,7 @@ export async function POST() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    revalidatePath("/heo/notebook");
     return NextResponse.json({
       current_streak: new_streak,
       longest_streak: new_longest,

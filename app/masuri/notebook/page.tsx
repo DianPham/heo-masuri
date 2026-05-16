@@ -11,7 +11,7 @@ import { MasuriAskInbox } from "@/components/notebook/MasuriAskInbox";
 import { MasuriEncourageButton } from "@/components/notebook/MasuriEncourageButton";
 import { createServerClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const PAPER_BG = {
   backgroundImage:

@@ -12,6 +12,7 @@
  * }
  */
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
@@ -66,5 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidatePath("/masuri/notebook");
+  revalidatePath(`/m/notebook/approve/${page_id}`);
   return NextResponse.json({ ok: true });
 }

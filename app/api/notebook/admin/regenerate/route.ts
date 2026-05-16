@@ -6,6 +6,7 @@
  * Body: { page_id: string, hint?: string }
  */
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
@@ -97,5 +98,6 @@ export async function POST(req: NextRequest) {
     }).catch(() => {});
   }
 
+  revalidatePath("/masuri/notebook");
   return NextResponse.json({ ok: true, archived: page_id, hint: hint ?? null });
 }

@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import { createServerClient } from "@/lib/supabase/server";
 import { startOfDayVN, endOfDayVN, daysUntil, progressPercent } from "@/lib/tz";

@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { ApprovalUI } from "./ApprovalUI";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function ApprovePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

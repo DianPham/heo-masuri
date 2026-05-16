@@ -7,6 +7,7 @@
  * Secured by CRON_SECRET header.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -107,6 +108,12 @@ export async function POST(req: NextRequest) {
         tag: "daily-page",
       }),
     }).catch(() => {});
+  }
+
+  if (published.length > 0) {
+    revalidatePath("/heo/notebook/today");
+    revalidatePath("/heo/notebook");
+    revalidatePath("/masuri/notebook");
   }
 
   return NextResponse.json({ published: published.length, unapproved: unapproved.length });

@@ -9,7 +9,7 @@ import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 const PAPER_BG = {
   backgroundImage:

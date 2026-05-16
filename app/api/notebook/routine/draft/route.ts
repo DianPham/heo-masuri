@@ -7,6 +7,7 @@
  * Body: the full page JSON (same schema as write_draft_page.ts)
  */
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
 
@@ -139,5 +140,6 @@ export async function POST(req: NextRequest) {
     tag: "notebook-review",
   });
 
+  revalidatePath("/masuri/notebook");
   return NextResponse.json({ page_id: pageId, approve_url: approveUrl });
 }
