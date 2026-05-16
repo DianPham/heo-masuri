@@ -21,6 +21,47 @@ const PAPER_BG = {
   backgroundColor: "#FFF9F5",
 } as React.CSSProperties;
 
+async function fetchHeoLetters(): Promise<{
+  id: string;
+  kind: string;
+  body: string;
+  delivered_at: string;
+  hasReply: boolean;
+}[]> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return [];
+
+    const { data: letters } = await supabase
+      .from("letters")
+      .select("id, kind, body, delivered_at")
+      .eq("from_user", heo.id)
+      .in("kind", ["weekly_letter", "two_truths"])
+      .not("delivered_at", "is", null)
+      .order("delivered_at", { ascending: false })
+      .limit(10);
+
+    if (!letters || letters.length === 0) return [];
+
+    // Check which have replies
+    const ids = letters.map((l) => l.id);
+    const { data: replies } = await supabase
+      .from("letters")
+      .select("in_reply_to")
+      .in("in_reply_to", ids);
+
+    const repliedSet = new Set((replies ?? []).map((r) => r.in_reply_to));
+
+    return letters.map((l) => ({
+      ...l,
+      hasReply: repliedSet.has(l.id),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 async function fetchPendingPages(): Promise<{ id: string; title_vi: string; scheduled_for: string; status: string }[]> {
   try {
     const supabase = createServerClient();
@@ -67,7 +108,11 @@ async function fetchStreak(): Promise<{ current: number; longest: number; active
 
 export default async function MasuriNotebookPage() {
   const t = await getTranslations("notebook.home");
-  const [streak, pendingDrafts] = await Promise.all([fetchStreak(), fetchPendingPages()]);
+  const [streak, pendingDrafts, heoLetters] = await Promise.all([
+    fetchStreak(),
+    fetchPendingPages(),
+    fetchHeoLetters(),
+  ]);
 
   return (
     <div style={PAPER_BG} className="min-h-dvh px-5 pb-8 pt-10">
@@ -152,6 +197,51 @@ export default async function MasuriNotebookPage() {
           />
         </div>
       </div>
+
+      {/* ── Heo's letters ─────────────────────────────────── */}
+      <SectionCard tape="lilac" title="Thư của Heo" icon="💌" rotate={-0.5}>
+        {heoLetters.length === 0 ? (
+          <p className="text-sm text-ink-soft text-center py-3">
+            Heo chưa viết thư nào 🌸
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {heoLetters.map((l) => (
+              <Link
+                key={l.id}
+                href={`/masuri/notebook/letter/${l.id}`}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 active:scale-[0.98] transition-transform"
+                style={{
+                  backgroundColor: l.hasReply
+                    ? "rgba(255,249,245,0.7)"
+                    : "rgba(255,201,213,0.2)",
+                  border: l.hasReply
+                    ? "1px solid rgba(255,201,213,0.2)"
+                    : "1px solid rgba(255,201,213,0.5)",
+                }}
+              >
+                <span style={{ fontSize: 18 }}>
+                  {l.kind === "two_truths" ? "🎭" : "📨"}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-ink truncate">
+                    {l.kind === "two_truths" ? "Two Truths and a Lie" : "Thư tuần này"}
+                  </p>
+                  <p className="text-xs text-ink-soft truncate mt-0.5">
+                    {l.body.slice(0, 50)}{l.body.length > 50 ? "…" : ""}
+                  </p>
+                </div>
+                <span
+                  className="text-xs font-semibold shrink-0"
+                  style={{ color: l.hasReply ? "#aaa" : "#C4667A" }}
+                >
+                  {l.hasReply ? "✓" : "Trả lời →"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </SectionCard>
 
       {/* ── Ask Masuri inbox ───────────────────────────────── */}
       <SectionCard
