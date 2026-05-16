@@ -29,7 +29,7 @@ export function MasuriLetterReply({
   const [sent, setSent] = useState(false);
 
   function addCorrection() {
-    if (corrections.length >= 3) return;
+    if (corrections.length >= 2) return; // Blueprint: "chỉ 1-2 câu để Heo không sợ"
     setCorrections([...corrections, { original_en: "", suggested_en: "", vi_explanation: "" }]);
   }
 
@@ -166,7 +166,7 @@ export function MasuriLetterReply({
             <p className="text-xs font-semibold text-ink-soft uppercase tracking-wide">
               Gợi ý tiếng Anh (không bắt buộc)
             </p>
-            {corrections.length < 3 && (
+            {corrections.length < 2 && (
               <button onClick={addCorrection} className="text-xs text-purple-500 font-medium">
                 + Thêm
               </button>

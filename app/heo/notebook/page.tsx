@@ -11,6 +11,66 @@ import { UseRestButton } from "@/components/notebook/UseRestButton";
 
 export const revalidate = 60;
 
+type TodayStatus = {
+  available: boolean;
+  completed: boolean;
+  carry_over: boolean;
+  title_vi?: string;
+};
+
+async function fetchTodayStatus(): Promise<TodayStatus> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return { available: false, completed: false, carry_over: false };
+
+    const today = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+
+    // Today's published page
+    const { data: todayRow } = await supabase
+      .from("daily_pages")
+      .select("title_vi, completed_at, scheduled_for")
+      .eq("for_user", heo.id)
+      .eq("status", "published")
+      .eq("scheduled_for", today)
+      .maybeSingle();
+
+    if (todayRow) {
+      return {
+        available: true,
+        completed: Boolean(todayRow.completed_at),
+        carry_over: false,
+        title_vi: todayRow.title_vi as string,
+      };
+    }
+
+    // Carry-over: most recent unfinished page before today
+    const { data: carryRow } = await supabase
+      .from("daily_pages")
+      .select("title_vi, scheduled_for")
+      .eq("for_user", heo.id)
+      .eq("status", "published")
+      .is("completed_at", null)
+      .lt("scheduled_for", today)
+      .order("scheduled_for", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (carryRow) {
+      return {
+        available: true,
+        completed: false,
+        carry_over: true,
+        title_vi: carryRow.title_vi as string,
+      };
+    }
+
+    return { available: false, completed: false, carry_over: false };
+  } catch {
+    return { available: false, completed: false, carry_over: false };
+  }
+}
+
 async function fetchLetterNudge(): Promise<{ hasLetterThisWeek: boolean; isSunday: boolean }> {
   try {
     const supabase = createServerClient();
@@ -85,8 +145,11 @@ export default async function HeoNotebookPage() {
   const tVocab = await getTranslations("notebook.vocab");
   const tLetter = await getTranslations("notebook.letter");
 
-  const streak = await fetchStreak();
-  const letterNudge = await fetchLetterNudge();
+  const [streak, letterNudge, todayStatus] = await Promise.all([
+    fetchStreak(),
+    fetchLetterNudge(),
+    fetchTodayStatus(),
+  ]);
 
   const nowVN = new Date(Date.now() + 7 * 3_600_000);
   const todayLabel = nowVN.toLocaleDateString("vi-VN", {
@@ -116,11 +179,11 @@ export default async function HeoNotebookPage() {
       <StreakBar {...streak} />
 
       {/* ── Today's page tile ──────────────────────────────── */}
-      <TodayTile openLabel={t("openToday")} todayLabel={t("todayLabel")} />
+      <TodayTile openLabel={t("openToday")} todayLabel={t("todayLabel")} status={todayStatus} />
 
-      {/* ── Letter nudge (Sunday or unsent this week) ──────── */}
-      {(letterNudge.isSunday || !letterNudge.hasLetterThisWeek) && (
-        <LetterNudgeCard hasLetterThisWeek={letterNudge.hasLetterThisWeek} isSunday={letterNudge.isSunday} />
+      {/* ── Letter nudge (Sunday-primary: only on Sunday, and only if no letter yet this week) */}
+      {letterNudge.isSunday && !letterNudge.hasLetterThisWeek && (
+        <LetterNudgeCard />
       )}
 
       {/* ── Section tiles ──────────────────────────────────── */}
@@ -259,14 +322,54 @@ function StreakBar({
 }
 
 // ── Today's page tile ─────────────────────────────────────────
-function TodayTile({ openLabel, todayLabel }: { openLabel: string; todayLabel: string }) {
+function TodayTile({
+  openLabel,
+  todayLabel,
+  status,
+}: {
+  openLabel: string;
+  todayLabel: string;
+  status: TodayStatus;
+}) {
+  // Visual state derived from actual page data
+  const { available, completed, carry_over, title_vi } = status;
+
+  const gradient = completed
+    ? "linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%)"  // green — done
+    : carry_over
+    ? "linear-gradient(135deg, #FFE0B2 0%, #FFCC80 100%)"  // amber — overdue
+    : available
+    ? "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)"  // pink — ready
+    : "linear-gradient(135deg, #F5F5F5 0%, #EEEEEE 100%)"; // grey — no page
+
+  const pigPose = completed ? "cheering" : carry_over ? "thinking" : "studying";
+
+  const headline = completed
+    ? `Heo đã hoàn thành rồi ✅`
+    : carry_over
+    ? `Còn trang chưa học: ${title_vi ?? "hôm trước"} 📓`
+    : available
+    ? (title_vi ? `${title_vi} — đang chờ Heo 📓` : "Trang hôm nay đang chờ Heo 📓")
+    : "Hôm nay chưa có trang mới 💤";
+
+  const btnLabel = completed
+    ? "Xem lại trang hôm nay"
+    : carry_over
+    ? "Học bài còn lại →"
+    : available
+    ? `${openLabel} →`
+    : null;
+
+  const btnColor = completed
+    ? "#5AAF75"
+    : carry_over
+    ? "#E8962A"
+    : "#e87898";
+
   return (
     <div
       className="relative rounded-3xl overflow-hidden mb-4"
-      style={{
-        background: "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)",
-        boxShadow: "var(--shadow-card)",
-      }}
+      style={{ background: gradient, boxShadow: "var(--shadow-card)" }}
     >
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <Tape color="butter" width={64} length={18} rotate={-3} />
@@ -274,47 +377,42 @@ function TodayTile({ openLabel, todayLabel }: { openLabel: string; todayLabel: s
 
       <div className="px-6 pt-8 pb-6 flex items-center gap-5">
         <div className="shrink-0">
-          <Pig pose="studying" size={80} animate />
+          <Pig pose={pigPose} size={80} animate />
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-rose-600 uppercase tracking-wide mb-1">
+          <p
+            className="text-xs font-semibold uppercase tracking-wide mb-1"
+            style={{ color: completed ? "#2E7D32" : carry_over ? "#E65100" : "#C2185B" }}
+          >
             {todayLabel}
           </p>
           <p
-            className="text-xl font-bold text-ink mb-4 leading-snug"
+            className="text-base font-bold text-ink mb-4 leading-snug"
             style={{ fontFamily: "var(--font-handwritten)" }}
           >
-            Trang hôm nay đang chờ Heo 📓
+            {headline}
           </p>
-          <Link
-            href="/heo/notebook/today"
-            className="inline-flex items-center gap-2 bg-rose-500 text-white text-sm font-semibold px-5 py-2.5 rounded-2xl"
-            style={{ boxShadow: "0 4px 12px rgba(209,77,111,0.35)" }}
-          >
-            {openLabel}
-            <span>→</span>
-          </Link>
+          {btnLabel && (
+            <Link
+              href="/heo/notebook/today"
+              className="inline-flex items-center gap-2 text-white text-sm font-semibold px-5 py-2.5 rounded-2xl"
+              style={{
+                backgroundColor: btnColor,
+                boxShadow: `0 4px 12px ${btnColor}55`,
+              }}
+            >
+              {btnLabel}
+            </Link>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ── Letter nudge card ─────────────────────────────────────────
-function LetterNudgeCard({
-  hasLetterThisWeek,
-  isSunday,
-}: {
-  hasLetterThisWeek: boolean;
-  isSunday: boolean;
-}) {
-  if (hasLetterThisWeek) return null;
-
-  const message = isSunday
-    ? "Chủ nhật rồi — viết thư cho Masuri nha Heo 💌"
-    : "Tuần này Heo chưa gửi thư cho Masuri 🌸";
-
+// ── Letter nudge card — Sunday only ──────────────────────────
+function LetterNudgeCard() {
   return (
     <Link
       href="/heo/notebook/letter/write"
@@ -327,7 +425,9 @@ function LetterNudgeCard({
     >
       <span style={{ fontSize: 32 }}>💌</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-ink leading-snug">{message}</p>
+        <p className="text-sm font-semibold text-ink leading-snug">
+          Chủ nhật rồi — viết thư cho Masuri nha Heo 💌
+        </p>
         <p className="text-xs text-purple-500 mt-0.5 font-medium">Viết thư ngay →</p>
       </div>
     </Link>
