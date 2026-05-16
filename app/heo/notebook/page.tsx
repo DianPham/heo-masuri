@@ -11,6 +11,42 @@ import { UseRestButton } from "@/components/notebook/UseRestButton";
 
 export const revalidate = 60;
 
+// ── Letter nudge helpers ──────────────────────────────────────
+function getISOWeek(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+async function fetchLetterNudge(): Promise<{ hasLetterThisWeek: boolean; isSunday: boolean }> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return { hasLetterThisWeek: false, isSunday: false };
+
+    const nowVN = new Date(Date.now() + 7 * 3_600_000);
+    const isSunday = nowVN.getUTCDay() === 0;
+    const weekNum = getISOWeek(nowVN);
+    const year = nowVN.getUTCFullYear();
+    const weekStart = `${year}-W${String(weekNum).padStart(2, "0")}`;
+
+    // Check if Heo sent a letter this ISO week
+    const { data: letters } = await supabase
+      .from("letters")
+      .select("id")
+      .eq("from_user", heo.id)
+      .in("kind", ["weekly_letter", "two_truths"])
+      .gte("created_at", new Date(nowVN.getFullYear(), 0, 1 + (weekNum - 1) * 7 - (nowVN.getUTCDay() || 7) + 1).toISOString())
+      .limit(1);
+
+    return { hasLetterThisWeek: (letters?.length ?? 0) > 0, isSunday };
+  } catch {
+    return { hasLetterThisWeek: false, isSunday: false };
+  }
+}
+
 // Paper-dot grid background
 const PAPER_BG = {
   backgroundImage:
@@ -57,6 +93,7 @@ export default async function HeoNotebookPage() {
   const tLetter = await getTranslations("notebook.letter");
 
   const streak = await fetchStreak();
+  const letterNudge = await fetchLetterNudge();
 
   const nowVN = new Date(Date.now() + 7 * 3_600_000);
   const todayLabel = nowVN.toLocaleDateString("vi-VN", {
@@ -87,6 +124,11 @@ export default async function HeoNotebookPage() {
 
       {/* ── Today's page tile ──────────────────────────────── */}
       <TodayTile openLabel={t("openToday")} todayLabel={t("todayLabel")} />
+
+      {/* ── Letter nudge (Sunday or unsent this week) ──────── */}
+      {(letterNudge.isSunday || !letterNudge.hasLetterThisWeek) && (
+        <LetterNudgeCard hasLetterThisWeek={letterNudge.hasLetterThisWeek} isSunday={letterNudge.isSunday} />
+      )}
 
       {/* ── Section tiles ──────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 mt-4">
@@ -263,6 +305,39 @@ function TodayTile({ openLabel, todayLabel }: { openLabel: string; todayLabel: s
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Letter nudge card ─────────────────────────────────────────
+function LetterNudgeCard({
+  hasLetterThisWeek,
+  isSunday,
+}: {
+  hasLetterThisWeek: boolean;
+  isSunday: boolean;
+}) {
+  if (hasLetterThisWeek) return null;
+
+  const message = isSunday
+    ? "Chủ nhật rồi — viết thư cho Masuri nha Heo 💌"
+    : "Tuần này Heo chưa gửi thư cho Masuri 🌸";
+
+  return (
+    <Link
+      href="/heo/notebook/letter/write"
+      className="flex items-center gap-4 rounded-2xl px-4 py-4 mb-4 active:scale-[0.98] transition-transform"
+      style={{
+        backgroundColor: "rgba(237,232,245,0.7)",
+        border: "1px solid rgba(196,168,220,0.5)",
+        boxShadow: "var(--shadow-card)",
+      }}
+    >
+      <span style={{ fontSize: 32 }}>💌</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-ink leading-snug">{message}</p>
+        <p className="text-xs text-purple-500 mt-0.5 font-medium">Viết thư ngay →</p>
+      </div>
+    </Link>
   );
 }
 
