@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Home, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
@@ -12,6 +13,7 @@ type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; classN
 export function BottomNav({ who }: { who: "heo" | "masuri" }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const router = useRouter();
   const base = `/${who}`;
 
   const links: { href: string; icon: NavIcon; label: string }[] = [
@@ -19,6 +21,12 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
     { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook") },
     { href: `${base}/settings`, icon: Settings as NavIcon, label: t("settings") },
   ];
+
+  // Eagerly prefetch all tab routes on mount so the first tap is instant
+  useEffect(() => {
+    links.forEach(({ href }) => router.prefetch(href));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <nav

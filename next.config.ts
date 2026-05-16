@@ -17,6 +17,17 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Next.js 15 defaults staleTimes.dynamic to 0, meaning the client-side
+    // router cache never holds RSC payloads for non-static pages — every
+    // tab tap triggers a fresh server round-trip (~1.5s). Setting dynamic=30
+    // keeps the payload in the browser cache for 30s so repeat tab switches
+    // are instant. The server-side revalidate still controls freshness.
+    staleTimes: {
+      dynamic: 30,
+      static: 300,
+    },
+  },
 };
 
 export default withPWA(withNextIntl(nextConfig));
