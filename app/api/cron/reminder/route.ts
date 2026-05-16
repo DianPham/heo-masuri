@@ -5,6 +5,10 @@
  *   - reminder_enabled = true in notebook_prefs
  *   - hasn't already studied today (last_active_date != today)
  *
+ * §13 — 3-day silence logic:
+ *   Days 1–2 missed  → normal "Học nha!" reminder
+ *   Days 3+  missed  → softer "Masuri nhớ Heo" message (lower pressure)
+ *
  * Secured by CRON_SECRET header (set in Vercel env).
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -12,6 +16,10 @@ import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
 
 export const dynamic = "force-dynamic";
+
+function daysBetween(a: string, b: string): number {
+  return Math.round((new Date(a).getTime() - new Date(b).getTime()) / 86_400_000);
+}
 
 export async function GET(req: NextRequest) {
   // Verify cron secret
@@ -55,15 +63,30 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ sent: false, reason: "already studied today" });
     }
 
-    // Send reminder
-    await sendPushToUser(heo.id, {
-      title: "Heo ơi, học tiếng Anh chưa? 📓",
-      body: "Trang hôm nay đang chờ Heo nè! Học một chút thôi là xong 🌸",
-      url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/heo/notebook/today`,
-      tag: "reminder",
-    });
+    // ── §13: 3-day silence logic ────────────────────────────────────
+    const lastActive = streak?.last_active_date ?? null;
+    const daysInactive = lastActive ? daysBetween(todayVN, lastActive) : null;
 
-    return NextResponse.json({ sent: true });
+    // After 3+ days of no activity, switch to the softer "Masuri misses Heo" message
+    const isLongSilence = daysInactive !== null && daysInactive >= 3;
+
+    const notification = isLongSilence
+      ? {
+          title: "Masuri nhớ Heo nhiều lắm 💕",
+          body: "Không cần học nhiều đâu nha — một từ thôi cũng được. Heo có thể làm được 🌸",
+          url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/heo/notebook/today`,
+          tag: "reminder-gentle",
+        }
+      : {
+          title: "Heo ơi, học tiếng Anh chưa? 📓",
+          body: "Trang hôm nay đang chờ Heo nè! Học một chút thôi là xong 🌸",
+          url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/heo/notebook/today`,
+          tag: "reminder",
+        };
+
+    await sendPushToUser(heo.id, notification);
+
+    return NextResponse.json({ sent: true, isLongSilence, daysInactive });
   } catch (err) {
     console.error("[cron reminder]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

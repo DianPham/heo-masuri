@@ -1,6 +1,5 @@
 /**
- * /heo/notebook — Notebook home (CP2 shell → CP7 live streak)
- * Shows today's tile, streak, scrapbook/vocab/letter tiles.
+ * /heo/notebook — Notebook home (CP8: streak rest days + settings tile)
  */
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -8,11 +7,11 @@ import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
 import { createServerClient } from "@/lib/supabase/server";
-import { ReminderToggle } from "@/components/notebook/ReminderToggle";
+import { UseRestButton } from "@/components/notebook/UseRestButton";
 
 export const revalidate = 60;
 
-// Paper-dot grid background (CSS radial-gradient dots)
+// Paper-dot grid background
 const PAPER_BG = {
   backgroundImage:
     "radial-gradient(circle, var(--paper-grid) 1.2px, transparent 1.2px)",
@@ -20,15 +19,22 @@ const PAPER_BG = {
   backgroundColor: "#FFF9F5",
 } as React.CSSProperties;
 
-async function fetchStreak(): Promise<{ current: number; longest: number; activeToday: boolean }> {
+type StreakData = {
+  current: number;
+  longest: number;
+  activeToday: boolean;
+  restDays: number;
+};
+
+async function fetchStreak(): Promise<StreakData> {
   try {
     const supabase = createServerClient();
     const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
-    if (!heo) return { current: 0, longest: 0, activeToday: false };
+    if (!heo) return { current: 0, longest: 0, activeToday: false, restDays: 1 };
 
     const { data } = await supabase
       .from("streaks")
-      .select("current_streak, longest_streak, last_active_date")
+      .select("current_streak, longest_streak, last_active_date, rest_days_remaining")
       .eq("user_id", heo.id)
       .maybeSingle();
 
@@ -37,9 +43,10 @@ async function fetchStreak(): Promise<{ current: number; longest: number; active
       current: data?.current_streak ?? 0,
       longest: data?.longest_streak ?? 0,
       activeToday: data?.last_active_date === todayVN,
+      restDays: data?.rest_days_remaining ?? 1,
     };
   } catch {
-    return { current: 0, longest: 0, activeToday: false };
+    return { current: 0, longest: 0, activeToday: false, restDays: 1 };
   }
 }
 
@@ -51,7 +58,6 @@ export default async function HeoNotebookPage() {
 
   const streak = await fetchStreak();
 
-  // Determine today's date in UTC+7
   const nowVN = new Date(Date.now() + 7 * 3_600_000);
   const todayLabel = nowVN.toLocaleDateString("vi-VN", {
     weekday: "long",
@@ -77,10 +83,7 @@ export default async function HeoNotebookPage() {
       </div>
 
       {/* ── Streak bar ─────────────────────────────────────── */}
-      <StreakBar current={streak.current} longest={streak.longest} activeToday={streak.activeToday} />
-
-      {/* ── Daily reminder toggle ───────────────────────────── */}
-      <ReminderToggle />
+      <StreakBar {...streak} />
 
       {/* ── Today's page tile ──────────────────────────────── */}
       <TodayTile openLabel={t("openToday")} todayLabel={t("todayLabel")} />
@@ -121,6 +124,20 @@ export default async function HeoNotebookPage() {
         />
       </div>
 
+      {/* ── Settings link ───────────────────────────────────── */}
+      <Link
+        href="/heo/notebook/settings"
+        className="flex items-center gap-2 mt-5 px-4 py-3 rounded-2xl text-sm text-ink-soft"
+        style={{
+          backgroundColor: "rgba(255,249,245,0.9)",
+          border: "1px solid rgba(255,201,213,0.3)",
+        }}
+      >
+        <span>⚙️</span>
+        <span className="flex-1">Cài đặt thông báo & chủ đề</span>
+        <span className="text-xs opacity-50">→</span>
+      </Link>
+
       {/* ── Decorative stickers ─────────────────────────────── */}
       <div className="flex justify-center gap-6 mt-10 opacity-40">
         <Sticker type="flower_rose" size={28} />
@@ -137,44 +154,69 @@ function StreakBar({
   current,
   longest,
   activeToday,
-}: {
-  current: number;
-  longest: number;
-  activeToday: boolean;
-}) {
-  const hearts = Math.min(current, 5);
+  restDays,
+}: StreakData) {
+  // Clamp hearts to 7 max display
+  const filledHearts = Math.min(current, 7);
+  const totalHearts = 7;
+
+  const subtext = activeToday
+    ? "Hôm nay đã học rồi 🌸"
+    : current === 0
+    ? "Hôm nay mình bắt đầu nha 🌸"
+    : "Học hôm nay để giữ streak nha!";
 
   return (
     <div
-      className="rounded-2xl px-5 py-4 mb-4 flex items-center gap-3"
+      className="rounded-2xl px-5 py-4 mb-4"
       style={{
         background: "rgba(255, 201, 213, 0.25)",
         border: "1px solid rgba(255, 201, 213, 0.5)",
       }}
     >
-      <span style={{ fontSize: 22 }}>🔥</span>
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-ink">
-          Streak: {current} ngày
-          {longest > 1 && current === longest && (
-            <span className="ml-1.5 text-xs text-rose-400 font-medium">(kỷ lục!)</span>
-          )}
-        </p>
-        <p className="text-xs text-ink-soft">
-          {current === 0
-            ? "Hôm nay mình bắt đầu nha 🌸"
-            : activeToday
-            ? "Hôm nay đã học rồi 🌸"
-            : "Học hôm nay để giữ streak nha!"}
-        </p>
+      {/* Top row — flame + streak count + hearts */}
+      <div className="flex items-center gap-3 mb-2">
+        <span style={{ fontSize: 22 }}>🔥</span>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-ink">
+            Streak: {current} ngày
+            {longest > 1 && current === longest && (
+              <span className="ml-1.5 text-xs text-rose-400 font-medium">(kỷ lục!)</span>
+            )}
+          </p>
+          <p className="text-xs text-ink-soft">{subtext}</p>
+        </div>
+        {/* Heart dots — current streak vs max 7 */}
+        <div className="flex gap-0.5">
+          {[...Array(totalHearts)].map((_, i) => (
+            <span key={i} style={{ fontSize: 12, opacity: i < filledHearts ? 1 : 0.18 }}>
+              {i < filledHearts ? "🩷" : "🤍"}
+            </span>
+          ))}
+        </div>
       </div>
-      {/* Hearts: filled = streak days (max 5) */}
-      <div className="flex gap-1">
-        {[...Array(5)].map((_, i) => (
-          <span key={i} style={{ fontSize: 14, opacity: i < hearts ? 1 : 0.2 }}>
-            {i < hearts ? "🩷" : "🤍"}
-          </span>
-        ))}
+
+      {/* Bottom row — best streak + rest day flowers */}
+      <div className="flex items-center justify-between">
+        {longest > 0 && (
+          <p className="text-xs text-ink-soft">
+            Kỷ lục: <span className="font-semibold text-ink">{longest} ngày</span>
+          </p>
+        )}
+
+        {/* Rest day flowers + use-rest button */}
+        <div className="flex items-center gap-2 ml-auto">
+          {restDays > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-ink-soft">Ngày nghỉ:</span>
+              {[...Array(restDays)].map((_, i) => (
+                <span key={i} style={{ fontSize: 14 }}>🌸</span>
+              ))}
+            </div>
+          )}
+          {/* Only show "Heo nghỉ" button if not already active today and has rest days */}
+          {!activeToday && restDays > 0 && <UseRestButton />}
+        </div>
       </div>
     </div>
   );
@@ -190,13 +232,11 @@ function TodayTile({ openLabel, todayLabel }: { openLabel: string; todayLabel: s
         boxShadow: "var(--shadow-card)",
       }}
     >
-      {/* Tape decoration */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <Tape color="butter" width={64} length={18} rotate={-3} />
       </div>
 
       <div className="px-6 pt-8 pb-6 flex items-center gap-5">
-        {/* Pig */}
         <div className="shrink-0">
           <Pig pose="studying" size={80} animate />
         </div>
@@ -254,7 +294,6 @@ function SectionTile({
         transformOrigin: "center center",
       }}
     >
-      {/* Tape across top */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%]">
         <Tape color={tapeColor} width={52} length={14} rotate={0} />
       </div>
