@@ -187,13 +187,18 @@ export default async function MasuriNotebookPage() {
           {/* Grant rest day to Heo */}
           <MasuriGrantRestButton currentRestDays={streak.restDays} />
 
-          {/* Future actions — dimmed */}
+          {/* Vocab card */}
           <QuickAction
-            href="#"
+            href="/masuri/notebook/card/new"
+            emoji="📖"
+            label="Viết thiệp từ vựng cho Heo"
+          />
+
+          {/* Progress */}
+          <QuickAction
+            href="/masuri/notebook/progress"
             emoji="📊"
             label={t("viewProgress")}
-            dimmed
-            note="Sắp có"
           />
         </div>
       </div>
