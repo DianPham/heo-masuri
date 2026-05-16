@@ -53,7 +53,7 @@ export async function POST() {
       });
     }
 
-    const current_rest = row?.rest_days_remaining ?? 0;
+    const current_rest = row?.rest_days_remaining ?? 1; // default 1 if column not yet populated
     if (current_rest <= 0) {
       return NextResponse.json(
         { error: "Heo không còn ngày nghỉ nào nữa 🥺" },
