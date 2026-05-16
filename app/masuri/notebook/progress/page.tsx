@@ -43,8 +43,8 @@ async function fetchProgress() {
         .limit(5),
       supabase
         .from("ask_masuri_threads")
-        .select("id, question_text, replied_at, created_at")
-        .eq("from_user_id", heo.id)
+        .select("id, context_word, question_note, replied_at, created_at")
+        .eq("from_user", heo.id)
         .order("created_at", { ascending: false })
         .limit(5),
     ]);
@@ -71,7 +71,11 @@ async function fetchProgress() {
       })),
       recentAsks: (asksRes.data ?? []).map((a) => ({
         id: a.id as string,
-        question_text: a.question_text as string,
+        question_text: a.question_note
+          ? (a.question_note as string)
+          : a.context_word
+          ? `Giải thích từ "${a.context_word}"`
+          : "Câu hỏi",
         answered_at: a.replied_at as string | null,
         created_at: a.created_at as string,
       })),

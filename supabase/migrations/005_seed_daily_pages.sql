@@ -23,7 +23,7 @@ begin
   select
     heo_id, '2026-05-18', 'greeting', 1,
     'Chào buổi sáng', 'Good Morning',
-    'published', 'seed',
+    'published', 'manual',
     '[
       {
         "type": "intro",
@@ -106,7 +106,7 @@ begin
   select
     heo_id, '2026-05-19', 'feelings', 1,
     'Hôm nay Heo cảm thấy gì?', 'How Do You Feel Today?',
-    'published', 'seed',
+    'published', 'manual',
     '[
       {
         "type": "intro",
@@ -199,7 +199,7 @@ begin
   select
     heo_id, '2026-05-20', 'food', 1,
     'Buổi cà phê', 'Coffee Date',
-    'published', 'seed',
+    'published', 'manual',
     '[
       {
         "type": "intro",
@@ -284,7 +284,7 @@ begin
   select
     heo_id, '2026-05-21', 'review', 1,
     'Heo đang giỏi rồi nè!', 'You Are Doing So Well!',
-    'published', 'seed',
+    'published', 'manual',
     '[
       {
         "type": "intro",
@@ -351,7 +351,7 @@ begin
   select
     heo_id, '2026-05-22', 'daily', 2,
     'Một ngày của Heo', 'A Day in Heo''s Life',
-    'published', 'seed',
+    'published', 'manual',
     '[
       {
         "type": "intro",
@@ -438,7 +438,7 @@ begin
   select
     heo_id, '2026-05-23', 'weather', 1,
     'Trời hôm nay đẹp ghê', 'The Weather Today',
-    'published', 'seed',
+    'published', 'manual',
     '[
       {
         "type": "intro",
@@ -523,7 +523,7 @@ begin
   select
     heo_id, '2026-05-24', 'feelings', 2,
     'Heo và Masuri', 'Heo and Masuri',
-    'published', 'seed',
+    'published', 'manual',
     '[
       {
         "type": "intro",

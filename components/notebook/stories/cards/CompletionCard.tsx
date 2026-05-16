@@ -1,15 +1,19 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
-import type { CompletionCard as CompletionCardType } from "@/types/notebook";
+import type { CompletionCard as CompletionCardType, WordCard } from "@/types/notebook";
 
 interface CompletionCardProps {
   card: CompletionCardType;
   pageTitle: string;
+  pageId: string;
+  wordCards: WordCard[];          // word cards from the same page — used to look up translations
+  onReview: () => void;           // navigate back to card 0 (re-read mode)
+  isReview?: boolean;             // true when in scrapbook re-read — skip streak bump + vocab save
 }
 
 interface StreakResult {
@@ -18,16 +22,50 @@ interface StreakResult {
   already_counted: boolean;
 }
 
-export function CompletionCard({ card, pageTitle }: CompletionCardProps) {
+export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, isReview = false }: CompletionCardProps) {
   const router = useRouter();
   const [streak, setStreak] = useState<StreakResult | null>(null);
+  const vocabSaved = useRef(false);
 
-  // Bump streak once when this card mounts
+  // On mount: bump streak + auto-save vocab_to_save words to DB
+  // Skip both when in review (scrapbook re-read) mode.
   useEffect(() => {
+    if (isReview) return;
+
+    // Bump streak
     fetch("/api/notebook/streak/bump", { method: "POST" })
       .then((r) => r.json())
       .then((data: StreakResult) => setStreak(data))
       .catch(() => {});
+
+    // Auto-save vocab — dedupe so double-mount doesn't duplicate
+    if (vocabSaved.current || card.vocab_to_save.length === 0) return;
+    vocabSaved.current = true;
+
+    // Build word lookup map from page's word cards
+    const wordMap = new Map<string, WordCard>();
+    for (const wc of wordCards) {
+      wordMap.set(wc.word_en.toLowerCase(), wc);
+    }
+
+    // Fire one POST per word (upsert — safe to replay)
+    for (const wordEn of card.vocab_to_save) {
+      const wc = wordMap.get(wordEn.toLowerCase());
+      fetch("/api/notebook/vocab", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          word_en: wordEn,
+          word_vi: wc?.word_vi ?? "",
+          example_en: wc?.example_en ?? undefined,
+          example_vi: wc?.example_vi ?? undefined,
+          pos: wc?.pos ?? undefined,
+          source_page_id: pageId,
+          source_kind: "page",
+        }),
+      }).catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const streakDay = streak?.current_streak ?? 0;
@@ -51,7 +89,7 @@ export function CompletionCard({ card, pageTitle }: CompletionCardProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25 }}
         >
-          Heo giỏi quá! 🌸
+          {isReview ? "Xem lại xong rồi 🌸" : "Heo giỏi quá! 🌸"}
         </motion.h1>
         <motion.p
           className="text-sm text-ink-soft text-center"
@@ -59,7 +97,7 @@ export function CompletionCard({ card, pageTitle }: CompletionCardProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.35 }}
         >
-          {pageTitle} — xong rồi nè
+          {pageTitle} — {isReview ? "trang này Heo đã hoàn thành rồi" : "xong rồi nè"}
         </motion.p>
       </motion.div>
 
@@ -106,7 +144,7 @@ export function CompletionCard({ card, pageTitle }: CompletionCardProps) {
           <p className="text-xs text-rose-400 font-semibold">Sticker mới 🎉</p>
         </div>
 
-        {/* Vocab saved */}
+        {/* Vocab saved (now actually saved to DB) */}
         {card.vocab_to_save.length > 0 && (
           <div
             className="w-full rounded-2xl p-4"
@@ -116,7 +154,7 @@ export function CompletionCard({ card, pageTitle }: CompletionCardProps) {
             }}
           >
             <p className="text-xs font-semibold text-rose-500 mb-2 text-center">
-              Đã lưu {card.vocab_to_save.length} từ mới vào sổ
+              Đã lưu {card.vocab_to_save.length} từ mới vào sổ 📖
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {card.vocab_to_save.map((word) => (
@@ -133,13 +171,22 @@ export function CompletionCard({ card, pageTitle }: CompletionCardProps) {
         )}
       </motion.div>
 
-      {/* Action buttons */}
+      {/* Action buttons — blueprint §7: three buttons */}
       <motion.div
         className="flex flex-col gap-3 w-full"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
       >
+        {/* Blueprint §7: first button — review this page */}
+        <button
+          type="button"
+          data-no-nav="true"
+          onClick={onReview}
+          className="w-full py-3 rounded-2xl text-sm font-semibold text-rose-500 border-2 border-rose-300"
+        >
+          Xem lại trang này 📖
+        </button>
         <button
           type="button"
           data-no-nav="true"
@@ -153,7 +200,7 @@ export function CompletionCard({ card, pageTitle }: CompletionCardProps) {
           type="button"
           data-no-nav="true"
           onClick={() => router.push("/heo/notebook")}
-          className="w-full py-3 rounded-2xl text-sm font-semibold text-rose-500 border border-rose-200"
+          className="w-full py-3 rounded-2xl text-sm font-semibold text-rose-400 border border-rose-200"
         >
           Quay lại trang chủ sổ
         </button>

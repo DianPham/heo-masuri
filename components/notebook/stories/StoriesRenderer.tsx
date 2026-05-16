@@ -17,7 +17,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { DailyPage } from "@/types/notebook";
+import type { DailyPage, WordCard as WordCardType } from "@/types/notebook";
 import { buildViMap } from "@/lib/notebook/test-page";
 import { StoriesProgress } from "./StoriesProgress";
 import { IntroCard } from "./cards/IntroCard";
@@ -55,14 +55,19 @@ const cardVariants = {
 
 interface StoriesRendererProps {
   page: DailyPage;
+  /** true when viewing an already-completed page from the scrapbook */
+  isReview?: boolean;
 }
 
-export function StoriesRenderer({ page }: StoriesRendererProps) {
+export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps) {
   const router = useRouter();
   const storageKey = `notebook_progress_${page.id}`;
   const viMap = buildViMap(page);
   const cards = page.cards;
   const total = cards.length;
+
+  // Extract word cards once for CompletionCard vocab auto-save
+  const wordCards = cards.filter((c): c is WordCardType => c.type === "word");
 
   // ── Card state ─────────────────────────────────────────────────
   const [current, setCurrent] = useState(0);
@@ -186,6 +191,23 @@ export function StoriesRenderer({ page }: StoriesRendererProps) {
       setTooHardToast(false);
       if (current < total - 1) goForward();
     }, 2500);
+
+    // Blueprint §7: ping Masuri (rate-limited: max 1 per page per day).
+    // Client-side guard via localStorage so we don't even hit the server on subsequent taps.
+    const today = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+    const lsKey = `toohardPinged_${page.id}_${today}`;
+    try {
+      if (!localStorage.getItem(lsKey)) {
+        localStorage.setItem(lsKey, "1");
+        fetch("/api/notebook/too-hard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ page_id: page.id, card_index: current }),
+        }).catch(() => {});
+      }
+    } catch {
+      // ignore localStorage errors
+    }
   }
 
   // ── Render card ───────────────────────────────────────────────
@@ -213,7 +235,16 @@ export function StoriesRenderer({ page }: StoriesRendererProps) {
       case "ask_prompt":
         return <AskPromptCard card={card} />;
       case "completion":
-        return <CompletionCard card={card} pageTitle={page.title_vi} />;
+        return (
+          <CompletionCard
+            card={card}
+            pageTitle={page.title_vi}
+            pageId={page.id}
+            wordCards={wordCards}
+            onReview={() => goTo(0, -1)}
+            isReview={isReview}
+          />
+        );
       default:
         return null;
     }

@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         to_user: masuri.id,
         context_word: word_en,
         question_note: question_text || `Giải thích từ "${word_en}" giúp Heo nha 💕`,
+        context_source: source_page_id ? { page_id: source_page_id } : null,
       })
       .select("id")
       .single();
@@ -81,6 +82,42 @@ export async function POST(req: NextRequest) {
       url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/masuri/notebook/ask/${data.id}`,
       tag: "ask",
     });
+
+    // Discord webhook — notify Masuri in #notebook-ask channel
+    const discordUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_ASK;
+    if (discordUrl) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+      const description = word_en
+        ? `**${word_en}**${question_text ? `\n\n💬 ${question_text}` : ""}`
+        : question_text;
+      fetch(discordUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "Heo (Sổ tiếng Anh)",
+          embeds: [
+            {
+              title: "📓 Heo hỏi Masuri",
+              description,
+              color: 0xf8b4c4,
+            },
+          ],
+          components: [
+            {
+              type: 1,
+              components: [
+                {
+                  type: 2,
+                  style: 5,
+                  label: "Trả lời 💕",
+                  url: `${appUrl}/masuri/notebook/ask/${data.id}`,
+                },
+              ],
+            },
+          ],
+        }),
+      }).catch((err) => console.error("[ask discord]", err));
+    }
 
     // Realtime broadcast
     await supabase.channel("couple").send({
