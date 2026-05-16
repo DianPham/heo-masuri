@@ -164,17 +164,14 @@ export default async function HeoNotebookPage() {
   return (
     <div style={PAPER_BG} className="min-h-dvh px-5 pb-8 pt-10">
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-4 mb-8">
-        <Pig pose="studying" size={72} animate />
-        <div>
-          <h1
-            className="text-2xl font-bold text-ink leading-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {t("title")}
-          </h1>
-          <p className="text-sm text-ink-soft mt-0.5">{todayLabel}</p>
-        </div>
+      <div className="mb-8">
+        <h1
+          className="text-2xl font-bold text-ink leading-tight"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {t("title")}
+        </h1>
+        <p className="text-sm text-ink-soft mt-0.5">{todayLabel}</p>
       </div>
 
       {/* ── Streak bar ─────────────────────────────────────── */}
