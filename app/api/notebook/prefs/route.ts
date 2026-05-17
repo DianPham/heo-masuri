@@ -31,7 +31,7 @@ export async function GET() {
 
     return NextResponse.json(
       { preferred_topics: data?.preferred_topics ?? [] },
-      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" } }
+      { headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {
     console.error("[notebook/prefs GET]", err);

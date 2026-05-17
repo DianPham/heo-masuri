@@ -28,10 +28,10 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        enabled: data?.reminder_enabled ?? false,
-        time: data?.reminder_time ? data.reminder_time.slice(0, 5) : null, // "HH:MM"
+        enabled: data?.reminder_enabled ?? true,   // default ON
+        time: data?.reminder_time ? data.reminder_time.slice(0, 5) : "20:00",
       },
-      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" } }
+      { headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {
     console.error("[reminder GET]", err);

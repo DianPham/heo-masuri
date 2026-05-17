@@ -32,7 +32,7 @@ type Prefs = {
 export function NotebookSettings() {
   const router = useRouter();
   const [prefs, setPrefs] = useState<Prefs>({
-    reminder_enabled: false,
+    reminder_enabled: true,   // default ON until server responds
     reminder_time: "20:00",
     preferred_topics: [],
   });
