@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   // Find next_needed_date: the first future date with no lesson queued.
   // Cap: if already 3+ days ahead are covered, routine should skip.
-  const MAX_BUFFER = 3;
+  const MAX_BUFFER = 2;
   const { data: queuedPages } = await supabase
     .from("daily_pages")
     .select("scheduled_for")

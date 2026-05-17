@@ -2,9 +2,9 @@
 
 **Schedule:** Any time daily — morning is fine.
 
-> The routine now maintains a 3-day buffer. It always creates a lesson for the
+> The routine now maintains a 2-day buffer. It always creates a lesson for the
 > next uncovered date, so it does not matter when Heo finishes her current lesson.
-> If all 3 slots are already filled, the routine skips silently.
+> If both slots are already filled, the routine skips silently.
 
 Everything goes through the deployed app's API — no direct database access needed.
 
