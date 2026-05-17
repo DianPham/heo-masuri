@@ -32,18 +32,27 @@ export async function GET(req: NextRequest) {
     .slice(0, 10);
 
   // Find next_needed_date: the first future date with no lesson queued.
-  // Cap: if already 3+ days ahead are covered, routine should skip.
+  // Cap: if already MAX_BUFFER days ahead are covered, routine should skip.
   const MAX_BUFFER = 2;
+
+  // Compute tomorrow's date string in VN timezone for the gte filter
+  const tomorrowVN = new Date(Date.now() + 7 * 3_600_000 + 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+
   const { data: queuedPages } = await supabase
     .from("daily_pages")
     .select("scheduled_for")
     .eq("for_user", heoId)
     .in("status", ["draft", "approved", "published"])
-    .gt("scheduled_for", todayVN)
+    .gte("scheduled_for", tomorrowVN)   // gte tomorrow (avoids date vs text operator edge cases)
     .order("scheduled_for", { ascending: true })
     .limit(MAX_BUFFER + 1);
 
-  const queuedDates = new Set((queuedPages ?? []).map((p) => p.scheduled_for));
+  // Normalize to plain YYYY-MM-DD strings (Supabase date columns may return Date objects)
+  const queuedDates = new Set(
+    (queuedPages ?? []).map((p) => String(p.scheduled_for).slice(0, 10))
+  );
 
   // Walk forward from tomorrow until we find a gap, up to MAX_BUFFER days ahead
   let next_needed_date: string | null = null;
