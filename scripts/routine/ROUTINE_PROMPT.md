@@ -1,6 +1,10 @@
 # Claude Code Routine — Heo & Masuri Sổ tiếng Anh
 
-**Schedule:** Daily at 07:00 Asia/Ho_Chi_Minh (23:00 UTC previous day)
+**Schedule:** Any time daily — morning is fine.
+
+> The routine now maintains a 3-day buffer. It always creates a lesson for the
+> next uncovered date, so it does not matter when Heo finishes her current lesson.
+> If all 3 slots are already filled, the routine skips silently.
 
 Everything goes through the deployed app's API — no direct database access needed.
 
@@ -35,20 +39,21 @@ curl -s "$APP_URL/api/notebook/routine/state" \
 ```
 
 Parse the JSON output. You will receive:
-- `unfinished_page` — **check this first.** If not null, Heo has not finished a previous lesson.
-- `tomorrow` — the date string to use for `scheduled_for`
+- `next_needed_date` — **check this first.** The first future date with no lesson queued. If `null`, 3 days are already covered — stop.
+- `queued_dates` — dates that already have a lesson (draft/approved/published). For your reference.
 - `last_pages` — recent 7 published pages (avoid repeating topic immediately)
 - `recent_vocab` — words she has saved (bias content to use these — recognition is rewarding)
 - `low_confidence_vocab` — words she rated "show me again" (weave in invisibly)
 - `preferred_topics` — her preferred topic tags
-- `[MASURI_HINT]` — if present, this is Masuri's instruction for today's page. **Honor it.**
+- `[MASURI_HINT]` — if present, this is Masuri's instruction for the next page. **Honor it.**
 
-**⚠️ If `unfinished_page` is not null: stop immediately.**
-Print: `SKIP — Heo chưa hoàn thành bài "${unfinished_page.title_vi}" (${unfinished_page.scheduled_for}). Không tạo bài mới.`
+**⚠️ If `next_needed_date` is null: stop immediately.**
+Print: `SKIP — Buffer full. Already have lessons queued for 3 days ahead. Nothing to do.`
 Do not proceed to Step 2. Do nothing else.
 
 ### STEP 2 — Plan tomorrow's page
 
+- Use `next_needed_date` as the `scheduled_for` value for this lesson
 - Pick ONE topic from `preferred_topics`, biased away from the last 3 topics in `last_pages`
 - Pick difficulty 1 or 2 (rarely 3)
 - Choose 3–5 NEW vocabulary words (not in `recent_vocab`)
@@ -60,7 +65,7 @@ Build a JSON object with this exact structure:
 
 ```json
 {
-  "scheduled_for": "<tomorrow from Step 1>",
+  "scheduled_for": "<next_needed_date from Step 1>",
   "title_vi": "...",
   "title_en": "...",
   "topic": "...",

@@ -130,6 +130,7 @@ export async function POST() {
     }
 
     revalidatePath("/heo/notebook");
+
     return NextResponse.json({
       current_streak: new_streak,
       longest_streak: new_longest,

@@ -26,21 +26,37 @@ export async function GET(req: NextRequest) {
 
   const heoId = heo.id;
 
-  // Tomorrow in VN timezone
-  const tomorrowVN = new Date(Date.now() + 7 * 3_600_000 + 86_400_000)
+  // Today in VN timezone
+  const todayVN = new Date(Date.now() + 7 * 3_600_000)
     .toISOString()
     .slice(0, 10);
 
-  // Check for unfinished published lesson — if present, routine should skip today
-  const { data: unfinishedPage } = await supabase
+  // Find next_needed_date: the first future date with no lesson queued.
+  // Cap: if already 3+ days ahead are covered, routine should skip.
+  const MAX_BUFFER = 3;
+  const { data: queuedPages } = await supabase
     .from("daily_pages")
-    .select("id, title_vi, scheduled_for")
+    .select("scheduled_for")
     .eq("for_user", heoId)
-    .eq("status", "published")
-    .is("completed_at", null)
-    .order("scheduled_for", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .in("status", ["draft", "approved", "published"])
+    .gt("scheduled_for", todayVN)
+    .order("scheduled_for", { ascending: true })
+    .limit(MAX_BUFFER + 1);
+
+  const queuedDates = new Set((queuedPages ?? []).map((p) => p.scheduled_for));
+
+  // Walk forward from tomorrow until we find a gap, up to MAX_BUFFER days ahead
+  let next_needed_date: string | null = null;
+  for (let i = 1; i <= MAX_BUFFER; i++) {
+    const candidate = new Date(Date.now() + 7 * 3_600_000 + i * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    if (!queuedDates.has(candidate)) {
+      next_needed_date = candidate;
+      break;
+    }
+  }
+  // next_needed_date = null means 3 days are already covered — routine should skip
 
   // Last 7 published pages
   const { data: lastPages } = await supabase
@@ -77,12 +93,14 @@ export async function GET(req: NextRequest) {
   } catch { /* column may not exist — use defaults */ }
 
   // Any pending Masuri hint (placeholder draft with masuri_hint in generation_meta)
+  // Check against next_needed_date if set, otherwise check nearest queued draft
+  const hintTargetDate = next_needed_date ?? todayVN;
   const { data: hintDraft } = await supabase
     .from("daily_pages")
     .select("generation_meta")
     .eq("for_user", heoId)
     .eq("status", "draft")
-    .eq("scheduled_for", tomorrowVN)
+    .eq("scheduled_for", hintTargetDate)
     .maybeSingle();
 
   const masuriHint = hintDraft
@@ -91,8 +109,8 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     heo_id: heoId,
-    tomorrow: tomorrowVN,
-    unfinished_page: unfinishedPage ?? null,
+    next_needed_date,          // null = buffer full (3 days covered), routine should skip
+    queued_dates: [...queuedDates].sort(),  // dates already covered
     last_pages: lastPages ?? [],
     recent_vocab: (recentVocab ?? []).map((w) => ({
       word_en: w.word_en,
