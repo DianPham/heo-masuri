@@ -354,7 +354,7 @@ function TodayTile({
     ? "linear-gradient(135deg, #FFC9D5 0%, #F8A8BC 100%)"  // pink — ready
     : "linear-gradient(135deg, #F5F5F5 0%, #EEEEEE 100%)"; // grey — no page
 
-  const pigPose = completed ? "cheering" : carry_over ? "thinking" : "studying";
+  const pigPose = completed ? "cheering" : carry_over ? "thinking" : available ? "studying" : "sleepy";
 
   const headline = completed
     ? `Heo đã hoàn thành rồi ✅`
