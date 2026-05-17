@@ -44,11 +44,11 @@ export async function GET(req: NextRequest) {
     // Check if reminder is enabled
     const { data: prefs } = await supabase
       .from("notebook_prefs")
-      .select("reminder_enabled")
+      .select("daily_reminder_enabled")
       .eq("user_id", heo.id)
       .maybeSingle();
 
-    if (!prefs?.reminder_enabled) {
+    if (!prefs?.daily_reminder_enabled) {
       return NextResponse.json({ sent: false, reason: "reminder disabled" });
     }
 

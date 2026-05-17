@@ -22,14 +22,14 @@ export async function GET() {
 
     const { data } = await supabase
       .from("notebook_prefs")
-      .select("reminder_enabled, reminder_time")
+      .select("daily_reminder_enabled, daily_reminder_time")
       .eq("user_id", heo.id)
       .maybeSingle();
 
     return NextResponse.json(
       {
-        enabled: data?.reminder_enabled ?? true,   // default ON
-        time: data?.reminder_time ? data.reminder_time.slice(0, 5) : "20:00",
+        enabled: data?.daily_reminder_enabled ?? true,   // default ON
+        time: data?.daily_reminder_time ? data.daily_reminder_time.slice(0, 5) : "20:00",
       },
       { headers: { "Cache-Control": "no-store" } }
     );
@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
       .upsert(
         {
           user_id: heo.id,
-          reminder_enabled: enabled,
-          reminder_time: enabled && time ? time : null,
+          daily_reminder_enabled: enabled,
+          daily_reminder_time: enabled && time ? time : null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" }
