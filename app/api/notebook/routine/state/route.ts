@@ -65,7 +65,15 @@ export async function GET(req: NextRequest) {
       break;
     }
   }
-  // next_needed_date = null means 3 days are already covered — routine should skip
+  // next_needed_date = null means MAX_BUFFER days are already covered — routine should skip
+
+  // Count total unpublished (draft/approved) future lessons — for routine's early-stop check
+  const { count: unpublishedCount } = await supabase
+    .from("daily_pages")
+    .select("id", { count: "exact", head: true })
+    .eq("for_user", heoId)
+    .in("status", ["draft", "approved"])
+    .gte("scheduled_for", tomorrowVN);
 
   // Last 7 published pages
   const { data: lastPages } = await supabase
@@ -118,7 +126,8 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     heo_id: heoId,
-    next_needed_date,          // null = buffer full (3 days covered), routine should skip
+    next_needed_date,          // null = buffer full, routine must stop
+    unpublished_count: unpublishedCount ?? 0,  // total draft/approved future lessons
     queued_dates: [...queuedDates].sort(),  // dates already covered
     last_pages: lastPages ?? [],
     recent_vocab: (recentVocab ?? []).map((w) => ({

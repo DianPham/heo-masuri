@@ -26,13 +26,37 @@ export async function POST(req: NextRequest) {
   const today = todayVN();
   const now = new Date().toISOString();
 
-  // Find all pages scheduled for today that aren't published yet
+  // ── Unfinished lesson gate (restored) ─────────────────────────────────
+  // If Heo has an active published lesson from the past 7 days that she
+  // hasn't completed yet, don't publish a new one — let her finish first.
+  // The 7-day window prevents old seed data from blocking forever.
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+  const { data: unfinished } = await supabase
+    .from("daily_pages")
+    .select("id, scheduled_for, title_vi")
+    .eq("status", "published")
+    .is("completed_at", null)
+    .gte("scheduled_for", sevenDaysAgo)
+    .lt("scheduled_for", today)
+    .limit(1)
+    .maybeSingle();
+
+  if (unfinished) {
+    return NextResponse.json({
+      published: 0,
+      note: `Skipped — Heo has an unfinished lesson from ${unfinished.scheduled_for}: "${unfinished.title_vi}". Complete it first.`,
+    });
+  }
+
+  // ── Find the oldest queued lesson (not tied to today's date) ──────────
+  // This decouples publishing from the calendar — the oldest approved/draft
+  // lesson is published regardless of when it was scheduled.
   const { data: due, error } = await supabase
     .from("daily_pages")
-    .select("id, title_vi, status, for_user")
-    .eq("scheduled_for", today)
+    .select("id, title_vi, status, for_user, scheduled_for")
     .in("status", ["approved", "draft"])
-    .neq("status", "archived");
+    .order("scheduled_for", { ascending: true })
+    .limit(5);
 
   if (error) {
     console.error("[publish-due]", error);

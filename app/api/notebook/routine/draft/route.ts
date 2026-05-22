@@ -33,8 +33,48 @@ function validate(page: Record<string, unknown>): string[] {
     for (const [i, card] of cards.entries()) {
       if (!VALID_CARD_TYPES.includes(card.type as string))
         errors.push(`card[${i}] invalid type '${card.type}'`);
-      if (card.type === "exercise" && !VALID_EXERCISE_TYPES.includes(card.exercise_type as string))
-        errors.push(`card[${i}] invalid exercise_type '${card.exercise_type}'`);
+      if (card.type === "exercise") {
+        if (!VALID_EXERCISE_TYPES.includes(card.exercise_type as string))
+          errors.push(`card[${i}] invalid exercise_type '${card.exercise_type}'`);
+        // Validate required data fields per exercise type — prevents silent blank renders
+        const d = card.data as Record<string, unknown> | null | undefined;
+        if (!d) { errors.push(`card[${i}] exercise missing data object`); }
+        else switch (card.exercise_type) {
+          case "word_train":
+            if (!d.target_sentence_en) errors.push(`card[${i}] word_train: missing target_sentence_en`);
+            if (!Array.isArray(d.shuffled_words) || (d.shuffled_words as unknown[]).length === 0)
+              errors.push(`card[${i}] word_train: missing/empty shuffled_words array`);
+            if (!d.hint_vi) errors.push(`card[${i}] word_train: missing hint_vi`);
+            break;
+          case "spot_imposter":
+            if (!d.sentence_en) errors.push(`card[${i}] spot_imposter: missing sentence_en`);
+            if (!d.imposter_word) errors.push(`card[${i}] spot_imposter: missing imposter_word`);
+            if (!d.correct_word) errors.push(`card[${i}] spot_imposter: missing correct_word`);
+            if (!d.hint_vi) errors.push(`card[${i}] spot_imposter: missing hint_vi`);
+            break;
+          case "pig_says":
+            if (!d.prompt_vi) errors.push(`card[${i}] pig_says: missing prompt_vi`);
+            if (!d.target_en) errors.push(`card[${i}] pig_says: missing target_en`);
+            break;
+          case "caption_polaroid":
+            if (!d.image_emoji) errors.push(`card[${i}] caption_polaroid: missing image_emoji`);
+            if (!Array.isArray(d.starter_words))
+              errors.push(`card[${i}] caption_polaroid: missing starter_words array`);
+            if (!d.example_en) errors.push(`card[${i}] caption_polaroid: missing example_en`);
+            break;
+          case "sentence_remix":
+            if (!d.base_en) errors.push(`card[${i}] sentence_remix: missing base_en`);
+            if (!d.base_vi) errors.push(`card[${i}] sentence_remix: missing base_vi`);
+            if (!d.instruction_vi) errors.push(`card[${i}] sentence_remix: missing instruction_vi`);
+            if (!d.target_en) errors.push(`card[${i}] sentence_remix: missing target_en`);
+            if (!Array.isArray(d.hint_words)) errors.push(`card[${i}] sentence_remix: missing hint_words array`);
+            break;
+          case "two_truths":
+            if (!d.prompt_vi) errors.push(`card[${i}] two_truths: missing prompt_vi`);
+            if (!Array.isArray(d.starter_words)) errors.push(`card[${i}] two_truths: missing starter_words array`);
+            break;
+        }
+      }
     }
   }
   return errors;

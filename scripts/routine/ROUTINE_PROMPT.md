@@ -39,7 +39,8 @@ curl -s "$APP_URL/api/notebook/routine/state" \
 ```
 
 Parse the JSON output. You will receive:
-- `next_needed_date` — **check this first.** The first future date with no lesson queued. If `null`, 3 days are already covered — stop.
+- `next_needed_date` — **check this first.** The first future date with no lesson queued. If `null`, the buffer is full — stop.
+- `unpublished_count` — total draft/approved future lessons awaiting publish. If ≥ 2 — stop.
 - `queued_dates` — dates that already have a lesson (draft/approved/published). For your reference.
 - `last_pages` — recent 7 published pages (avoid repeating topic immediately)
 - `recent_vocab` — words she has saved (bias content to use these — recognition is rewarding)
@@ -47,8 +48,11 @@ Parse the JSON output. You will receive:
 - `preferred_topics` — her preferred topic tags
 - `[MASURI_HINT]` — if present, this is Masuri's instruction for the next page. **Honor it.**
 
-**⚠️ If `next_needed_date` is null: stop immediately.**
-Print: `SKIP — Buffer full. Already have lessons queued for 3 days ahead. Nothing to do.`
+**⚠️ Stop immediately — before generating ANYTHING — if EITHER is true:**
+- `next_needed_date` is `null`
+- `unpublished_count` ≥ 2
+
+Print: `SKIP — Buffer full. next_needed_date=<value>, unpublished_count=<value>. Nothing to do.`
 Do not proceed to Step 2. Do nothing else.
 
 ### STEP 2 — Plan tomorrow's page

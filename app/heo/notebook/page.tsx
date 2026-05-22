@@ -11,7 +11,7 @@ import { UseRestButton } from "@/components/notebook/UseRestButton";
 import { TourGuide } from "@/components/notebook/TourGuide";
 import { InfoTip } from "@/components/notebook/InfoTip";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type TodayStatus = {
   available: boolean;

@@ -204,7 +204,7 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
         <button
           type="button"
           data-no-nav="true"
-          onClick={() => router.push("/heo/notebook/vocab")}
+          onClick={() => { router.refresh(); router.push("/heo/notebook/vocab"); }}
           className="w-full py-3 rounded-2xl text-sm font-semibold text-white bg-rose-500"
           style={{ boxShadow: "0 4px 12px rgba(209,77,111,0.35)" }}
         >
@@ -213,7 +213,7 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
         <button
           type="button"
           data-no-nav="true"
-          onClick={() => router.push("/heo/notebook")}
+          onClick={() => { router.refresh(); router.push("/heo/notebook"); }}
           className="w-full py-3 rounded-2xl text-sm font-semibold text-rose-400 border border-rose-200"
         >
           Quay lại trang chủ sổ

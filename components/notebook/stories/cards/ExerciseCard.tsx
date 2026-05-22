@@ -42,13 +42,6 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
   const label = EXERCISE_LABELS[card.exercise_type] ?? card.exercise_type;
 
   function renderExercise() {
-    if (!card.data) {
-      return (
-        <div className="flex items-center justify-center h-full">
-          <p className="text-sm text-rose-300 text-center">Bài tập chưa tải xong, thử lại nha 🌸</p>
-        </div>
-      );
-    }
     switch (card.exercise_type) {
       case "word_train":
         return <WordTrain data={card.data as WordTrainData} onContinue={onSkip} />;
@@ -63,11 +56,7 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
       case "two_truths":
         return <TwoTruths data={card.data as TwoTruthsData} onContinue={onSkip} />;
       default:
-        return (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-rose-300 text-center">Bài tập không nhận ra, bỏ qua nha 🌸</p>
-          </div>
-        );
+        return null;
     }
   }
 

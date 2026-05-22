@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Pig } from "@/components/theme/Pig";
 import { Tape } from "@/components/notebook/Tape";
 import { InfoTip } from "@/components/notebook/InfoTip";
+import { PublishButton } from "@/components/notebook/PublishButton";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const revalidate = 30;
@@ -226,12 +227,15 @@ function PageRow({ page }: { page: Page }) {
       </div>
 
       {/* CTA */}
-      <span
-        className="text-xs font-bold shrink-0"
-        style={{ color: isDraft ? "#E97A95" : "#3A6B2A" }}
-      >
-        {isDraft ? "Duyệt →" : "Xem →"}
-      </span>
+      <div className="flex items-center gap-2 shrink-0">
+        <PublishButton pageId={page.id} title={page.title_vi} />
+        <span
+          className="text-xs font-bold"
+          style={{ color: isDraft ? "#E97A95" : "#3A6B2A" }}
+        >
+          {isDraft ? "Duyệt →" : "Xem →"}
+        </span>
+      </div>
     </Link>
   );
 }
