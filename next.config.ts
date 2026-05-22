@@ -7,7 +7,10 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const withPWA = withPWAInit({
   dest: "public",
   cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  // aggressiveFrontEndNavCaching caused /heo/notebook/today to be served from
+  // cache (pre-publish snapshot → TEST_PAGE), so exercises appeared blank
+  // until the cache expired. NetworkFirst still caches for offline use.
+  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
   workboxOptions: {
@@ -32,7 +35,10 @@ const nextConfig: NextConfig = {
     // keeps the payload in the browser cache for 30s so repeat tab switches
     // are instant. The server-side revalidate still controls freshness.
     staleTimes: {
-      dynamic: 30,
+      // 0 = Next.js router never serves stale dynamic pages from its client cache.
+      // This ensures /heo/notebook/today always refetches when navigated to,
+      // so a newly published lesson shows immediately without waiting.
+      dynamic: 0,
       static: 300,
     },
   },
