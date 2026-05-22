@@ -67,6 +67,60 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Users not found" }, { status: 500 });
   }
 
+  // ── Server-side buffer guard ─────────────────────────────────────────────
+  // Reject if the requested scheduled_for date is already covered, or if
+  // MAX_BUFFER future slots are already filled (prevents duplicate creation
+  // when the routine is run multiple times).
+  const MAX_BUFFER = 2;
+  const todayVN = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+  const tomorrowVN = new Date(Date.now() + 7 * 3_600_000 + 86_400_000).toISOString().slice(0, 10);
+
+  const { data: existingQueued } = await supabase
+    .from("daily_pages")
+    .select("scheduled_for")
+    .eq("for_user", heo.id)
+    .in("status", ["draft", "approved", "published"])
+    .gte("scheduled_for", tomorrowVN)
+    .order("scheduled_for", { ascending: true })
+    .limit(MAX_BUFFER + 1);
+
+  const queuedDates = new Set(
+    (existingQueued ?? []).map((p) => String(p.scheduled_for).slice(0, 10))
+  );
+
+  // Reject if this specific date is already covered
+  const requestedDate = String(page.scheduled_for).slice(0, 10);
+  if (queuedDates.has(requestedDate)) {
+    return NextResponse.json(
+      { error: `Date ${requestedDate} already has a queued lesson. Skipping.`, already_queued: true },
+      { status: 409 }
+    );
+  }
+
+  // Reject if the date is in the past or today (must be a future date)
+  if (requestedDate <= todayVN) {
+    return NextResponse.json(
+      { error: `scheduled_for must be a future date (got ${requestedDate}, today is ${todayVN})` },
+      { status: 400 }
+    );
+  }
+
+  // Reject if buffer is already full (MAX_BUFFER future slots are all covered)
+  let bufferFull = true;
+  for (let i = 1; i <= MAX_BUFFER; i++) {
+    const candidate = new Date(Date.now() + 7 * 3_600_000 + i * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    if (!queuedDates.has(candidate)) { bufferFull = false; break; }
+  }
+  if (bufferFull) {
+    return NextResponse.json(
+      { error: "Buffer full — already have lessons queued for the next 2 days.", buffer_full: true },
+      { status: 409 }
+    );
+  }
+  // ── End buffer guard ─────────────────────────────────────────────────────
+
   // Archive any existing placeholder draft for this date (from a prior regenerate)
   await supabase
     .from("daily_pages")
