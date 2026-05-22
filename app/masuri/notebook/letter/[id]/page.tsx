@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { Tape } from "@/components/notebook/Tape";
 import { MasuriLetterReply } from "@/components/notebook/MasuriLetterReply";
+import { LetterSeenMarker } from "@/components/notebook/LetterSeenMarker";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +59,9 @@ export default async function MasuriLetterPage({ params }: { params: Promise<{ i
 
   return (
     <div className="min-h-dvh pb-8 px-5" style={{ backgroundColor: "#FFF9F5" }}>
+      {/* Auto-mark Heo's letter as seen by Masuri */}
+      <LetterSeenMarker id={id} />
+
       {/* Header */}
       <div className="pt-10 pb-4 flex items-center gap-3">
         <Link href="/masuri/notebook" className="text-ink-soft text-sm">← Sổ</Link>

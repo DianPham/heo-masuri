@@ -14,7 +14,9 @@ export async function POST(
 ) {
   try {
     const cookieStore = await cookies();
-    if (cookieStore.get("who")?.value !== "heo") {
+    const who = cookieStore.get("who")?.value;
+    // heo marks letters FROM Masuri as seen; masuri marks letters FROM Heo as seen
+    if (who !== "heo" && who !== "masuri") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

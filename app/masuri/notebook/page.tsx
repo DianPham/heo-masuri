@@ -20,28 +20,39 @@ const PAPER_BG = {
   backgroundColor: "#FFF9F5",
 } as React.CSSProperties;
 
-async function fetchHeoLetters(): Promise<{
+type HeoLetter = {
   id: string;
   kind: string;
   body: string;
   delivered_at: string;
+  seen_at: string | null;
   hasReply: boolean;
-}[]> {
+};
+
+type HeoLettersResult = {
+  dashboard: HeoLetter[];  // unseen-first, filtered
+  totalCount: number;
+  unseenCount: number;
+};
+
+async function fetchHeoLetters(): Promise<HeoLettersResult> {
   try {
     const supabase = createServerClient();
     const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
-    if (!heo) return [];
+    if (!heo) return { dashboard: [], totalCount: 0, unseenCount: 0 };
 
     const { data: letters } = await supabase
       .from("letters")
-      .select("id, kind, body, delivered_at")
+      .select("id, kind, body, delivered_at, seen_at")
       .eq("from_user", heo.id)
       .in("kind", ["weekly_letter", "two_truths"])
       .not("delivered_at", "is", null)
       .order("delivered_at", { ascending: false })
-      .limit(10);
+      .limit(50);
 
-    if (!letters || letters.length === 0) return [];
+    if (!letters || letters.length === 0) {
+      return { dashboard: [], totalCount: 0, unseenCount: 0 };
+    }
 
     // Check which have replies
     const ids = letters.map((l) => l.id);
@@ -49,15 +60,35 @@ async function fetchHeoLetters(): Promise<{
       .from("letters")
       .select("in_reply_to")
       .in("in_reply_to", ids);
-
     const repliedSet = new Set((replies ?? []).map((r) => r.in_reply_to));
 
-    return letters.map((l) => ({
+    const enriched: HeoLetter[] = letters.map((l) => ({
       ...l,
       hasReply: repliedSet.has(l.id),
     }));
+
+    const unseenCount = enriched.filter((l) => !l.seen_at).length;
+
+    // Dashboard filter: unseen OR within last 2 days
+    const twoDaysAgo = new Date(Date.now() - 2 * 86_400_000).toISOString();
+    const dashboardAll = enriched.filter(
+      (l) => !l.seen_at || l.delivered_at >= twoDaysAgo
+    );
+
+    // Sort: unseen first, then by date desc
+    dashboardAll.sort((a, b) => {
+      if (!a.seen_at && b.seen_at) return -1;
+      if (a.seen_at && !b.seen_at) return 1;
+      return new Date(b.delivered_at).getTime() - new Date(a.delivered_at).getTime();
+    });
+
+    return {
+      dashboard: dashboardAll.slice(0, 5),
+      totalCount: enriched.length,
+      unseenCount,
+    };
   } catch {
-    return [];
+    return { dashboard: [], totalCount: 0, unseenCount: 0 };
   }
 }
 
@@ -155,7 +186,7 @@ async function fetchStreak(): Promise<{ current: number; longest: number; active
 
 export default async function MasuriNotebookPage() {
   const t = await getTranslations("notebook.home");
-  const [streak, pendingDrafts, heoLetters, todayActivity] = await Promise.all([
+  const [streak, pendingDrafts, heoLetterData, todayActivity] = await Promise.all([
     fetchStreak(),
     fetchPendingPages(),
     fetchHeoLetters(),
@@ -278,49 +309,86 @@ export default async function MasuriNotebookPage() {
       </div>
 
       {/* ── Heo's letters ─────────────────────────────────── */}
-      <SectionCard tape="lilac" title="Thư của Heo" icon="💌" rotate={-0.5}>
-        {heoLetters.length === 0 ? (
-          <p className="text-sm text-ink-soft text-center py-3">
-            Heo chưa viết thư nào 🌸
+      <div
+        className="rounded-2xl p-4 mb-4"
+        style={{ backgroundColor: "#FFFFFF", boxShadow: "var(--shadow)", transform: "rotate(-0.5deg)" }}
+      >
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Tape color="lilac" width={14} length={48} rotate={0.5} />
+            <span style={{ fontSize: 16 }}>💌</span>
+            <h2 className="text-base font-bold text-ink">Thư của Heo</h2>
+            {heoLetterData.unseenCount > 0 && (
+              <span
+                className="text-xs font-bold text-white px-1.5 py-0.5 rounded-full"
+                style={{ backgroundColor: "#E97A95", fontSize: 10 }}
+              >
+                {heoLetterData.unseenCount} mới
+              </span>
+            )}
+          </div>
+          {heoLetterData.totalCount > 0 && (
+            <Link
+              href="/masuri/notebook/letter"
+              className="text-xs font-medium text-rose-400 active:opacity-60 shrink-0"
+            >
+              Xem tất cả ({heoLetterData.totalCount}) →
+            </Link>
+          )}
+        </div>
+
+        {heoLetterData.dashboard.length === 0 ? (
+          <p className="text-sm text-ink-soft text-center py-2">
+            Không có thư nào gần đây 🌸
           </p>
         ) : (
-          <div className="space-y-2">
-            {heoLetters.map((l) => (
-              <Link
-                key={l.id}
-                href={`/masuri/notebook/letter/${l.id}`}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 active:scale-[0.98] transition-transform"
-                style={{
-                  backgroundColor: l.hasReply
-                    ? "rgba(237,232,245,0.7)"
-                    : "rgba(255,249,245,0.5)",
-                  border: l.hasReply
-                    ? "1px solid rgba(196,168,220,0.5)"
-                    : "1px solid rgba(255,201,213,0.2)",
-                }}
-              >
-                <span style={{ fontSize: 18 }}>
-                  {l.kind === "two_truths" ? "🎭" : "📨"}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-ink truncate">
-                    {l.kind === "two_truths" ? "Two Truths and a Lie" : "Thư tuần này"}
-                  </p>
-                  <p className="text-xs text-ink-soft truncate mt-0.5">
-                    {l.body.slice(0, 50)}{l.body.length > 50 ? "…" : ""}
-                  </p>
-                </div>
-                <span
-                  className="text-xs font-semibold shrink-0"
-                  style={{ color: l.hasReply ? "#8B5CF6" : "#aaa" }}
+          <div className="space-y-1.5">
+            {heoLetterData.dashboard.map((l) => {
+              const unseen = !l.seen_at;
+              return (
+                <Link
+                  key={l.id}
+                  href={`/masuri/notebook/letter/${l.id}`}
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 active:scale-[0.98] transition-transform"
+                  style={{
+                    backgroundColor: unseen
+                      ? "rgba(255,201,213,0.15)"
+                      : "rgba(245,245,245,0.6)",
+                    border: unseen
+                      ? "1px solid rgba(255,201,213,0.5)"
+                      : "1px solid rgba(220,220,220,0.4)",
+                  }}
                 >
-                  {l.hasReply ? "✓ Đã trả lời" : "Chưa trả lời"}
-                </span>
-              </Link>
-            ))}
+                  <span style={{ fontSize: 16 }}>{l.kind === "two_truths" ? "🎭" : "📨"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-ink truncate">
+                      {l.kind === "two_truths" ? "Two Truths and a Lie" : "Thư tuần này"}
+                    </p>
+                    <p className="text-xs text-ink-soft truncate">
+                      {l.body.slice(0, 45)}{l.body.length > 45 ? "…" : ""}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    {unseen && (
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: "#E97A95" }}
+                      />
+                    )}
+                    <span
+                      className="text-xs font-semibold"
+                      style={{ color: l.hasReply ? "#8B5CF6" : unseen ? "#E97A95" : "#aaa" }}
+                    >
+                      {l.hasReply ? "✓ Đã trả lời" : "Chưa trả lời"}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
-      </SectionCard>
+      </div>
 
       {/* ── Ask Masuri inbox ───────────────────────────────── */}
       <SectionCard

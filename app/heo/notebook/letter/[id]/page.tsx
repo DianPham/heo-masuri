@@ -25,7 +25,7 @@ async function fetchLetter(id: string) {
 
     const { data: reply } = await supabase
       .from("letters")
-      .select("id, body, attachments, delivered_at, created_at")
+      .select("id, body, attachments, delivered_at, created_at, seen_at")
       .eq("in_reply_to", id)
       .maybeSingle();
 
@@ -59,14 +59,19 @@ export default async function LetterViewPage({ params }: { params: Promise<{ id:
 
   const { letter, reply, heoId } = result;
   const fromHeo = letter.from_user === heoId;
+  // Mark original letter as seen if it came FROM Masuri directly (encouragement, vocab_card, etc.)
   const needsSeen = !fromHeo && !letter.seen_at;
+  // Mark Masuri's reply as seen when Heo opens it (reply is a separate row)
+  const needsSeenReply = Boolean(reply && !reply.seen_at);
   const corrections = (reply?.attachments as { corrections?: Correction[] } | null)?.corrections ?? [];
   const twoTruthsGuess = (reply?.attachments as { two_truths_guess?: number } | null)?.two_truths_guess;
 
   return (
     <div className="min-h-dvh pb-8" style={{ backgroundColor: "#FFF9F5" }}>
-      {/* Auto-mark seen */}
+      {/* Auto-mark seen: original letter from Masuri */}
       {needsSeen && <LetterSeenMarker id={id} />}
+      {/* Auto-mark seen: Masuri's reply to this letter */}
+      {needsSeenReply && reply && <LetterSeenMarker id={reply.id} />}
 
       {/* Header */}
       <div className="px-5 pt-10 pb-4 flex items-center gap-3">

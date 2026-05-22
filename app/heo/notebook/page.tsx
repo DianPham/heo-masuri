@@ -73,6 +73,40 @@ async function fetchTodayStatus(): Promise<TodayStatus> {
   }
 }
 
+async function fetchUnreadCounts(): Promise<{ letters: number; asks: number }> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return { letters: 0, asks: 0 };
+
+    const now = new Date().toISOString();
+
+    const [lettersRes, asksRes] = await Promise.all([
+      // All letters/replies sent TO Heo that she hasn't seen yet
+      supabase
+        .from("letters")
+        .select("id", { count: "exact", head: true })
+        .eq("to_user", heo.id)
+        .is("seen_at", null)
+        .lte("delivered_at", now),
+      // Ask replies she hasn't seen yet
+      supabase
+        .from("ask_masuri_threads")
+        .select("id", { count: "exact", head: true })
+        .eq("from_user", heo.id)
+        .not("reply_text", "is", null)
+        .is("seen_at", null),
+    ]);
+
+    return {
+      letters: lettersRes.count ?? 0,
+      asks: asksRes.count ?? 0,
+    };
+  } catch {
+    return { letters: 0, asks: 0 };
+  }
+}
+
 async function fetchLetterNudge(): Promise<{ hasLetterThisWeek: boolean; isSunday: boolean }> {
   try {
     const supabase = createServerClient();
@@ -147,10 +181,11 @@ export default async function HeoNotebookPage() {
   const tVocab = await getTranslations("notebook.vocab");
   const tLetter = await getTranslations("notebook.letter");
 
-  const [streak, letterNudge, todayStatus] = await Promise.all([
+  const [streak, letterNudge, todayStatus, unread] = await Promise.all([
     fetchStreak(),
     fetchLetterNudge(),
     fetchTodayStatus(),
+    fetchUnreadCounts(),
   ]);
 
   const nowVN = new Date(Date.now() + 7 * 3_600_000);
@@ -210,6 +245,7 @@ export default async function HeoNotebookPage() {
           color="#EDE8F5"
           tapeColor="lilac"
           rotate={-1}
+          badge={unread.letters}
         />
         <SectionTile
           href="/heo/notebook/ask"
@@ -218,6 +254,7 @@ export default async function HeoNotebookPage() {
           color="#E8F2E9"
           tapeColor="mint"
           rotate={2}
+          badge={unread.asks}
         />
       </div>
 
@@ -455,6 +492,7 @@ function SectionTile({
   tapeColor,
   rotate,
   dimmed = false,
+  badge = 0,
 }: {
   href: string;
   emoji: string;
@@ -463,6 +501,7 @@ function SectionTile({
   tapeColor: "pink" | "mint" | "butter" | "lilac";
   rotate: number;
   dimmed?: boolean;
+  badge?: number;
 }) {
   const content = (
     <div
@@ -475,12 +514,18 @@ function SectionTile({
         transformOrigin: "center center",
       }}
     >
-      {/* Tape: width=short axis (height of strip), length=long axis (width of strip).
-          SVG renders as length×width px. Keep the strip short so it only peeks ~8px
-          into the card — well above the emoji which sits at ~28px from top. */}
+      {/* Tape */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
         <Tape color={tapeColor} width={16} length={48} rotate={0} />
       </div>
+
+      {/* Unread badge dot */}
+      {badge > 0 && (
+        <div
+          className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full"
+          style={{ backgroundColor: "#E97A95", boxShadow: "0 0 0 2px white" }}
+        />
+      )}
 
       <span style={{ fontSize: 28 }} className="mt-2">{emoji}</span>
       <p
