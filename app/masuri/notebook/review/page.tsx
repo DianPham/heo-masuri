@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Pig } from "@/components/theme/Pig";
 import { Tape } from "@/components/notebook/Tape";
 import { InfoTip } from "@/components/notebook/InfoTip";
-import { PublishButton } from "@/components/notebook/PublishButton";
+import { ReviewRow } from "@/components/notebook/ReviewRow";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const revalidate = 30;
@@ -50,40 +50,6 @@ async function fetchPendingPages(): Promise<Page[]> {
   } catch {
     return [];
   }
-}
-
-const TOPIC_COLORS: Record<string, { bg: string; text: string; emoji: string }> = {
-  daily_life: { bg: "rgba(255,201,213,0.25)", text: "#C4667A", emoji: "🏠" },
-  food:        { bg: "rgba(255,220,150,0.25)", text: "#B8860B", emoji: "🍜" },
-  travel:      { bg: "rgba(173,216,230,0.25)", text: "#1E6F8E", emoji: "✈️" },
-  work:        { bg: "rgba(196,168,220,0.25)", text: "#6B21A8", emoji: "💼" },
-  feelings:    { bg: "rgba(255,182,193,0.25)", text: "#C4667A", emoji: "💕" },
-  nature:      { bg: "rgba(156,175,136,0.25)", text: "#3A6B2A", emoji: "🌿" },
-  cafe:        { bg: "rgba(210,180,140,0.25)", text: "#8B6914", emoji: "☕" },
-  shopping:    { bg: "rgba(255,160,122,0.2)", text: "#B85C38", emoji: "🛍️" },
-};
-
-function topicStyle(topic: string | null) {
-  if (!topic) return { bg: "rgba(200,200,200,0.15)", text: "#888", emoji: "📄" };
-  return (
-    TOPIC_COLORS[topic] ?? { bg: "rgba(200,200,200,0.15)", text: "#888", emoji: "📄" }
-  );
-}
-
-function scheduledLabel(dateStr: string) {
-  const todayVN = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
-  const tomorrowVN = new Date(Date.now() + 7 * 3_600_000 + 86_400_000)
-    .toISOString()
-    .slice(0, 10);
-
-  if (dateStr === todayVN) return { label: "Hôm nay", urgent: true };
-  if (dateStr === tomorrowVN) return { label: "Ngày mai", urgent: false };
-
-  const d = new Date(dateStr + "T00:00:00+07:00");
-  return {
-    label: d.toLocaleDateString("vi-VN", { weekday: "short", day: "numeric", month: "short" }),
-    urgent: false,
-  };
 }
 
 export default async function MasuriReviewPage() {
@@ -146,7 +112,7 @@ export default async function MasuriReviewPage() {
               </div>
               <div className="space-y-2">
                 {drafts.map((p) => (
-                  <PageRow key={p.id} page={p} />
+                  <ReviewRow key={p.id} page={p} />
                 ))}
               </div>
             </section>
@@ -163,7 +129,7 @@ export default async function MasuriReviewPage() {
               </div>
               <div className="space-y-2">
                 {approved.map((p) => (
-                  <PageRow key={p.id} page={p} />
+                  <ReviewRow key={p.id} page={p} />
                 ))}
               </div>
             </section>
@@ -171,72 +137,6 @@ export default async function MasuriReviewPage() {
         </div>
       )}
     </div>
-  );
-}
-
-// ── Page row ──────────────────────────────────────────────────
-function PageRow({ page }: { page: Page }) {
-  const isDraft = page.status === "draft";
-  const { bg, text, emoji } = topicStyle(page.topic);
-  const { label: schedLabel, urgent } = scheduledLabel(page.scheduled_for);
-
-  return (
-    <Link
-      href={`/masuri/notebook/review/${page.id}`}
-      className="flex items-center gap-3 rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-transform"
-      style={{
-        backgroundColor: isDraft ? "white" : "rgba(240,255,248,0.8)",
-        boxShadow: "var(--shadow)",
-        border: isDraft
-          ? "1.5px solid rgba(255,201,213,0.5)"
-          : "1px solid rgba(156,175,136,0.35)",
-      }}
-    >
-      {/* Topic badge */}
-      <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl"
-        style={{ backgroundColor: bg }}
-      >
-        {emoji}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-ink truncate">{page.title_vi}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span
-            className="text-xs font-semibold px-2 py-0.5 rounded-full"
-            style={{
-              backgroundColor: urgent
-                ? "rgba(233,122,149,0.15)"
-                : "rgba(200,200,200,0.15)",
-              color: urgent ? "#C4667A" : "#888",
-            }}
-          >
-            {schedLabel}
-          </span>
-          {page.generated_by === "masuri" && (
-            <span className="text-xs text-purple-500">· Masuri viết</span>
-          )}
-          {page.topic && (
-            <span className="text-xs font-medium" style={{ color: text }}>
-              {page.topic.replace(/_/g, " ")}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="flex items-center gap-2 shrink-0">
-        <PublishButton pageId={page.id} title={page.title_vi} />
-        <span
-          className="text-xs font-bold"
-          style={{ color: isDraft ? "#E97A95" : "#3A6B2A" }}
-        >
-          {isDraft ? "Duyệt →" : "Xem →"}
-        </span>
-      </div>
-    </Link>
   );
 }
 
