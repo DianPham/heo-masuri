@@ -519,12 +519,16 @@ function SectionTile({
         <Tape color={tapeColor} width={16} length={48} rotate={0} />
       </div>
 
-      {/* Unread badge dot */}
+      {/* Unread badge count */}
       {badge > 0 && (
         <div
-          className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full"
+          className="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center"
           style={{ backgroundColor: "#E97A95", boxShadow: "0 0 0 2px white" }}
-        />
+        >
+          <span className="text-white font-bold leading-none" style={{ fontSize: 11 }}>
+            {badge > 99 ? "99+" : badge}
+          </span>
+        </div>
       )}
 
       <span style={{ fontSize: 28 }} className="mt-2">{emoji}</span>
