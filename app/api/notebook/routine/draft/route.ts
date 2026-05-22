@@ -117,15 +117,21 @@ export async function POST(req: NextRequest) {
 
   const { data: existingQueued } = await supabase
     .from("daily_pages")
-    .select("scheduled_for")
+    .select("scheduled_for, generation_meta")
     .eq("for_user", heo.id)
     .in("status", ["draft", "approved", "published"])
     .gte("scheduled_for", tomorrowVN)
     .order("scheduled_for", { ascending: true })
-    .limit(MAX_BUFFER + 1);
+    .limit(MAX_BUFFER + 5);
 
+  // Exclude legacy placeholder drafts from the buffer check (same as state API)
   const queuedDates = new Set(
-    (existingQueued ?? []).map((p) => String(p.scheduled_for).slice(0, 10))
+    (existingQueued ?? [])
+      .filter((p) => {
+        const meta = p.generation_meta as Record<string, unknown> | null;
+        return meta?.placeholder !== true;
+      })
+      .map((p) => String(p.scheduled_for).slice(0, 10))
   );
 
   // Reject if this specific date is already covered
@@ -161,13 +167,17 @@ export async function POST(req: NextRequest) {
   }
   // ── End buffer guard ─────────────────────────────────────────────────────
 
-  // Archive any existing placeholder draft for this date (from a prior regenerate)
+  // Delete any legacy placeholder drafts for this date before inserting the real one.
+  // Old regenerate flow created placeholder drafts with generation_meta.placeholder=true
+  // that would cause a 409 duplicate-date rejection here. We delete (not archive) them
+  // because they were never real lessons — the hint now lives on the archived original.
   await supabase
     .from("daily_pages")
-    .update({ status: "archived" })
+    .delete()
     .eq("for_user", heo.id)
     .eq("scheduled_for", page.scheduled_for)
-    .eq("status", "draft");
+    .eq("status", "draft")
+    .filter("generation_meta->>placeholder", "eq", "true");
 
   // Insert the new draft
   const { data: inserted, error } = await supabase

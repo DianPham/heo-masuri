@@ -1,7 +1,12 @@
 /**
  * POST /api/notebook/admin/regenerate
- * Masuri-only. Archives the current draft, stores a hint, then immediately
- * fires the Claude Code Routine to regenerate the lesson — no manual trigger needed.
+ * Masuri-only. Archives the current draft, stores the hint IN the archived
+ * page's generation_meta (no placeholder draft), then fires the Routine.
+ *
+ * Why no placeholder draft: a placeholder draft counted as an "unpublished lesson"
+ * in the state API, inflating unpublished_count and causing the routine's early-stop
+ * check (≥ 2) to trigger — so regeneration never actually happened.
+ * Storing the hint on the archived page is clean and has no side effects on counts.
  *
  * Body: { page_id: string, hint?: string }
  */
@@ -38,10 +43,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Page not found" }, { status: 404 });
   }
 
-  // 2. Archive the old draft
+  // 2. Archive the page — embed the hint directly into generation_meta.
+  //    This avoids creating a placeholder draft that would inflate unpublished_count
+  //    and block the routine's early-stop check.
+  const updatedMeta = {
+    ...((page.generation_meta as object) ?? {}),
+    ...(hint?.trim() ? { masuri_hint: hint.trim() } : {}),
+    archived_at: new Date().toISOString(),
+  };
+
   const { error: archiveErr } = await supabase
     .from("daily_pages")
-    .update({ status: "archived" })
+    .update({ status: "archived", generation_meta: updatedMeta })
     .eq("id", page_id);
 
   if (archiveErr) {
@@ -49,34 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: archiveErr.message }, { status: 500 });
   }
 
-  // 3. If there's a hint, insert a placeholder draft so the Routine picks it up via [MASURI_HINT]
-  if (hint?.trim()) {
-    const { data: heo } = await supabase
-      .from("users")
-      .select("id")
-      .eq("slug", "heo")
-      .single();
-
-    if (heo) {
-      await supabase.from("daily_pages").insert({
-        for_user: heo.id,
-        scheduled_for: page.scheduled_for,
-        status: "draft",
-        title_vi: "Đang tạo lại...",
-        title_en: "Regenerating...",
-        topic: "pending",
-        difficulty: 1,
-        cards: [],
-        generated_by: "manual",
-        generation_meta: {
-          masuri_hint: hint.trim(),
-          placeholder: true,
-        },
-      });
-    }
-  }
-
-  // 4. Fire the Claude Code Routine immediately
+  // 3. Fire the Claude Code Routine immediately
   const routineEndpoint = process.env.CLAUDE_ROUTINE_ENDPOINT;
   const routineToken    = process.env.CLAUDE_ROUTINE_TOKEN;
   let routineFired      = false;
@@ -91,7 +77,6 @@ export async function POST(req: NextRequest) {
           "Content-Type": "application/json",
         },
       });
-
       if (routineRes.ok) {
         routineFired = true;
       } else {
@@ -108,28 +93,26 @@ export async function POST(req: NextRequest) {
     console.warn("[admin/regenerate]", routineError);
   }
 
-  // 5. Discord notification — status depends on whether routine fired
+  // 4. Discord notification
   const webhookUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW;
   if (webhookUrl) {
     const statusLine = routineFired
-      ? "✅ Routine đã được kích hoạt tự động — bài mới sẽ xuất hiện trong vài phút."
-      : `⚠️ Routine chưa kích hoạt được (${routineError ?? "unknown error"}) — chạy thủ công nha.`;
+      ? "✅ Routine đã được kích hoạt — bài mới sẽ xuất hiện trong vài phút."
+      : `⚠️ Routine chưa kích hoạt được (${routineError ?? "unknown"}) — chạy thủ công nha.`;
 
     await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "Sổ tiếng Anh",
-        embeds: [
-          {
-            title: "🔄 Masuri yêu cầu tạo lại trang",
-            description:
-              `Trang cho ngày **${page.scheduled_for}** đã bị archive.\n` +
-              (hint ? `💬 Hint: _${hint}_\n\n` : "\n") +
-              statusLine,
-            color: routineFired ? 0xa8d5a2 : 0xfae8b8,
-          },
-        ],
+        embeds: [{
+          title: "🔄 Masuri yêu cầu tạo lại trang",
+          description:
+            `Trang cho ngày **${page.scheduled_for}** đã bị archive.\n` +
+            (hint?.trim() ? `💬 Hint: _${hint.trim()}_\n\n` : "\n") +
+            statusLine,
+          color: routineFired ? 0xa8d5a2 : 0xfae8b8,
+        }],
       }),
     }).catch(() => {});
   }
@@ -140,7 +123,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     archived: page_id,
-    hint: hint ?? null,
+    hint: hint?.trim() ?? null,
     routine_fired: routineFired,
     routine_error: routineError,
   });

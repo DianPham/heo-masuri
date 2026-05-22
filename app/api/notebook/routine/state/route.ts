@@ -40,18 +40,29 @@ export async function GET(req: NextRequest) {
     .toISOString()
     .slice(0, 10);
 
+  // Fetch queued pages including status + generation_meta so we can:
+  //   (a) exclude legacy placeholder drafts from date-gap detection
+  //   (b) derive the real unpublished count without a second query
+  // Old regenerate flow inserted placeholder drafts (generation_meta.placeholder=true)
+  // which inflated unpublished_count and caused false early-stops.
   const { data: queuedPages } = await supabase
     .from("daily_pages")
-    .select("scheduled_for")
+    .select("scheduled_for, status, generation_meta")
     .eq("for_user", heoId)
     .in("status", ["draft", "approved", "published"])
-    .gte("scheduled_for", tomorrowVN)   // gte tomorrow (avoids date vs text operator edge cases)
+    .gte("scheduled_for", tomorrowVN)
     .order("scheduled_for", { ascending: true })
-    .limit(MAX_BUFFER + 1);
+    .limit(MAX_BUFFER + 10); // fetch extra to account for filtered-out placeholders
 
-  // Normalize to plain YYYY-MM-DD strings (Supabase date columns may return Date objects)
+  // Strip legacy placeholder drafts — they were never real lessons
+  const realQueued = (queuedPages ?? []).filter((p) => {
+    const meta = p.generation_meta as Record<string, unknown> | null;
+    return meta?.placeholder !== true;
+  });
+
+  // Normalize to plain YYYY-MM-DD strings
   const queuedDates = new Set(
-    (queuedPages ?? []).map((p) => String(p.scheduled_for).slice(0, 10))
+    realQueued.map((p) => String(p.scheduled_for).slice(0, 10))
   );
 
   // Walk forward from tomorrow until we find a gap, up to MAX_BUFFER days ahead
@@ -67,13 +78,10 @@ export async function GET(req: NextRequest) {
   }
   // next_needed_date = null means MAX_BUFFER days are already covered — routine should skip
 
-  // Count total unpublished (draft/approved) future lessons — for routine's early-stop check
-  const { count: unpublishedCount } = await supabase
-    .from("daily_pages")
-    .select("id", { count: "exact", head: true })
-    .eq("for_user", heoId)
-    .in("status", ["draft", "approved"])
-    .gte("scheduled_for", tomorrowVN);
+  // Count real unpublished (draft/approved) — derived from realQueued, no extra query needed
+  const unpublishedCount = realQueued.filter(
+    (p) => p.status === "draft" || p.status === "approved"
+  ).length;
 
   // Last 7 published pages
   const { data: lastPages } = await supabase
@@ -109,25 +117,45 @@ export async function GET(req: NextRequest) {
     }
   } catch { /* column may not exist — use defaults */ }
 
-  // Any pending Masuri hint (placeholder draft with masuri_hint in generation_meta)
-  // Check against next_needed_date if set, otherwise check nearest queued draft
+  // Look for a Masuri hint for next_needed_date.
+  // New style: hint is stored on the archived page's generation_meta (no placeholder draft).
+  // Legacy style: hint was stored on a placeholder draft (generation_meta.placeholder=true).
+  // We check both so old data keeps working.
   const hintTargetDate = next_needed_date ?? todayVN;
-  const { data: hintDraft } = await supabase
-    .from("daily_pages")
-    .select("generation_meta")
-    .eq("for_user", heoId)
-    .eq("status", "draft")
-    .eq("scheduled_for", hintTargetDate)
-    .maybeSingle();
 
-  const masuriHint = hintDraft
-    ? ((hintDraft.generation_meta as Record<string, unknown>)?.masuri_hint as string | null)
-    : null;
+  const [hintArchivedRes, hintDraftRes] = await Promise.all([
+    // New: hint on the most recently archived page for this date
+    supabase
+      .from("daily_pages")
+      .select("generation_meta")
+      .eq("for_user", heoId)
+      .eq("status", "archived")
+      .eq("scheduled_for", hintTargetDate)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Legacy: hint on a placeholder draft for this date
+    supabase
+      .from("daily_pages")
+      .select("generation_meta")
+      .eq("for_user", heoId)
+      .eq("status", "draft")
+      .eq("scheduled_for", hintTargetDate)
+      .maybeSingle(),
+  ]);
+
+  const archivedMeta = hintArchivedRes.data?.generation_meta as Record<string, unknown> | null;
+  const draftMeta    = hintDraftRes.data?.generation_meta as Record<string, unknown> | null;
+
+  // Prefer archived (new style); fall back to placeholder draft (legacy)
+  const masuriHint =
+    (archivedMeta?.masuri_hint as string | null) ??
+    (draftMeta?.placeholder === true ? (draftMeta?.masuri_hint as string | null) : null);
 
   return NextResponse.json({
     heo_id: heoId,
     next_needed_date,          // null = buffer full, routine must stop
-    unpublished_count: unpublishedCount ?? 0,  // total draft/approved future lessons
+    unpublished_count: unpublishedCount,  // real draft/approved future lessons (placeholders excluded)
     queued_dates: [...queuedDates].sort(),  // dates already covered
     last_pages: lastPages ?? [],
     recent_vocab: (recentVocab ?? []).map((w) => ({
