@@ -5,7 +5,6 @@
  * Pointer events are stopped at this level so none leak to StoriesRenderer.
  * Blueprint §8 / CP5.
  */
-import { motion } from "motion/react";
 import { InfoTip } from "@/components/notebook/InfoTip";
 import type { ExerciseCard as ExerciseCardType } from "@/types/notebook";
 import type {
@@ -62,13 +61,8 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
 
   return (
     <div className="flex flex-col h-full px-7 py-8">
-      {/* Header */}
-      <motion.div
-        className="mb-5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.05 }}
-      >
+      {/* Header — no nested opacity animation; parent card handles entrance */}
+      <div className="mb-5">
         <p className="text-xs font-semibold text-rose-400 uppercase tracking-widest mb-0.5">
           Luyện tập
         </p>
@@ -78,25 +72,15 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
         >
           {label}
         </h2>
-      </motion.div>
+      </div>
 
       {/* Exercise body */}
-      <motion.div
-        className="flex-1 flex flex-col min-h-0"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12 }}
-      >
+      <div className="flex-1 flex flex-col min-h-0">
         {renderExercise()}
-      </motion.div>
+      </div>
 
       {/* Skip / Too hard */}
-      <motion.div
-        className="flex items-center justify-between pt-3 mt-1"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
+      <div className="flex items-center justify-between pt-3 mt-1">
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -119,7 +103,7 @@ export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
             Bỏ qua
           </button>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
