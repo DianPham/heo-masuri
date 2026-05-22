@@ -50,17 +50,18 @@ export function MasuriLetterReply({
 
     setSending(true);
     try {
-      const attachments: Record<string, unknown> = {};
-      if (isTwoTruths && guess !== null) attachments.two_truths_guess = guess;
       const validCorrections = corrections.filter(
         (c) => c.original_en.trim() && c.suggested_en.trim()
       );
-      if (validCorrections.length > 0) attachments.corrections = validCorrections;
 
       const res = await fetch(`/api/notebook/letter/${letterId}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: body.trim(), attachments }),
+        body: JSON.stringify({
+          body: body.trim(),
+          corrections: validCorrections.length > 0 ? validCorrections : undefined,
+          two_truths_guess: isTwoTruths && guess !== null ? guess : undefined,
+        }),
       });
 
       if (!res.ok) {

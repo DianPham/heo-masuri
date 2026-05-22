@@ -21,6 +21,7 @@ export function TwoTruths({ data, onContinue }: Props) {
   const [truth2, setTruth2] = useState("");
   const [lie, setLie] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [activeField, setActiveField] = useState<"t1" | "t2" | "lie" | null>(null);
 
   // Shuffle once on submit
@@ -53,35 +54,54 @@ export function TwoTruths({ data, onContinue }: Props) {
     return (
       <div className="flex flex-col gap-5 h-full">
         <p className="text-sm font-semibold text-ink-soft text-center">
-          Masuri phải đoán câu nào là bịa 🕵️
+          {revealed ? "Đây là đáp án 🎉" : "Masuri phải đoán câu nào là bịa 🕵️"}
         </p>
 
         <div className="flex flex-col gap-3">
-          {shuffled.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.12 }}
-              className="rounded-2xl px-4 py-3"
-              style={{
-                backgroundColor: "rgba(255,201,213,0.18)",
-                border: "1px solid rgba(255,201,213,0.4)",
-              }}
-            >
-              <p className="text-sm font-medium text-ink">
-                <span className="text-rose-400 font-bold mr-2">{i + 1}.</span>
-                {item.text}
-              </p>
-            </motion.div>
-          ))}
+          {shuffled.map((item, i) => {
+            const isLieAndRevealed = revealed && item.isLie;
+            const isTruthAndRevealed = revealed && !item.isLie;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.12 }}
+                className="rounded-2xl px-4 py-3"
+                style={{
+                  backgroundColor: isLieAndRevealed
+                    ? "rgba(251,191,36,0.22)"
+                    : isTruthAndRevealed
+                    ? "rgba(110,231,183,0.22)"
+                    : "rgba(255,201,213,0.18)",
+                  border: `1px solid ${isLieAndRevealed ? "rgba(251,191,36,0.5)" : isTruthAndRevealed ? "rgba(110,231,183,0.5)" : "rgba(255,201,213,0.4)"}`,
+                }}
+              >
+                <p className="text-sm font-medium text-ink flex items-center gap-2">
+                  <span className="text-rose-400 font-bold">{i + 1}.</span>
+                  <span className="flex-1">{item.text}</span>
+                  {isLieAndRevealed && <span>🤥</span>}
+                  {isTruthAndRevealed && <span>✅</span>}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
 
         <p className="text-xs text-ink-soft text-center italic">
-          Đã gửi cho Masuri đoán 💕
+          {revealed ? "Câu vàng là câu bịa nha! 🤥" : "Đã gửi cho Masuri đoán 💕"}
         </p>
 
-        <div className="mt-auto">
+        <div className="mt-auto flex flex-col gap-2">
+          {!revealed && (
+            <button
+              type="button"
+              onClick={() => setRevealed(true)}
+              className="w-full py-3 rounded-2xl text-rose-500 border-2 border-rose-300 text-sm font-semibold active:scale-95 transition-transform"
+            >
+              Tiết lộ đáp án 🤫
+            </button>
+          )}
           <button
             type="button"
             onClick={onContinue}

@@ -7,7 +7,7 @@ import type { DailyPage } from "@/types/notebook";
 import { TEST_PAGE } from "@/lib/notebook/test-page";
 import { StoriesRenderer } from "@/components/notebook/stories/StoriesRenderer";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 type TodayResponse = {
   page: DailyPage | null;

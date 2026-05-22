@@ -28,10 +28,17 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
   const [streak, setStreak] = useState<StreakResult | null>(null);
   const vocabSaved = useRef(false);
 
-  // On mount: bump streak + auto-save vocab_to_save words to DB
-  // Skip both when in review (scrapbook re-read) mode.
+  // On mount: mark page complete + bump streak + auto-save vocab_to_save words to DB
+  // Skip all three when in review (scrapbook re-read) mode.
   useEffect(() => {
     if (isReview) return;
+
+    // Mark page as completed (sets completed_at — drives scrapbook + Masuri progress)
+    fetch("/api/notebook/page/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ page_id: pageId }),
+    }).catch(() => {});
 
     // Bump streak
     fetch("/api/notebook/streak/bump", { method: "POST" })

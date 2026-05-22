@@ -26,23 +26,6 @@ export async function POST(req: NextRequest) {
   const today = todayVN();
   const now = new Date().toISOString();
 
-  // Block publish if any user has an unfinished published lesson from a prior day
-  const { data: unfinished } = await supabase
-    .from("daily_pages")
-    .select("id, for_user, scheduled_for, title_vi")
-    .eq("status", "published")
-    .is("completed_at", null)
-    .lt("scheduled_for", today)
-    .limit(1)
-    .maybeSingle();
-
-  if (unfinished) {
-    return NextResponse.json({
-      published: 0,
-      note: `Skipped — unfinished lesson from ${unfinished.scheduled_for}: "${unfinished.title_vi}". Complete it first.`,
-    });
-  }
-
   // Find all pages scheduled for today that aren't published yet
   const { data: due, error } = await supabase
     .from("daily_pages")
