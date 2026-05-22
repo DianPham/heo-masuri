@@ -1,7 +1,7 @@
 /**
  * POST /api/notebook/admin/regenerate
- * Masuri-only. Archives the current draft and stores a hint for the Routine.
- * The Routine picks up the [MASURI_HINT] on its next run (or Masuri runs it manually).
+ * Masuri-only. Archives the current draft, stores a hint, then immediately
+ * fires the Claude Code Routine to regenerate the lesson — no manual trigger needed.
  *
  * Body: { page_id: string, hint?: string }
  */
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServerClient();
 
-  // Fetch current page to get scheduled_for
+  // 1. Fetch current page
   const { data: page, error: fetchErr } = await supabase
     .from("daily_pages")
     .select("id, scheduled_for, generation_meta")
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Page not found" }, { status: 404 });
   }
 
-  // Archive the old draft
+  // 2. Archive the old draft
   const { error: archiveErr } = await supabase
     .from("daily_pages")
     .update({ status: "archived" })
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: archiveErr.message }, { status: 500 });
   }
 
-  // If there's a hint, store it in a placeholder draft so read_heo_state picks it up
+  // 3. If there's a hint, insert a placeholder draft so the Routine picks it up via [MASURI_HINT]
   if (hint?.trim()) {
     const { data: heo } = await supabase
       .from("users")
@@ -76,9 +76,45 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Send a Discord notification to trigger manual re-run
+  // 4. Fire the Claude Code Routine immediately
+  const routineEndpoint = process.env.CLAUDE_ROUTINE_ENDPOINT;
+  const routineToken    = process.env.CLAUDE_ROUTINE_TOKEN;
+  let routineFired      = false;
+  let routineError: string | null = null;
+
+  if (routineEndpoint && routineToken) {
+    try {
+      const routineRes = await fetch(routineEndpoint, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${routineToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (routineRes.ok) {
+        routineFired = true;
+      } else {
+        const errText = await routineRes.text().catch(() => "");
+        routineError = `HTTP ${routineRes.status}: ${errText.slice(0, 200)}`;
+        console.error("[admin/regenerate] Routine fire failed:", routineError);
+      }
+    } catch (err) {
+      routineError = String(err);
+      console.error("[admin/regenerate] Routine fire error:", routineError);
+    }
+  } else {
+    routineError = "CLAUDE_ROUTINE_ENDPOINT or CLAUDE_ROUTINE_TOKEN not configured";
+    console.warn("[admin/regenerate]", routineError);
+  }
+
+  // 5. Discord notification — status depends on whether routine fired
   const webhookUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW;
   if (webhookUrl) {
+    const statusLine = routineFired
+      ? "✅ Routine đã được kích hoạt tự động — bài mới sẽ xuất hiện trong vài phút."
+      : `⚠️ Routine chưa kích hoạt được (${routineError ?? "unknown error"}) — chạy thủ công nha.`;
+
     await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,9 +125,9 @@ export async function POST(req: NextRequest) {
             title: "🔄 Masuri yêu cầu tạo lại trang",
             description:
               `Trang cho ngày **${page.scheduled_for}** đã bị archive.\n` +
-              (hint ? `💬 Hint: _${hint}_\n` : "") +
-              `\nChạy lại Routine để tạo trang mới.`,
-            color: 0xfae8b8,
+              (hint ? `💬 Hint: _${hint}_\n\n` : "\n") +
+              statusLine,
+            color: routineFired ? 0xa8d5a2 : 0xfae8b8,
           },
         ],
       }),
@@ -99,5 +135,13 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath("/masuri/notebook");
-  return NextResponse.json({ ok: true, archived: page_id, hint: hint ?? null });
+  revalidatePath("/masuri/notebook/review");
+
+  return NextResponse.json({
+    ok: true,
+    archived: page_id,
+    hint: hint ?? null,
+    routine_fired: routineFired,
+    routine_error: routineError,
+  });
 }
