@@ -52,14 +52,18 @@ export async function POST() {
     const today = todayVN();
     const yesterday = yesterdayVN();
 
-    // Read current row
+    // ── Read current row ───────────────────────────────────────────────
+    // We need this to compute the new streak values. The idempotency guard
+    // is enforced atomically at write-time (neq filter below), not here,
+    // so concurrent requests computing from the same snapshot are fine —
+    // only the first writer will succeed; the second sees 0 rows updated.
     const { data: row } = await supabase
       .from("streaks")
       .select("current_streak, longest_streak, last_active_date, rest_days_remaining, rest_replenished_at")
       .eq("user_id", heo.id)
       .maybeSingle();
 
-    // Already bumped today — idempotent
+    // Fast path: clearly already counted (single request, no race)
     if (row?.last_active_date === today) {
       return NextResponse.json({
         current_streak: row.current_streak,
@@ -108,25 +112,55 @@ export async function POST() {
     }
 
     const new_longest = Math.max(prev_longest, new_streak);
+    const writePayload = {
+      current_streak: new_streak,
+      longest_streak: new_longest,
+      last_active_date: today,
+      rest_days_remaining: rest_days,
+      rest_replenished_at: newReplenishedAt,
+      updated_at: new Date().toISOString(),
+    };
 
-    const { error } = await supabase
-      .from("streaks")
-      .upsert(
-        {
-          user_id: heo.id,
+    // ── Atomic write — closes the race window ──────────────────────────
+    // If a row exists: UPDATE with .neq("last_active_date", today) so the
+    // write only lands if nobody else already counted today. If two requests
+    // race past the fast-path check above, only the first UPDATE wins;
+    // the second sees 0 rows returned and we return already_counted.
+    // If no row exists yet (first-ever completion): INSERT instead.
+    if (row) {
+      const { data: updated, error } = await supabase
+        .from("streaks")
+        .update(writePayload)
+        .eq("user_id", heo.id)
+        .neq("last_active_date", today) // ← atomic idempotency guard
+        .select("current_streak, longest_streak, rest_days_remaining")
+        .maybeSingle();
+
+      if (error) {
+        console.error("[streak bump]", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // 0 rows updated = another request already counted while we were computing
+      if (!updated) {
+        return NextResponse.json({
           current_streak: new_streak,
           longest_streak: new_longest,
-          last_active_date: today,
           rest_days_remaining: rest_days,
-          rest_replenished_at: newReplenishedAt,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
+          already_counted: true,
+          streak_saved: false,
+        });
+      }
+    } else {
+      // First ever completion — no row exists, INSERT directly
+      const { error } = await supabase
+        .from("streaks")
+        .insert({ user_id: heo.id, ...writePayload });
 
-    if (error) {
-      console.error("[streak bump]", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error) {
+        console.error("[streak bump first]", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
     }
 
     revalidatePath("/heo/notebook");

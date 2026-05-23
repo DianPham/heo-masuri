@@ -70,17 +70,49 @@ export async function GET(req: NextRequest) {
     // After 3+ days of no activity, switch to the softer "Masuri misses Heo" message
     const isLongSilence = daysInactive !== null && daysInactive >= 3;
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+
+    // ── §J3: Rotating normal reminder copy (5 variants, picks by weekday) ──
+    // Deterministic — same day of the week always gets the same message,
+    // so it rotates week-over-week without any randomness or DB state.
+    const NORMAL_REMINDERS = [
+      {
+        title: "Heo ơi, học tiếng Anh chưa? 📓",
+        body: "Trang hôm nay đang chờ Heo nè! Học một chút thôi là xong 🌸",
+      },
+      {
+        title: "Đừng quên bài học hôm nay nha Heo ✨",
+        body: "Chỉ cần vài phút thôi — Masuri tin Heo làm được 💕",
+      },
+      {
+        title: "Streak của Heo đang chờ được giữ đó 🔥",
+        body: "Vào học một chút là xong nha — Heo giỏi lắm 🌸",
+      },
+      {
+        title: "Nhắc Heo nhẹ một cái 📖",
+        body: "Bài học hôm nay ngắn lắm — vào xem thử nha Heo 🌷",
+      },
+      {
+        title: "Masuri đang nghĩ đến Heo nè 💕",
+        body: "Học một từ mới hôm nay đi Heo — nhỏ thôi cũng được 🌸",
+      },
+    ] as const;
+
+    // getUTCDay() returns 0 (Sun) – 6 (Sat); mod 5 cycles through all 5 variants
+    const dayIndex = new Date().getUTCDay() % NORMAL_REMINDERS.length;
+    const normalReminder = NORMAL_REMINDERS[dayIndex];
+
     const notification = isLongSilence
       ? {
           title: "Masuri nhớ Heo nhiều lắm 💕",
           body: "Không cần học nhiều đâu nha — một từ thôi cũng được. Heo có thể làm được 🌸",
-          url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/heo/notebook/today`,
+          url: `${appUrl}/heo/notebook/today`,
           tag: "reminder-gentle",
         }
       : {
-          title: "Heo ơi, học tiếng Anh chưa? 📓",
-          body: "Trang hôm nay đang chờ Heo nè! Học một chút thôi là xong 🌸",
-          url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/heo/notebook/today`,
+          title: normalReminder.title,
+          body: normalReminder.body,
+          url: `${appUrl}/heo/notebook/today`,
           tag: "reminder",
         };
 
