@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   // which inflated unpublished_count and caused false early-stops.
   const { data: queuedPages } = await supabase
     .from("daily_pages")
-    .select("scheduled_for, status, generation_meta")
+    .select("scheduled_for, status, generation_meta, topic, title_en")
     .eq("for_user", heoId)
     .in("status", ["draft", "approved", "published"])
     .gte("scheduled_for", tomorrowVN)
@@ -83,24 +83,29 @@ export async function GET(req: NextRequest) {
     (p) => p.status === "draft" || p.status === "approved"
   ).length;
 
-  // Last 7 published pages
-  const { data: lastPages } = await supabase
-    .from("daily_pages")
-    .select("id, title_vi, title_en, topic, difficulty, scheduled_for")
-    .eq("for_user", heoId)
-    .eq("status", "published")
-    .order("scheduled_for", { ascending: false })
-    .limit(7);
+  // Last 7 published pages + ALL vocab — run in parallel
+  const [lastPagesRes, allVocabRes] = await Promise.all([
+    supabase
+      .from("daily_pages")
+      .select("id, title_vi, title_en, topic, difficulty, scheduled_for")
+      .eq("for_user", heoId)
+      .eq("status", "published")
+      .order("scheduled_for", { ascending: false })
+      .limit(7),
+    supabase
+      .from("vocabulary")
+      .select("word_en, word_vi, pos, source_page_topic, self_confidence")
+      .eq("user_id", heoId)
+      .order("saved_at", { ascending: false }),
+  ]);
+  const lastPages = lastPagesRes.data;
+  const allVocab  = allVocabRes.data ?? [];
 
-  // Recent 30 vocab words
-  const { data: recentVocab } = await supabase
-    .from("vocabulary")
-    .select("word_en, word_vi, pos, source_page_topic, self_confidence")
-    .eq("user_id", heoId)
-    .order("saved_at", { ascending: false })
-    .limit(30);
+  // Slice for the "recent context" view (last 30 with full details)
+  const recentVocab = allVocab.slice(0, 30);
 
-  const lowConfidenceVocab = (recentVocab ?? [])
+  // Words she's uncertain about — drawn from ALL saved vocab, not just recent 30
+  const lowConfidenceVocab = allVocab
     .filter((w) => w.self_confidence < 0)
     .map((w) => ({ word_en: w.word_en, word_vi: w.word_vi }));
 
@@ -124,10 +129,11 @@ export async function GET(req: NextRequest) {
   const hintTargetDate = next_needed_date ?? todayVN;
 
   const [hintArchivedRes, hintDraftRes] = await Promise.all([
-    // New: hint on the most recently archived page for this date
+    // New: hint on the most recently archived page for this date.
+    // Also fetch the full lesson content so the routine can REVISE rather than rebuild.
     supabase
       .from("daily_pages")
-      .select("generation_meta")
+      .select("generation_meta, title_vi, title_en, topic, difficulty, cards")
       .eq("for_user", heoId)
       .eq("status", "archived")
       .eq("scheduled_for", hintTargetDate)
@@ -152,21 +158,49 @@ export async function GET(req: NextRequest) {
     (archivedMeta?.masuri_hint as string | null) ??
     (draftMeta?.placeholder === true ? (draftMeta?.masuri_hint as string | null) : null);
 
+  // If there's a hint AND the gap is a real regen request, include the archived lesson
+  // content so the routine can revise it rather than starting from scratch.
+  const archivedLessonForRegen = (masuriHint && next_needed_date && hintArchivedRes.data)
+    ? {
+        title_vi:   hintArchivedRes.data.title_vi,
+        title_en:   hintArchivedRes.data.title_en,
+        topic:      hintArchivedRes.data.topic,
+        difficulty: hintArchivedRes.data.difficulty,
+        cards:      hintArchivedRes.data.cards,
+      }
+    : null;
+
   return NextResponse.json({
     heo_id: heoId,
     next_needed_date,          // null = buffer full, routine must stop
     unpublished_count: unpublishedCount,  // real draft/approved future lessons (placeholders excluded)
     queued_dates: [...queuedDates].sort(),  // dates already covered
+    // Topics + titles of already-queued (draft/approved) future lessons so the routine
+    // can avoid topic duplication with lessons Heo hasn't seen yet.
+    queued_page_details: realQueued
+      .filter((p) => p.status === "draft" || p.status === "approved")
+      .map((p) => ({
+        date:     String(p.scheduled_for).slice(0, 10),
+        topic:    p.topic    ?? null,
+        title_en: p.title_en ?? null,
+      })),
     last_pages: lastPages ?? [],
-    recent_vocab: (recentVocab ?? []).map((w) => ({
-      word_en: w.word_en,
-      word_vi: w.word_vi,
-      pos: w.pos,
-      topic: w.source_page_topic,
+    recent_vocab: recentVocab.map((w) => ({
+      word_en:    w.word_en,
+      word_vi:    w.word_vi,
+      pos:        w.pos,
+      topic:      w.source_page_topic,
       confidence: w.self_confidence,
     })),
+    // Flat list of EVERY word Heo has ever saved — use this to avoid re-introducing
+    // known vocabulary as "new" words. Can freely use these as support/context words.
+    all_known_words: allVocab.map((w) => w.word_en),
     low_confidence_vocab: lowConfidenceVocab,
     preferred_topics: preferredTopics,
     ...(masuriHint ? { "[MASURI_HINT]": masuriHint } : {}),
+    // Full content of the archived lesson that was flagged for regen.
+    // Present only when [MASURI_HINT] exists. Use this as the BASE to revise —
+    // keep what's good, apply the hint's changes. Do not rebuild from scratch.
+    ...(archivedLessonForRegen ? { "[ARCHIVED_LESSON]": archivedLessonForRegen } : {}),
   });
 }

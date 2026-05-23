@@ -2,9 +2,10 @@
 
 **Schedule:** Any time daily — morning is fine.
 
-> The routine now maintains a 2-day buffer. It always creates a lesson for the
-> next uncovered date, so it does not matter when Heo finishes her current lesson.
-> If both slots are already filled, the routine skips silently.
+> The routine maintains a 2-day buffer. It always creates a lesson for the
+> next uncovered date. If both buffer slots are already filled, the routine skips silently.
+> If Masuri has flagged a lesson for regeneration, the routine fills that gap REGARDLESS
+> of how many unpublished lessons exist — Masuri's hint is an explicit override.
 
 Everything goes through the deployed app's API — no direct database access needed.
 
@@ -39,29 +40,45 @@ curl -s "$APP_URL/api/notebook/routine/state" \
 ```
 
 Parse the JSON output. You will receive:
-- `next_needed_date` — **check this first.** The first future date with no lesson queued. If `null`, the buffer is full — stop.
-- `unpublished_count` — total draft/approved future lessons awaiting publish. If ≥ 2 — stop.
-- `queued_dates` — dates that already have a lesson (draft/approved/published). For your reference.
-- `last_pages` — recent 7 published pages (avoid repeating topic immediately)
-- `recent_vocab` — words she has saved (bias content to use these — recognition is rewarding)
-- `low_confidence_vocab` — words she rated "show me again" (weave in invisibly)
-- `preferred_topics` — her preferred topic tags
-- `[MASURI_HINT]` — if present, this is Masuri's instruction for the next page. **Honor it.**
 
-**⚠️ Stop immediately — before generating ANYTHING — if EITHER is true:**
-- `next_needed_date` is `null`
-- `unpublished_count` ≥ 2
+- `next_needed_date` — The first future date with no lesson queued. If `null`, the buffer is full — stop.
+- `unpublished_count` — Total draft/approved future lessons awaiting publish.
+- `queued_dates` — Dates that already have a lesson (any status). For reference.
+- `queued_page_details` — Array of `{ date, topic, title_en }` for unpublished queued lessons. **Avoid repeating these topics.**
+- `last_pages` — Recent 7 published pages (avoid repeating topic immediately)
+- `recent_vocab` — Last 30 saved words with full details (pos, confidence, topic)
+- `all_known_words` — **Every** word Heo has ever saved, as a flat string array. Do NOT introduce any of these as "new" vocabulary. You MAY use them freely as support words, in exercises, and in reading sentences.
+- `low_confidence_vocab` — Words she rated "show me again" — weave these in invisibly as review
+- `preferred_topics` — Her preferred topic tags
+- `[MASURI_HINT]` — If present, Masuri's instruction for the next page. **Honor it fully.**
+- `[ARCHIVED_LESSON]` — If present alongside `[MASURI_HINT]`, this is the full content of the lesson that was archived for regeneration. **Use it as your base — revise it according to the hint rather than building from scratch.**
 
-Print: `SKIP — Buffer full. next_needed_date=<value>, unpublished_count=<value>. Nothing to do.`
-Do not proceed to Step 2. Do nothing else.
+**⚠️ When to stop — check in this order:**
 
-### STEP 2 — Plan tomorrow's page
+1. If `next_needed_date` is `null` → **STOP.** Buffer is completely full.
+   Print: `SKIP — Buffer full (next_needed_date=null, unpublished_count=<value>). Nothing to do.`
 
-- Use `next_needed_date` as the `scheduled_for` value for this lesson
-- Pick ONE topic from `preferred_topics`, biased away from the last 3 topics in `last_pages`
+2. If `[MASURI_HINT]` is present → **NEVER stop due to unpublished_count.** Masuri has explicitly requested a regeneration for this date. Always generate, regardless of how many lessons are already queued.
+
+3. If `unpublished_count` ≥ 2 AND `[MASURI_HINT]` is NOT present → **STOP.**
+   Print: `SKIP — unpublished_count=<value> already ≥ 2, buffer healthy. Nothing to do.`
+
+Only proceed to Step 2 if none of the stop conditions above triggered.
+
+### STEP 2 — Plan the page
+
+- Use `next_needed_date` as `scheduled_for`
+- **If `[ARCHIVED_LESSON]` is present:** treat it as the base to revise. Keep vocabulary, structure, and exercises that are already good. Apply the `[MASURI_HINT]` changes to the content, tone, theme, or whatever the hint specifies. You are editing, not rebuilding.
+- **If `[ARCHIVED_LESSON]` is absent:** build from scratch using the guidelines below.
+- Pick ONE topic from `preferred_topics`. **Check `queued_page_details` and `last_pages` — avoid any topic that already appears in those lists.**
 - Pick difficulty 1 or 2 (rarely 3)
-- Choose 3–5 NEW vocabulary words (not in `recent_vocab`)
-- Choose 1–2 REVIEW words from `low_confidence_vocab` to weave in invisibly
+- Choose 3–5 NEW vocabulary words that do NOT appear in `all_known_words`
+- Pick 1–2 words from `low_confidence_vocab` to weave in invisibly as review (in exercises and reading sentences — don't announce them as "review")
+
+**Vocab rules:**
+- `all_known_words` = words Heo already knows → use freely as support/context, do NOT introduce as new
+- `low_confidence_vocab` ⊆ `all_known_words` → these need reinforcement → target them in exercises
+- New words must be genuinely new (not in `all_known_words`) and A1–A2 level
 
 ### STEP 3 — Generate the page JSON
 
@@ -77,16 +94,19 @@ Build a JSON object with this exact structure:
   "cards": [...],
   "generation_meta": {
     "new_vocab": ["word1", "word2"],
-    "review_vocab": ["word3"]
+    "review_vocab": ["word3"],
+    "revised_from_hint": true
   }
 }
 ```
 
+Set `"revised_from_hint": true` only when revising an `[ARCHIVED_LESSON]`. Omit otherwise.
+
 **Card structure — always follow this order:**
 1. One `intro` card (warm Vietnamese greeting)
 2. Three to five `word` cards (each new vocabulary word)
-3. One `reading` card (2–3 sentences using today's vocab)
-4. Two to three `exercise` cards (mix of types)
+3. One `reading` card (2–3 sentences using today's vocab — also use words from `all_known_words` naturally, and sneak `low_confidence_vocab` words into the sentences)
+4. Two to three `exercise` cards (mix of types — at least one should target a `low_confidence_vocab` word)
 5. One `ask_prompt` card (optional)
 6. One `completion` card (always last)
 
@@ -172,6 +192,9 @@ Before saving, verify every card:
 - [ ] Tone is warm but not infantilizing
 - [ ] No heavy content (politics, religion, illness, death)
 - [ ] First card is `intro`, last card is `completion`, 6–10 cards total
+- [ ] No new word appears in `all_known_words` (they should be in `all_known_words` after this lesson, not already in it)
+- [ ] Topic does not repeat any topic in `queued_page_details` or the last 3 entries of `last_pages`
+- [ ] At least one exercise uses a `low_confidence_vocab` word as its target
 
 Fix any issues before proceeding.
 
