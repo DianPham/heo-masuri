@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, createContext, useContext, useState, useCallback } from "react";
+import { useEffect, useRef, createContext, useContext, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Who } from "@/lib/soft-gate";
 
 export type RealtimeEvent =
@@ -11,12 +12,14 @@ export type RealtimeEvent =
   | { event: "angry:new"; payload: { id: string; need_type: string } }
   | { event: "angry:reply"; payload: { id: string; reply: string } }
   | { event: "angry:resolved"; payload: { id: string } }
-  | { event: "reunion:updated"; payload: { target_date: string | null } };
+  | { event: "reunion:updated"; payload: { target_date: string | null } }
+  | { event: "heo:studying"; payload: { card_index: number; total: number; page_title: string } };
 
 type Listener = (e: RealtimeEvent) => void;
 
 const RealtimeContext = createContext<{
   addListener: (fn: Listener) => () => void;
+  broadcast: (event: string, payload: Record<string, unknown>) => void;
 } | null>(null);
 
 export function RealtimeProvider({
@@ -27,6 +30,7 @@ export function RealtimeProvider({
   children: React.ReactNode;
 }) {
   const [listeners] = useState<Set<Listener>>(() => new Set());
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const addListener = useCallback(
     (fn: Listener) => {
@@ -34,6 +38,14 @@ export function RealtimeProvider({
       return () => listeners.delete(fn);
     },
     [listeners]
+  );
+
+  // Expose a send function so any component can broadcast on the shared channel.
+  const broadcast = useCallback(
+    (event: string, payload: Record<string, unknown>) => {
+      channelRef.current?.send({ type: "broadcast", event, payload });
+    },
+    []
   );
 
   useEffect(() => {
@@ -46,19 +58,28 @@ export function RealtimeProvider({
       })
       .subscribe();
 
+    channelRef.current = ch;
+
     // Suppress unused warning — `who` is available for future filtering
     void who;
 
     return () => {
+      channelRef.current = null;
       supabase.removeChannel(ch);
     };
   }, [who, listeners]);
 
   return (
-    <RealtimeContext.Provider value={{ addListener }}>
+    <RealtimeContext.Provider value={{ addListener, broadcast }}>
       {children}
     </RealtimeContext.Provider>
   );
+}
+
+export function useRealtimeBroadcast() {
+  const ctx = useContext(RealtimeContext);
+  // Return a no-op if used outside provider (e.g. during SSR)
+  return ctx?.broadcast ?? (() => {});
 }
 
 export function useRealtime(listener: Listener) {

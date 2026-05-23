@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 
 import type { DailyPage, WordCard as WordCardType } from "@/types/notebook";
 import { buildViMap } from "@/lib/notebook/test-page";
+import { useRealtimeBroadcast } from "@/components/realtime/RealtimeProvider";
 import { StoriesProgress } from "./StoriesProgress";
 import { IntroCard } from "./cards/IntroCard";
 import { WordCard } from "./cards/WordCard";
@@ -61,6 +62,7 @@ interface StoriesRendererProps {
 
 export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps) {
   const router = useRouter();
+  const broadcast = useRealtimeBroadcast();
   const storageKey = `notebook_progress_${page.id}`;
   const viMap = buildViMap(page);
   const cards = page.cards;
@@ -117,6 +119,17 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
       // ignore quota errors
     }
   }, [current, visited, storageKey]);
+
+  // ── Broadcast live card position to Masuri ────────────────────
+  // Skip review mode (scrapbook re-reads) — only broadcast active study sessions.
+  useEffect(() => {
+    if (isReview) return;
+    broadcast("heo:studying", {
+      card_index: current,
+      total,
+      page_title: page.title_vi,
+    });
+  }, [broadcast, current, total, page.title_vi, isReview]);
 
   // ── Navigation ────────────────────────────────────────────────
   const goTo = useCallback(

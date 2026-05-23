@@ -9,6 +9,7 @@ import { Sticker } from "@/components/notebook/Sticker";
 import { Tape } from "@/components/notebook/Tape";
 import { MasuriAskInbox } from "@/components/notebook/MasuriAskInbox";
 import { MasuriGrantRestButton } from "@/components/notebook/MasuriGrantRestButton";
+import { HeoStudyingBanner } from "@/components/notebook/HeoStudyingBanner";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -253,6 +254,9 @@ export default async function MasuriNotebookPage() {
           </Link>
         </div>
       )}
+
+      {/* ── I1: Live studying banner (client, shows only when Heo is active) ── */}
+      <HeoStudyingBanner />
 
       {/* ── Today's status card ─────────────────────────────── */}
       <StatusCard streak={streak} />
