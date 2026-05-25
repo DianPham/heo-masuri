@@ -40,21 +40,24 @@ export async function GET(req: NextRequest) {
     .toISOString()
     .slice(0, 10);
 
-  // Fetch queued pages from TODAY onwards (not tomorrow).
-  // Using todayVN ensures today's approved/draft lesson is counted in
-  // unpublished_count — if the publish cron is blocked (e.g. unfinished
-  // lesson gate), today's lesson stays approved and must be included so
-  // the routine doesn't generate unnecessarily.
-  // The next_needed_date gap-detection loop still starts from tomorrow (i=1),
-  // so this change only affects unpublished_count, not the date targeting.
+  // Fetch all recent + future pages (draft/approved/published).
+  // We use a 14-day lookback so late/backlogged approved lessons (e.g.
+  // publish cron blocked by the unfinished-lesson gate) are included in
+  // unpublished_count. The queuedDates set — used for next_needed_date
+  // gap detection — is filtered to tomorrow+ in JS below, keeping date
+  // targeting unaffected.
+  const fourteenDaysAgo = new Date(Date.now() + 7 * 3_600_000 - 14 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+
   const { data: queuedPages } = await supabase
     .from("daily_pages")
     .select("scheduled_for, status, generation_meta, topic, title_en")
     .eq("for_user", heoId)
     .in("status", ["draft", "approved", "published"])
-    .gte("scheduled_for", todayVN)
+    .gte("scheduled_for", fourteenDaysAgo)
     .order("scheduled_for", { ascending: true })
-    .limit(MAX_BUFFER + 10); // fetch extra to account for filtered-out placeholders
+    .limit(30); // wide enough to catch any backlog
 
   // Strip legacy placeholder drafts — they were never real lessons
   const realQueued = (queuedPages ?? []).filter((p) => {
@@ -62,9 +65,11 @@ export async function GET(req: NextRequest) {
     return meta?.placeholder !== true;
   });
 
-  // Normalize to plain YYYY-MM-DD strings
+  // queuedDates — only future dates (tomorrow+), used for next_needed_date gap detection
   const queuedDates = new Set(
-    realQueued.map((p) => String(p.scheduled_for).slice(0, 10))
+    realQueued
+      .filter((p) => String(p.scheduled_for).slice(0, 10) >= tomorrowVN)
+      .map((p) => String(p.scheduled_for).slice(0, 10))
   );
 
   // Walk forward from tomorrow until we find a gap, up to MAX_BUFFER days ahead
