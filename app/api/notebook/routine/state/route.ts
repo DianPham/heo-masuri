@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
       .limit(7),
     supabase
       .from("vocabulary")
-      .select("word_en, word_vi, pos, source_page_topic, self_confidence")
+      .select("word_en, word_vi, pos, self_confidence, source_page_id, source_kind")
       .eq("user_id", heoId)
       .order("saved_at", { ascending: false }),
   ]);
@@ -196,7 +196,6 @@ export async function GET(req: NextRequest) {
       word_en:    w.word_en,
       word_vi:    w.word_vi,
       pos:        w.pos,
-      topic:      w.source_page_topic,
       confidence: w.self_confidence,
     })),
     // Flat list of EVERY word Heo has ever saved — use this to avoid re-introducing
