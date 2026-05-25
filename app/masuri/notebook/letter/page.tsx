@@ -24,6 +24,37 @@ type Letter = {
   dayKey: string; // YYYY-MM-DD in VN timezone
 };
 
+type LetterPrompt = {
+  prompt_vi: string;
+  prompt_en: string;
+  starter_words: string[];
+};
+
+async function fetchWeeklyPrompt(): Promise<LetterPrompt | null> {
+  try {
+    const supabase = createServerClient();
+    const { data: prompts } = await supabase
+      .from("letter_prompts")
+      .select("prompt_vi, prompt_en, starter_words")
+      .order("id", { ascending: true });
+
+    if (!prompts || prompts.length === 0) return null;
+
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNum = Math.floor((now.getTime() - startOfYear.getTime()) / (7 * 86_400_000));
+    const prompt = prompts[weekNum % prompts.length];
+
+    return {
+      prompt_vi: prompt.prompt_vi,
+      prompt_en: prompt.prompt_en,
+      starter_words: Array.isArray(prompt.starter_words) ? prompt.starter_words : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchAllLetters(): Promise<Letter[]> {
   try {
     const supabase = createServerClient();
@@ -96,7 +127,10 @@ function formatDayLabel(dayKey: string): string {
 }
 
 export default async function MasuriLetterListPage() {
-  const letters = await fetchAllLetters();
+  const [letters, weeklyPrompt] = await Promise.all([
+    fetchAllLetters(),
+    fetchWeeklyPrompt(),
+  ]);
   const groups = groupByDay(letters);
   const unseenCount = letters.filter((l) => !l.seen_at).length;
 
@@ -142,6 +176,41 @@ export default async function MasuriLetterListPage() {
           </p>
         </div>
       </div>
+
+      {/* This week's prompt — so Masuri knows what Heo was asked to write */}
+      {weeklyPrompt && (
+        <div
+          className="rounded-2xl px-4 py-4 mb-6"
+          style={{
+            backgroundColor: "rgba(237,232,245,0.6)",
+            border: "1px solid rgba(196,168,220,0.4)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Tape color="lilac" width={10} length={36} rotate={-1} />
+            <p className="text-xs font-bold text-purple-500 uppercase tracking-wide">
+              Đề thư tuần này
+            </p>
+          </div>
+          <p className="text-sm font-medium text-ink leading-snug mb-1">
+            {weeklyPrompt.prompt_vi}
+          </p>
+          <p className="text-xs text-ink-soft italic mb-2">{weeklyPrompt.prompt_en}</p>
+          {weeklyPrompt.starter_words.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {weeklyPrompt.starter_words.map((w) => (
+                <span
+                  key={w}
+                  className="text-xs font-medium px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: "rgba(196,168,220,0.3)", color: "#6B46A0" }}
+                >
+                  {w}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Grouped list */}
       {groups.length === 0 ? (

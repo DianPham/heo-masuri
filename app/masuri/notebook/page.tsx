@@ -142,7 +142,7 @@ async function fetchTodayActivity(): Promise<TodayActivity> {
         .from("vocabulary")
         .select("id", { count: "exact", head: true })
         .eq("user_id", heo.id)
-        .gte("created_at", todayStart),
+        .gte("saved_at", todayStart),
       supabase
         .from("ask_masuri_threads")
         .select("id", { count: "exact", head: true })

@@ -8,6 +8,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { sendPushToUser } from "@/lib/push";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
@@ -36,10 +37,10 @@ export async function POST(req: NextRequest) {
       .single();
     if (!heo) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Read current state
+    // Read current state (also grab title + topic for Masuri notification)
     const { data: page } = await supabase
       .from("daily_pages")
-      .select("id, completed_at, for_user")
+      .select("id, completed_at, for_user, title_vi, topic")
       .eq("id", page_id)
       .eq("for_user", heo.id)
       .maybeSingle();
@@ -66,7 +67,44 @@ export async function POST(req: NextRequest) {
 
     revalidatePath("/heo/notebook");
     revalidatePath("/heo/notebook/scrapbook");
+    revalidatePath("/masuri/notebook");
     revalidatePath("/masuri/notebook/progress");
+
+    // Notify Masuri that Heo finished her lesson
+    const { data: masuri } = await supabase
+      .from("users")
+      .select("id")
+      .eq("slug", "masuri")
+      .single();
+
+    if (masuri) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+      const title = (page as Record<string, unknown>).title_vi as string | null;
+
+      await sendPushToUser(masuri.id, {
+        title: "Heo vừa hoàn thành bài học! 🎉",
+        body: title ? `"${title}" — Heo học xong rồi 🌸` : "Heo học xong bài hôm nay rồi 🌸",
+        url: `${appUrl}/masuri/notebook`,
+        tag: "heo-completed",
+      });
+
+      // Discord webhook
+      const webhookUrl = process.env.DISCORD_WEBHOOK_LOGS;
+      if (webhookUrl && title) {
+        await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: "Sổ tiếng Anh",
+            embeds: [{
+              title: "🎉 Heo hoàn thành bài học!",
+              description: `**${title}** — Heo vừa học xong trang hôm nay 🌸`,
+              color: 0xa8d5a2,
+            }],
+          }),
+        }).catch(() => {});
+      }
+    }
 
     return NextResponse.json({ completed_at: now, already_done: false });
   } catch (err) {
