@@ -35,22 +35,24 @@ export async function GET(req: NextRequest) {
   // Cap: if already MAX_BUFFER days ahead are covered, routine should skip.
   const MAX_BUFFER = 2;
 
-  // Compute tomorrow's date string in VN timezone for the gte filter
+  // Compute tomorrow's date string in VN timezone for the next_needed_date loop
   const tomorrowVN = new Date(Date.now() + 7 * 3_600_000 + 86_400_000)
     .toISOString()
     .slice(0, 10);
 
-  // Fetch queued pages including status + generation_meta so we can:
-  //   (a) exclude legacy placeholder drafts from date-gap detection
-  //   (b) derive the real unpublished count without a second query
-  // Old regenerate flow inserted placeholder drafts (generation_meta.placeholder=true)
-  // which inflated unpublished_count and caused false early-stops.
+  // Fetch queued pages from TODAY onwards (not tomorrow).
+  // Using todayVN ensures today's approved/draft lesson is counted in
+  // unpublished_count — if the publish cron is blocked (e.g. unfinished
+  // lesson gate), today's lesson stays approved and must be included so
+  // the routine doesn't generate unnecessarily.
+  // The next_needed_date gap-detection loop still starts from tomorrow (i=1),
+  // so this change only affects unpublished_count, not the date targeting.
   const { data: queuedPages } = await supabase
     .from("daily_pages")
     .select("scheduled_for, status, generation_meta, topic, title_en")
     .eq("for_user", heoId)
     .in("status", ["draft", "approved", "published"])
-    .gte("scheduled_for", tomorrowVN)
+    .gte("scheduled_for", todayVN)
     .order("scheduled_for", { ascending: true })
     .limit(MAX_BUFFER + 10); // fetch extra to account for filtered-out placeholders
 
