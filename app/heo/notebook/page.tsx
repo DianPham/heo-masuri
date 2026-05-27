@@ -107,11 +107,17 @@ async function fetchUnreadCounts(): Promise<{ letters: number; asks: number }> {
   }
 }
 
-async function fetchLetterNudge(): Promise<{ hasLetterThisWeek: boolean; isSunday: boolean }> {
+type LetterNudge = {
+  hasLetterThisWeek: boolean;
+  isSunday: boolean;
+  prompt: { prompt_vi: string; prompt_en: string } | null;
+};
+
+async function fetchLetterNudge(): Promise<LetterNudge> {
   try {
     const supabase = createServerClient();
     const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
-    if (!heo) return { hasLetterThisWeek: false, isSunday: false };
+    if (!heo) return { hasLetterThisWeek: false, isSunday: false, prompt: null };
 
     const nowVN = new Date(Date.now() + 7 * 3_600_000);
     const isSunday = nowVN.getUTCDay() === 0;
@@ -122,17 +128,35 @@ async function fetchLetterNudge(): Promise<{ hasLetterThisWeek: boolean; isSunda
     mondayUTC.setUTCDate(nowVN.getUTCDate() - (dayOfWeek - 1));
     mondayUTC.setUTCHours(0, 0, 0, 0);
 
-    const { data: letters } = await supabase
-      .from("letters")
-      .select("id")
-      .eq("from_user", heo.id)
-      .in("kind", ["weekly_letter", "two_truths"])
-      .gte("created_at", mondayUTC.toISOString())
-      .limit(1);
+    const [lettersRes, promptsRes] = await Promise.all([
+      supabase
+        .from("letters")
+        .select("id")
+        .eq("from_user", heo.id)
+        .in("kind", ["weekly_letter", "two_truths"])
+        .gte("created_at", mondayUTC.toISOString())
+        .limit(1),
+      supabase
+        .from("letter_prompts")
+        .select("prompt_vi, prompt_en")
+        .order("id", { ascending: true }),
+    ]);
 
-    return { hasLetterThisWeek: (letters?.length ?? 0) > 0, isSunday };
+    const prompts = promptsRes.data ?? [];
+    let prompt: { prompt_vi: string; prompt_en: string } | null = null;
+    if (prompts.length > 0) {
+      const startOfYear = new Date(nowVN.getUTCFullYear(), 0, 1);
+      const weekNum = Math.floor((nowVN.getTime() - startOfYear.getTime()) / (7 * 86_400_000));
+      prompt = prompts[weekNum % prompts.length];
+    }
+
+    return {
+      hasLetterThisWeek: (lettersRes.data?.length ?? 0) > 0,
+      isSunday,
+      prompt,
+    };
   } catch {
-    return { hasLetterThisWeek: false, isSunday: false };
+    return { hasLetterThisWeek: false, isSunday: false, prompt: null };
   }
 }
 
@@ -217,7 +241,7 @@ export default async function HeoNotebookPage() {
 
       {/* ── Letter nudge (Sunday-primary: only on Sunday, and only if no letter yet this week) */}
       {letterNudge.isSunday && !letterNudge.hasLetterThisWeek && (
-        <LetterNudgeCard />
+        <LetterNudgeCard prompt={letterNudge.prompt} />
       )}
 
       {/* ── Section tiles ──────────────────────────────────── */}
@@ -461,24 +485,41 @@ function TodayTile({
 }
 
 // ── Letter nudge card — Sunday only ──────────────────────────
-function LetterNudgeCard() {
+function LetterNudgeCard({
+  prompt,
+}: {
+  prompt: { prompt_vi: string; prompt_en: string } | null;
+}) {
   return (
     <Link
       href="/heo/notebook/letter/write"
-      className="flex items-center gap-4 rounded-2xl px-4 py-4 mb-4 active:scale-[0.98] transition-transform"
+      className="block rounded-2xl px-4 py-4 mb-4 active:scale-[0.98] transition-transform"
       style={{
         backgroundColor: "rgba(237,232,245,0.7)",
         border: "1px solid rgba(196,168,220,0.5)",
         boxShadow: "var(--shadow-card)",
       }}
     >
-      <span style={{ fontSize: 32 }}>💌</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-ink leading-snug">
-          Chủ nhật rồi — viết thư cho Masuri nha Heo 💌
-        </p>
-        <p className="text-xs text-purple-500 mt-0.5 font-medium">Viết thư ngay →</p>
+      <div className="flex items-center gap-3 mb-2">
+        <span style={{ fontSize: 28 }}>💌</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-ink leading-snug">
+            Chủ nhật rồi — viết thư cho Masuri nha Heo!
+          </p>
+          <p className="text-xs text-purple-500 mt-0.5 font-medium">Viết thư ngay →</p>
+        </div>
       </div>
+      {prompt && (
+        <div
+          className="rounded-xl px-3 py-2 mt-1"
+          style={{ backgroundColor: "rgba(255,255,255,0.6)", border: "1px solid rgba(196,168,220,0.3)" }}
+        >
+          <p className="text-xs font-medium text-purple-700 leading-relaxed">
+            📝 {prompt.prompt_vi}
+          </p>
+          <p className="text-xs text-ink-soft italic mt-0.5">{prompt.prompt_en}</p>
+        </div>
+      )}
     </Link>
   );
 }

@@ -58,14 +58,14 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 border-t border-rose-200/50"
+      className="fixed bottom-0 left-0 right-0 z-30 border-t border-rose-200/50 md:border md:border-rose-200/60 md:left-1/2 md:right-auto md:bottom-6 md:-translate-x-1/2 md:rounded-2xl md:shadow-[0_8px_24px_rgba(196,102,122,0.18)]"
       style={{
         background: "rgba(255, 249, 245, 0.94)",
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
       } as React.CSSProperties}
     >
-      <div className="flex items-center justify-around px-8 pt-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))] max-w-md mx-auto">
+      <div className="flex items-center justify-around px-8 pt-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))] max-w-md mx-auto md:max-w-lg md:pb-3">
         {links.map(({ href, icon: Icon, label }) => {
           // Home: exact match. Notebook: starts-with (has sub-pages). Settings: exact.
           const active =
