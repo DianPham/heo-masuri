@@ -1,7 +1,10 @@
 /**
- * POST /api/notebook/admin/publish-due
+ * GET/POST /api/notebook/admin/publish-due
  * Vercel Cron — runs daily at 06:00 Asia/Ho_Chi_Minh (23:00 UTC).
- * Publishes any approved (or stale draft) pages where scheduled_for = today.
+ * Vercel sends GET; manual triggers can use either.
+ *
+ * Publishes the SINGLE OLDEST queued lesson (approved or stale draft).
+ * One lesson per day — keeps Heo's pace steady regardless of queue depth.
  * Fires a Discord alert if a draft is auto-published without Masuri's approval.
  *
  * Secured by CRON_SECRET header.
@@ -16,7 +19,7 @@ function todayVN(): string {
   return new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
 }
 
-export async function POST(req: NextRequest) {
+async function handle(req: NextRequest) {
   const secret = req.headers.get("authorization")?.replace("Bearer ", "");
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,7 +29,7 @@ export async function POST(req: NextRequest) {
   const today = todayVN();
   const now = new Date().toISOString();
 
-  // ── Unfinished lesson gate (restored) ─────────────────────────────────
+  // ── Unfinished lesson gate ────────────────────────────────────────────
   // If Heo has an active published lesson from the past 7 days that she
   // hasn't completed yet, don't publish a new one — let her finish first.
   // The 7-day window prevents old seed data from blocking forever.
@@ -48,15 +51,17 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // ── Find the oldest queued lesson (not tied to today's date) ──────────
-  // This decouples publishing from the calendar — the oldest approved/draft
-  // lesson is published regardless of when it was scheduled.
+  // ── Find the SINGLE OLDEST queued lesson ──────────────────────────────
+  // Publishing is decoupled from the calendar — oldest approved/draft first,
+  // one per day. This prevents flooding Heo when the queue has multiple
+  // items and ensures lessons are consumed in the order Masuri intended.
   const { data: due, error } = await supabase
     .from("daily_pages")
     .select("id, title_vi, status, for_user, scheduled_for")
     .in("status", ["approved", "draft"])
     .order("scheduled_for", { ascending: true })
-    .limit(5);
+    .order("created_at", { ascending: true })
+    .limit(1);
 
   if (error) {
     console.error("[publish-due]", error);
@@ -64,24 +69,26 @@ export async function POST(req: NextRequest) {
   }
 
   if (!due || due.length === 0) {
-    return NextResponse.json({ published: 0, note: "No pages due today" });
+    return NextResponse.json({ published: 0, note: "No queued lessons" });
   }
 
   const published: string[] = [];
   const unapproved: string[] = [];
+  const page = due[0];
 
-  for (const page of due) {
-    const { error: pubErr } = await supabase
-      .from("daily_pages")
-      .update({ status: "published", published_at: now })
-      .eq("id", page.id);
+  const { error: pubErr } = await supabase
+    .from("daily_pages")
+    .update({ status: "published", published_at: now })
+    .eq("id", page.id);
 
-    if (!pubErr) {
-      published.push(page.id);
-      if (page.status === "draft") {
-        unapproved.push(page.title_vi);
-      }
-    }
+  if (pubErr) {
+    console.error("[publish-due] update failed", pubErr);
+    return NextResponse.json({ error: pubErr.message }, { status: 500 });
+  }
+
+  published.push(page.id);
+  if (page.status === "draft") {
+    unapproved.push(page.title_vi);
   }
 
   // Alert if any draft was auto-published without approval
@@ -142,3 +149,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ published: published.length, unapproved: unapproved.length });
 }
+
+// Vercel Cron sends GET; manual triggers may use POST.
+export const GET = handle;
+export const POST = handle;
