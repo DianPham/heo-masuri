@@ -19,6 +19,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { runDeliverScheduled } from "@/app/api/cron/deliver-scheduled/route";
+import { runGmgnTick } from "@/app/api/cron/gmgn-tick/route";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,15 @@ async function handle(req: NextRequest) {
     errors: {},
   };
 
+  // ── Every minute: GM / GN auto-notes ──────────────────────────────────────
+  try {
+    const r = await runGmgnTick();
+    result.ran.push("gmgn-tick");
+    result.results["gmgn-tick"] = r;
+  } catch (err) {
+    result.errors["gmgn-tick"] = String(err);
+  }
+
   // ── Every 5 minutes: deliver scheduled letters ────────────────────────────
   if (utcMinute % 5 === 0) {
     try {
@@ -93,9 +103,9 @@ async function handle(req: NextRequest) {
     }
   }
 
-  // ── Future CP2 hooks (left commented for visibility) ──────────────────────
-  // Every minute:    runGmgnTick()
+  // ── Future hooks (CP3+) ───────────────────────────────────────────────────
   // Every hour at :00:    runSurpriseTick()
+  // Daily 09:00 VN:       runImportantDateTick()  (Phase 2B)
 
   return NextResponse.json(result);
 }
