@@ -50,3 +50,5 @@ next-env.d.ts
 # Project-scoped MCP server config — references local-only env vars,
 # never commit (contains references to user's Supabase access token via env).
 .mcp.json
+
+.vercel

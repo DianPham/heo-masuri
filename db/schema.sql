@@ -84,17 +84,22 @@ create table public.push_subscriptions (
 );
 
 -- ── notification_prefs ───────────────────────────────────────────────────────
--- Phase 2 §4.4 adds: surprise_enabled, gmgn_enabled, date_planning_enabled,
--- outfit_enabled, important_date_enabled.
+-- Phase 2 §4.4 adds the 5 *_enabled flags below.
 create table public.notification_prefs (
-  user_id          uuid primary key references public.users(id),
-  missing_enabled  boolean default true,
-  thinking_enabled boolean default true,
-  hug_kiss_enabled boolean default true,
-  angry_enabled    boolean default true,
-  quiet_start      time,
-  quiet_end        time,
-  updated_at       timestamptz default now()
+  user_id                uuid primary key references public.users(id),
+  missing_enabled        boolean default true,
+  thinking_enabled       boolean default true,
+  hug_kiss_enabled       boolean default true,
+  angry_enabled          boolean default true,
+  quiet_start            time,
+  quiet_end              time,
+  -- Phase 2 additions (migration 010):
+  surprise_enabled       boolean not null default true,
+  gmgn_enabled           boolean not null default true,
+  date_planning_enabled  boolean not null default true,
+  outfit_enabled         boolean not null default true,
+  important_date_enabled boolean not null default true,
+  updated_at             timestamptz default now()
 );
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -174,12 +179,14 @@ create index ask_masuri_to_user_unseen_idx
 
 -- ── letters ──────────────────────────────────────────────────────────────────
 -- Phase 2 §17.2 extends kind: + 'love_note','surprise','gm','gn'. two_truths stays.
+-- (Migration 007 applied the CHECK constraint extension below.)
 create table public.letters (
   id              uuid primary key default gen_random_uuid(),
   from_user       uuid not null references public.users(id),
   to_user         uuid not null references public.users(id),
   kind            text not null
-                    check (kind in ('weekly_letter','vocab_card','encouragement','two_truths')),
+                    check (kind in ('weekly_letter','vocab_card','encouragement','two_truths',
+                                    'love_note','surprise','gm','gn')),
   prompt_id       text,
   body            text not null,
   language        text not null default 'en'
@@ -238,5 +245,60 @@ create table public.notebook_prefs (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- End of pre-Phase-2 schema. New Phase 2 tables begin at migration 007.
+-- Phase 2A — scheduled message infrastructure (migrations 007–010)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── surprise_pool (migration 008) ────────────────────────────────────────────
+-- Masuri's pre-written surprise messages. Shuffle-bag deliveries draw from here.
+create table public.surprise_pool (
+  id           uuid primary key default gen_random_uuid(),
+  body         text not null,
+  language     text not null default 'vi' check (language in ('vi','en','mixed')),
+  weight       int not null default 1,
+  attachments  jsonb,
+  author       uuid not null references public.users(id),
+  created_at   timestamptz default now(),
+  retired_at   timestamptz
+);
+create index surprise_pool_active_idx on public.surprise_pool (retired_at, created_at desc);
+
+-- ── surprise_deliveries (migration 008) ──────────────────────────────────────
+-- Bookkeeping: which pool items have been delivered in which shuffle round.
+-- Separate from `letters` because `letters` is the user-visible delivery and
+-- this table is shuffle-bag state — different concern.
+create table public.surprise_deliveries (
+  id            uuid primary key default gen_random_uuid(),
+  pool_id       uuid not null references public.surprise_pool(id),
+  letter_id     uuid not null references public.letters(id),
+  delivered_at  timestamptz not null default now(),
+  shuffle_round int not null
+);
+create index surprise_deliveries_pool_idx  on public.surprise_deliveries (pool_id, delivered_at desc);
+create index surprise_deliveries_round_idx on public.surprise_deliveries (shuffle_round, delivered_at desc);
+
+-- ── recurring_letters (migration 009) ────────────────────────────────────────
+-- GM/GN auto-note configuration. One row per active recurring schedule.
+-- Pool rotates linearly (not shuffled): each tick advances `last_pool_index`,
+-- wraps when reaching the end. Idempotent within a day via `last_delivered_at`.
+create table public.recurring_letters (
+  id                uuid primary key default gen_random_uuid(),
+  from_user         uuid not null references public.users(id),
+  to_user           uuid not null references public.users(id),
+  kind              text not null check (kind in ('gm','gn')),
+  pool              jsonb not null,
+  send_at_local     time not null,
+  timezone          text not null default 'Asia/Ho_Chi_Minh',
+  enabled           boolean not null default true,
+  last_delivered_at timestamptz,
+  last_pool_index   int not null default -1,
+  created_at        timestamptz default now()
+);
+create unique index recurring_letters_unique_kind_per_pair
+  on public.recurring_letters (from_user, to_user, kind);
+
+-- All three Phase 2A tables have RLS enabled and NO anon policies
+-- (service-role only access — like notification_prefs, push_subscriptions).
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- End of schema. Phase 2B tables (calendar, important dates) begin at 011+.
 -- ─────────────────────────────────────────────────────────────────────────────

@@ -360,30 +360,45 @@ export type Database = {
       notification_prefs: {
         Row: {
           angry_enabled: boolean | null
+          date_planning_enabled: boolean
+          gmgn_enabled: boolean
           hug_kiss_enabled: boolean | null
+          important_date_enabled: boolean
           missing_enabled: boolean | null
+          outfit_enabled: boolean
           quiet_end: string | null
           quiet_start: string | null
+          surprise_enabled: boolean
           thinking_enabled: boolean | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           angry_enabled?: boolean | null
+          date_planning_enabled?: boolean
+          gmgn_enabled?: boolean
           hug_kiss_enabled?: boolean | null
+          important_date_enabled?: boolean
           missing_enabled?: boolean | null
+          outfit_enabled?: boolean
           quiet_end?: string | null
           quiet_start?: string | null
+          surprise_enabled?: boolean
           thinking_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           angry_enabled?: boolean | null
+          date_planning_enabled?: boolean
+          gmgn_enabled?: boolean
           hug_kiss_enabled?: boolean | null
+          important_date_enabled?: boolean
           missing_enabled?: boolean | null
+          outfit_enabled?: boolean
           quiet_end?: string | null
           quiet_start?: string | null
+          surprise_enabled?: boolean
           thinking_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
@@ -430,6 +445,63 @@ export type Database = {
           {
             foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_letters: {
+        Row: {
+          created_at: string | null
+          enabled: boolean
+          from_user: string
+          id: string
+          kind: string
+          last_delivered_at: string | null
+          last_pool_index: number
+          pool: Json
+          send_at_local: string
+          timezone: string
+          to_user: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean
+          from_user: string
+          id?: string
+          kind: string
+          last_delivered_at?: string | null
+          last_pool_index?: number
+          pool: Json
+          send_at_local: string
+          timezone?: string
+          to_user: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean
+          from_user?: string
+          id?: string
+          kind?: string
+          last_delivered_at?: string | null
+          last_pool_index?: number
+          pool?: Json
+          send_at_local?: string
+          timezone?: string
+          to_user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_letters_from_user_fkey"
+            columns: ["from_user"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_letters_to_user_fkey"
+            columns: ["to_user"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -499,6 +571,86 @@ export type Database = {
             foreignKeyName: "streaks_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surprise_deliveries: {
+        Row: {
+          delivered_at: string
+          id: string
+          letter_id: string
+          pool_id: string
+          shuffle_round: number
+        }
+        Insert: {
+          delivered_at?: string
+          id?: string
+          letter_id: string
+          pool_id: string
+          shuffle_round: number
+        }
+        Update: {
+          delivered_at?: string
+          id?: string
+          letter_id?: string
+          pool_id?: string
+          shuffle_round?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surprise_deliveries_letter_id_fkey"
+            columns: ["letter_id"]
+            isOneToOne: false
+            referencedRelation: "letters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "surprise_deliveries_pool_id_fkey"
+            columns: ["pool_id"]
+            isOneToOne: false
+            referencedRelation: "surprise_pool"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surprise_pool: {
+        Row: {
+          attachments: Json | null
+          author: string
+          body: string
+          created_at: string | null
+          id: string
+          language: string
+          retired_at: string | null
+          weight: number
+        }
+        Insert: {
+          attachments?: Json | null
+          author: string
+          body: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          retired_at?: string | null
+          weight?: number
+        }
+        Update: {
+          attachments?: Json | null
+          author?: string
+          body?: string
+          created_at?: string | null
+          id?: string
+          language?: string
+          retired_at?: string | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surprise_pool_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
