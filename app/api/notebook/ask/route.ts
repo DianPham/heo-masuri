@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
+import { sendWebhook } from "@/lib/discord";
 import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
@@ -84,39 +85,34 @@ export async function POST(req: NextRequest) {
     });
 
     // Discord webhook — notify Masuri in #notebook-ask channel
-    const discordUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_ASK;
-    if (discordUrl) {
+    {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
       const description = word_en
         ? `**${word_en}**${question_text ? `\n\n💬 ${question_text}` : ""}`
         : question_text;
-      fetch(discordUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: "Heo (Sổ tiếng Anh)",
-          embeds: [
-            {
-              title: "📓 Heo hỏi Masuri",
-              description,
-              color: 0xf8b4c4,
-            },
-          ],
-          components: [
-            {
-              type: 1,
-              components: [
-                {
-                  type: 2,
-                  style: 5,
-                  label: "Trả lời 💕",
-                  url: `${appUrl}/masuri/notebook/ask/${data.id}`,
-                },
-              ],
-            },
-          ],
-        }),
-      }).catch((err) => console.error("[ask discord]", err));
+      await sendWebhook(process.env.DISCORD_WEBHOOK_NOTEBOOK_ASK, {
+        username: "Heo (Sổ tiếng Anh)",
+        embeds: [
+          {
+            title: "📓 Heo hỏi Masuri",
+            description,
+            color: 0xf8b4c4,
+          },
+        ],
+        components: [
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                style: 5,
+                label: "Trả lời 💕",
+                url: `${appUrl}/masuri/notebook/ask/${data.id}`,
+              },
+            ],
+          },
+        ],
+      });
     }
 
     // Realtime broadcast
