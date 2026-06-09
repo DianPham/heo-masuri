@@ -131,12 +131,20 @@ aren't on a Vercel-managed schedule.
 - [ ] Confirm staging production deploy now succeeds (no `deploy_failed` for cron-cadence reason). `vercel ls heo-masuri-staging | head` should show a recent Production deploy with status `● Ready`.
 - [ ] Visit `https://heo-masuri-staging.vercel.app/calendar` (after soft-gate) and confirm the CP3 UI renders.
 
-### Phase 2 cron decision (BLOCKS Phase 2A launch)
-Phase 2 features (delivery worker, GM/GN, surprise tick) need minute or
-hourly cadence. Pick one:
-- Upgrade Vercel to Pro ($20/mo) and re-register `/api/cron/tick` at `* * * * *`.
-- Use an external minute pinger (cron-job.org, uptimerobot, github actions) calling `https://<staging-url>/api/cron/tick` with `Authorization: Bearer $CRON_SECRET`.
-- Move scheduling to Supabase pg_cron with HTTP extension.
+### Phase 2 cron trigger — external pinger (decided)
+Using cron-job.org to hit `/api/cron/tick` every minute. See setup in
+[`PHASE2_CRON_PINGER.md`](./PHASE2_CRON_PINGER.md).
+
+- [ ] cron-job.org account created
+- [ ] Staging job pointing at `https://heo-masuri-staging.vercel.app/api/cron/tick` with `Authorization: Bearer <staging CRON_SECRET>`, every 1 minute
+- [ ] cron-job.org execution history shows HTTP 200 with body `{"utc":…,"ran":[…],"results":{…},"errors":{}}` on each fire
+- [ ] `gmgn-tick` appears in `ran` array on every fire (no time gating)
+- [ ] `deliver-scheduled` appears in `ran` on minutes 00, 05, 10, …
+- [ ] `reminder` appears in `ran` at 13:00 UTC fire (one-off, easy to miss — check Vercel function logs the next day)
+- [ ] `publish-due` appears in `ran` at 23:00 UTC fire (same)
+- [ ] Direct curl with bad/missing Bearer returns 401 (already verified)
+- [ ] Stop the cron-job.org job, wait a minute → confirm nothing fires (no orphan triggers from elsewhere). Restart it.
+- [ ] Production job created at launch time, pointing at production URL with **production** `CRON_SECRET` (verify it is NOT the same value as staging)
 
 ---
 
