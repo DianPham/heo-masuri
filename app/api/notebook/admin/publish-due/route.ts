@@ -51,19 +51,17 @@ async function handle(req: NextRequest) {
   }
 
   // ── Unfinished lesson gate ────────────────────────────────────────────
-  // If Heo has ANY published lesson she hasn't completed yet (published in
-  // the last 14 days — to ignore old seed/test data while still catching
-  // anything reasonably recent), don't publish a new one — let her finish
-  // first. Anchor on published_at, NOT scheduled_for: scheduled_for is when
-  // Masuri planned the lesson for, which can be in the future relative to
-  // publish time and was the source of the old gate's escape bug.
-  const fourteenDaysAgoIso = new Date(Date.now() - 14 * 86_400_000).toISOString();
+  // If Heo has ANY published lesson she hasn't completed yet, don't publish
+  // a new one — let her finish first. No time bound: a stuck-forever lesson
+  // is a recoverable data state (one SQL update or a Masuri admin action
+  // resets it). A windowed gate has an entire class of silent expiry bugs
+  // — which is exactly the bug the previous hotfix tried to close. Trade
+  // one recoverable edge case for zero silent failures.
   const { data: unfinished } = await supabase
     .from("daily_pages")
     .select("id, scheduled_for, title_vi, published_at")
     .eq("status", "published")
     .is("completed_at", null)
-    .gte("published_at", fourteenDaysAgoIso)
     .order("published_at", { ascending: false })
     .limit(1)
     .maybeSingle();
