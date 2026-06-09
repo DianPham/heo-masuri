@@ -300,5 +300,45 @@ create unique index recurring_letters_unique_kind_per_pair
 -- (service-role only access — like notification_prefs, push_subscriptions).
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- End of schema. Phase 2B tables (calendar, important dates) begin at 011+.
+-- Phase 2B — calendar (migration 011). Important dates land at 012 (CP6).
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── calendar_events (migration 011) ──────────────────────────────────────────
+-- Both users' events. share_details defaults FALSE (privacy default).
+-- When the API serves events to a viewer who isn't the owner and the event
+-- has share_details=false, title/note/emoji are stripped server-side.
+create table public.calendar_events (
+  id             uuid primary key default gen_random_uuid(),
+  owner          uuid not null references public.users(id),
+  start_at       timestamptz not null,
+  end_at         timestamptz not null,
+  title          text,
+  note           text,
+  emoji          text,
+  source         text not null default 'manual'
+                   check (source in ('manual','recurring_template','date','quick_block')),
+  source_ref     uuid,
+  share_details  boolean not null default false,
+  created_at     timestamptz default now(),
+  updated_at     timestamptz default now(),
+  constraint chk_end_after_start check (end_at > start_at)
+);
+create index calendar_events_owner_start_idx on public.calendar_events (owner, start_at);
+create index calendar_events_owner_range_idx on public.calendar_events (owner, start_at, end_at);
+-- BEFORE UPDATE trigger touch_updated_at() on every row update.
+-- anon SELECT allowed (busy state is cross-pair visible); writes service-role.
+
+-- ── recurring_schedule_template (migration 011) ──────────────────────────────
+-- One row per user. template = 7-element jsonb array (Mon=0 … Sun=6), each
+-- element is an array of {start_minute, end_minute} ranges in [0,1440].
+create table public.recurring_schedule_template (
+  user_id     uuid primary key references public.users(id),
+  template    jsonb not null default '[[],[],[],[],[],[],[]]'::jsonb,
+  enabled     boolean not null default false,
+  updated_at  timestamptz default now()
+);
+-- BEFORE UPDATE trigger touch_updated_at(). RLS on, server-only.
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- End of schema. Phase 2B important_dates begins at 012 (CP6).
 -- ─────────────────────────────────────────────────────────────────────────────

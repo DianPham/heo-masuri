@@ -1,0 +1,183 @@
+"use client";
+
+/**
+ * CalendarShell — top-level client wrapper for the mobile calendar.
+ * Blueprint §6.3, §6.4. Renders the header (week nav + granularity selector),
+ * one of the per-granularity views, and the quick-block FAB.
+ *
+ * CP3 ships hour, 30-min, and block granularities — mobile only. CP4 will
+ * add the desktop layout under `md:`.
+ */
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { WeekHourView } from "./WeekHourView";
+import { WeekBlockView } from "./WeekBlockView";
+import { QuickBlockFAB } from "./QuickBlockFAB";
+import type { VisibleEvent } from "@/lib/calendar";
+
+export type Granularity = "hour" | "halfhour" | "block";
+
+type Props = {
+  initialMonday: string;       // YYYY-MM-DD in VN
+  initialEvents: VisibleEvent[];
+  viewerId: string;
+};
+
+const STORAGE_GRANULARITY = "calendar.granularity";
+
+function addDaysVN(mondayStr: string, days: number): string {
+  const ms = Date.UTC(
+    Number(mondayStr.slice(0, 4)),
+    Number(mondayStr.slice(5, 7)) - 1,
+    Number(mondayStr.slice(8, 10))
+  );
+  return new Date(ms + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+function thisWeekMondayVN(): string {
+  const nowVn = new Date(Date.now() + 7 * 3_600_000);
+  const dow = nowVn.getUTCDay() || 7;
+  const m = new Date(nowVn);
+  m.setUTCDate(nowVn.getUTCDate() - (dow - 1));
+  return m.toISOString().slice(0, 10);
+}
+
+function formatWeekLabel(mondayStr: string): string {
+  const startMs = Date.UTC(
+    Number(mondayStr.slice(0, 4)),
+    Number(mondayStr.slice(5, 7)) - 1,
+    Number(mondayStr.slice(8, 10))
+  );
+  const start = new Date(startMs);
+  const end = new Date(startMs + 6 * 86_400_000);
+  const startLabel = start.toLocaleDateString("vi-VN", { day: "numeric", month: "short" });
+  const endLabel = end.toLocaleDateString("vi-VN", { day: "numeric", month: "short" });
+  return `${startLabel} – ${endLabel}`;
+}
+
+export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props) {
+  const [monday, setMonday] = useState(initialMonday);
+  const [events, setEvents] = useState<VisibleEvent[]>(initialEvents);
+  const [granularity, setGranularity] = useState<Granularity>("hour");
+  const [loading, setLoading] = useState(false);
+
+  // Restore granularity from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_GRANULARITY) as Granularity | null;
+    if (saved === "hour" || saved === "halfhour" || saved === "block") {
+      setGranularity(saved);
+    }
+  }, []);
+
+  // Persist granularity
+  useEffect(() => {
+    localStorage.setItem(STORAGE_GRANULARITY, granularity);
+  }, [granularity]);
+
+  // Fetch events when week changes
+  const reload = useCallback(async (m: string) => {
+    setLoading(true);
+    try {
+      const fromMs = Date.UTC(
+        Number(m.slice(0, 4)),
+        Number(m.slice(5, 7)) - 1,
+        Number(m.slice(8, 10))
+      ) - 7 * 3_600_000; // Mon 00:00 VN = UTC-7
+      const fromIso = new Date(fromMs).toISOString();
+      const toIso = new Date(fromMs + 7 * 86_400_000).toISOString();
+      const res = await fetch(
+        `/api/calendar/events?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
+        { cache: "no-store" }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(data.events ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // When monday changes (and isn't the initial value), refetch
+  useEffect(() => {
+    if (monday !== initialMonday) reload(monday);
+  }, [monday, initialMonday, reload]);
+
+  function goPrev() {
+    setMonday((m) => addDaysVN(m, -7));
+  }
+  function goNext() {
+    setMonday((m) => addDaysVN(m, 7));
+  }
+  function goToday() {
+    setMonday(thisWeekMondayVN());
+  }
+
+  const weekLabel = useMemo(() => formatWeekLabel(monday), [monday]);
+  const isCurrentWeek = monday === thisWeekMondayVN();
+
+  return (
+    <div className="min-h-dvh">
+      {/* Header */}
+      <header className="px-4 pt-6 pb-3 sticky top-0 z-20" style={{ backgroundColor: "rgba(255,249,245,0.94)", backdropFilter: "blur(8px)" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <button onClick={goPrev} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100" aria-label="Tuần trước">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M11 14 L5 9 L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <div className="flex-1 text-center">
+            <h1 className="text-base font-bold text-ink leading-tight" style={{ fontFamily: "var(--font-handwritten)" }}>
+              {weekLabel}
+            </h1>
+            {!isCurrentWeek && (
+              <button onClick={goToday} className="text-xs text-purple-500 underline underline-offset-2">
+                Về tuần này
+              </button>
+            )}
+          </div>
+          <button onClick={goNext} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100" aria-label="Tuần sau">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M7 4 L13 9 L7 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Granularity selector */}
+        <div className="flex rounded-2xl overflow-hidden text-xs font-medium" style={{ border: "1px solid rgba(255,201,213,0.5)" }}>
+          {(["hour", "halfhour", "block"] as Granularity[]).map((g) => (
+            <button
+              key={g}
+              onClick={() => setGranularity(g)}
+              className="flex-1 py-1.5 transition-colors"
+              style={{
+                backgroundColor: granularity === g ? "rgba(255,201,213,0.6)" : "transparent",
+                color: granularity === g ? "#C4667A" : "#888",
+              }}
+            >
+              {g === "hour" ? "1 giờ" : g === "halfhour" ? "30 phút" : "Buổi"}
+            </button>
+          ))}
+        </div>
+
+        {loading && (
+          <p className="text-xs text-ink-soft text-center mt-2 opacity-70">Đang tải…</p>
+        )}
+      </header>
+
+      {/* View */}
+      {granularity === "block" ? (
+        <WeekBlockView monday={monday} events={events} viewerId={viewerId} onChange={() => reload(monday)} />
+      ) : (
+        <WeekHourView
+          monday={monday}
+          events={events}
+          viewerId={viewerId}
+          slotMinutes={granularity === "halfhour" ? 30 : 60}
+          onChange={() => reload(monday)}
+        />
+      )}
+
+      <QuickBlockFAB onCreated={() => reload(monday)} />
+    </div>
+  );
+}

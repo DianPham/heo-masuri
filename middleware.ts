@@ -19,6 +19,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
+  // /calendar is shared (both users) but still requires soft-gate identity.
+  if (path.startsWith("/calendar") && who !== "heo" && who !== "masuri") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   // Magic-link routes (/m/*) require masuri cookie for reply routes
   if (path.match(/^\/m\/angry\/[^/]+\/reply\//)) {
     if (who !== "masuri") {
@@ -37,5 +42,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/heo/:path*", "/masuri/:path*", "/m/:path*"],
+  matcher: ["/", "/heo/:path*", "/masuri/:path*", "/m/:path*", "/calendar", "/calendar/:path*"],
 };

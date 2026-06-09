@@ -83,4 +83,46 @@ Format: `[ ]` pending, `[x]` passed, `[!]` failed (add a note about why).
 
 ---
 
-## CP3+ — to be added as each phase lands
+## CP3 — Phase 2B: calendar migrations + mobile WeekHourView/WeekBlockView
+
+### Auth + layout
+- [ ] `/calendar` reachable as Heo and as Masuri after soft-gate
+- [ ] Unauthenticated visit to `/calendar` → middleware redirects to `/`
+- [ ] Bottom nav still shows on `/calendar` (RealtimeProvider + nav present in layout)
+
+### Hour view (default)
+- [ ] Header shows current week range (e.g. "26 thg 5 – 1 thg 6")
+- [ ] Scroll position lands near "now − 1h" on first paint when viewing the current week
+- [ ] Tap an empty cell → cell turns pink (own-busy color), event persists in DB
+- [ ] Tap the same cell again → cell clears, event deleted
+- [ ] Switch to 30-min granularity → cell count doubles per day, scroll behavior intact
+- [ ] Granularity preference persists across full page reload (localStorage)
+- [ ] Now indicator (pink horizontal line) renders only when the current week is in view; disappears on prev/next nav
+
+### Block view
+- [ ] Switch granularity to "Buổi" → list of 7 day cards with 4 pill buttons each (Sáng / Chiều / Tối / Đêm khuya)
+- [ ] Tap "Sáng" on today → label changes to "Bạn bận", refresh persists
+- [ ] Tap again → reverts to "Trống"
+- [ ] Today's card has a stronger border/shadow than other days
+
+### Quick-block FAB
+- [ ] Bottom-right FAB visible, doesn't overlap content
+- [ ] Tap → bottom sheet with three span chips + 5 period options
+- [ ] "Hôm nay" + "Sáng" → events for 8–12 today appear in hour view
+- [ ] "Cả tuần" + "Cả ngày" → events for today through Sunday, each 8–24, all appear
+- [ ] "Ngày mai" + "Tối" → 17–21 event appears tomorrow
+
+### Visibility filter (the privacy guarantee)
+- [ ] In SQL: insert a calendar_events row owned by Test Masuri with `share_details=false`, `title='Project planning'`, `note='Internal'`
+- [ ] Soft-gate as Heo, open `/calendar` → the time block shows as partner-busy (lilac), but **title/note/emoji must be null in the response**. Inspect /api/calendar/events JSON in DevTools to confirm.
+- [ ] Update the row to `share_details=true` → response now includes title/note/emoji
+- [ ] Open as Masuri → always sees own title/note (no stripping)
+
+### Week navigation
+- [ ] Tap prev/next chevron → week changes, events refetched
+- [ ] "Về tuần này" link appears when not on current week; tap → returns to current
+- [ ] Loading indicator shows briefly during refetch
+
+---
+
+## CP4+ — to be added as each phase lands

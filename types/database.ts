@@ -112,6 +112,59 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          created_at: string | null
+          emoji: string | null
+          end_at: string
+          id: string
+          note: string | null
+          owner: string
+          share_details: boolean
+          source: string
+          source_ref: string | null
+          start_at: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          emoji?: string | null
+          end_at: string
+          id?: string
+          note?: string | null
+          owner: string
+          share_details?: boolean
+          source?: string
+          source_ref?: string | null
+          start_at: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string | null
+          end_at?: string
+          id?: string
+          note?: string | null
+          owner?: string
+          share_details?: boolean
+          source?: string
+          source_ref?: string | null
+          start_at?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_pages: {
         Row: {
           approved_at: string | null
@@ -503,6 +556,35 @@ export type Database = {
             foreignKeyName: "recurring_letters_to_user_fkey"
             columns: ["to_user"]
             isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_schedule_template: {
+        Row: {
+          enabled: boolean
+          template: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          enabled?: boolean
+          template?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          enabled?: boolean
+          template?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_schedule_template_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
