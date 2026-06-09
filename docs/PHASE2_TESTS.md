@@ -83,12 +83,41 @@ Format: `[ ]` pending, `[x]` passed, `[!]` failed (add a note about why).
 
 ---
 
+## Hotfix (2026-06-08): publish-due unfinished-lesson gate
+
+Hotfix `caba7df` on `main` (merged into `staging` as `168d496`). Restored
+correctness of the gate by removing the time window entirely. The first
+hotfix (`4d58a66`, anchored on `published_at` with a 14-day window) was
+superseded — windowed gates have an entire class of silent expiry bugs.
+
+### Manual sanity (against production)
+- [ ] Apply the data cleanup SQL from the `4d58a66` commit message: keep the most-recent unfinished published lesson; demote the rest back to `approved`.
+- [ ] Confirm `select count(*) from daily_pages where status='published' and completed_at is null` returns 1.
+- [ ] At next cron fire (06:00 VN), confirm no new lesson published (gate held).
+- [ ] Complete the carry-over lesson as Heo. The next cron fire should publish exactly one approved lesson.
+
+### Defensive checks (any environment with data)
+- [ ] Insert a fake unfinished `published` lesson with `published_at = now() - interval '60 days'`. Trigger publish-due (with CRON_SECRET). Response: skipped ("Heo has an unfinished lesson…"). The previous time-window bug class is gone.
+- [ ] Trigger publish-due twice within the same minute. First call publishes, second returns "already published today" (daily idempotency check held).
+- [ ] With NO unfinished lesson present, fire publish-due via curl with Bearer — publishes exactly one approved lesson, response shows `published: 1`.
+
+---
+
+## Staging Vercel deploy gotcha (CP3 visibility)
+
+- [ ] Vercel dashboard → `heo-masuri-staging` → Settings → Git → **Production Branch** is set to `staging` (not `main`).
+- [ ] After fixing the above, push an empty commit to `staging` and confirm the next deploy lands as **Production** (not Preview) on the stable URL `heo-masuri-staging.vercel.app`.
+- [ ] Visit `https://heo-masuri-staging.vercel.app/calendar` (after soft-gate) and confirm the CP3 UI renders. Before this fix, the stable URL served the 11-day-old CP0-era build with no `/calendar` route.
+
+---
+
 ## CP3 — Phase 2B: calendar migrations + mobile WeekHourView/WeekBlockView
 
 ### Auth + layout
 - [ ] `/calendar` reachable as Heo and as Masuri after soft-gate
 - [ ] Unauthenticated visit to `/calendar` → middleware redirects to `/`
 - [ ] Bottom nav still shows on `/calendar` (RealtimeProvider + nav present in layout)
+- [ ] Calendar is not yet linked from any home tile or nav — must be reached by typing `/calendar` (tile/nav addition tracked separately)
 
 ### Hour view (default)
 - [ ] Header shows current week range (e.g. "26 thg 5 – 1 thg 6")
