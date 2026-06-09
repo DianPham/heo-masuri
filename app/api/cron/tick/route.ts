@@ -18,8 +18,8 @@
  * Auth: Authorization: Bearer ${CRON_SECRET}.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { runDeliverScheduled } from "@/app/api/cron/deliver-scheduled/route";
-import { runGmgnTick } from "@/app/api/cron/gmgn-tick/route";
+import { runDeliverScheduled } from "@/lib/crons/deliver-scheduled";
+import { runGmgnTick } from "@/lib/crons/gmgn-tick";
 
 export const dynamic = "force-dynamic";
 

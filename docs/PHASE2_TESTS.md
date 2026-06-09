@@ -103,11 +103,40 @@ superseded — windowed gates have an entire class of silent expiry bugs.
 
 ---
 
-## Staging Vercel deploy gotcha (CP3 visibility)
+## Staging Vercel deploy gotchas (CP3 visibility)
 
-- [ ] Vercel dashboard → `heo-masuri-staging` → Settings → Git → **Production Branch** is set to `staging` (not `main`).
-- [ ] After fixing the above, push an empty commit to `staging` and confirm the next deploy lands as **Production** (not Preview) on the stable URL `heo-masuri-staging.vercel.app`.
-- [ ] Visit `https://heo-masuri-staging.vercel.app/calendar` (after soft-gate) and confirm the CP3 UI renders. Before this fix, the stable URL served the 11-day-old CP0-era build with no `/calendar` route.
+Two separate misconfigurations were keeping CP1–CP3 off the stable staging URL.
+
+### 1. Production Branch was `main`
+- [ ] Vercel dashboard → `heo-masuri-staging` → Settings → Git → **Production Branch** is set to `staging` (not `main`). Without this, pushes to `staging` build as Preview only and the stable URL serves stale code from whatever was last deployed off `main`.
+
+### 2. Hobby plan rejects minute-cadence crons
+The CP1 dispatcher (`/api/cron/tick` every minute) silently rejected
+every production deploy on Hobby — only Preview deploys went through.
+Restored to the Phase 1.5 daily pair in `a9e8169`:
+
+```json
+{
+  "crons": [
+    { "path": "/api/notebook/admin/publish-due", "schedule": "0 23 * * *" },
+    { "path": "/api/cron/reminder",              "schedule": "0 13 * * *" }
+  ]
+}
+```
+
+`/api/cron/tick`, `/api/cron/deliver-scheduled`, `/api/cron/gmgn-tick` all
+still exist as endpoints and work via curl with Bearer auth — they just
+aren't on a Vercel-managed schedule.
+
+- [ ] Confirm staging production deploy now succeeds (no `deploy_failed` for cron-cadence reason). `vercel ls heo-masuri-staging | head` should show a recent Production deploy with status `● Ready`.
+- [ ] Visit `https://heo-masuri-staging.vercel.app/calendar` (after soft-gate) and confirm the CP3 UI renders.
+
+### Phase 2 cron decision (BLOCKS Phase 2A launch)
+Phase 2 features (delivery worker, GM/GN, surprise tick) need minute or
+hourly cadence. Pick one:
+- Upgrade Vercel to Pro ($20/mo) and re-register `/api/cron/tick` at `* * * * *`.
+- Use an external minute pinger (cron-job.org, uptimerobot, github actions) calling `https://<staging-url>/api/cron/tick` with `Authorization: Bearer $CRON_SECRET`.
+- Move scheduling to Supabase pg_cron with HTTP extension.
 
 ---
 
