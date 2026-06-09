@@ -29,25 +29,48 @@ async function handle(req: NextRequest) {
   const today = todayVN();
   const now = new Date().toISOString();
 
+  // ── Daily idempotency ─────────────────────────────────────────────────
+  // If we've already published any lesson today (the cron already ran, or
+  // a manual trigger happened), don't publish again. Belt-and-suspenders
+  // alongside the unfinished-lesson gate below.
+  const todayStartIso = new Date(today + "T00:00:00+07:00").toISOString();
+  const { data: publishedToday } = await supabase
+    .from("daily_pages")
+    .select("id, title_vi, published_at")
+    .eq("status", "published")
+    .gte("published_at", todayStartIso)
+    .limit(1)
+    .maybeSingle();
+
+  if (publishedToday) {
+    return NextResponse.json({
+      published: 0,
+      note: `Skipped — already published "${publishedToday.title_vi}" today.`,
+    });
+  }
+
   // ── Unfinished lesson gate ────────────────────────────────────────────
-  // If Heo has an active published lesson from the past 7 days that she
-  // hasn't completed yet, don't publish a new one — let her finish first.
-  // The 7-day window prevents old seed data from blocking forever.
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+  // If Heo has ANY published lesson she hasn't completed yet (published in
+  // the last 14 days — to ignore old seed/test data while still catching
+  // anything reasonably recent), don't publish a new one — let her finish
+  // first. Anchor on published_at, NOT scheduled_for: scheduled_for is when
+  // Masuri planned the lesson for, which can be in the future relative to
+  // publish time and was the source of the old gate's escape bug.
+  const fourteenDaysAgoIso = new Date(Date.now() - 14 * 86_400_000).toISOString();
   const { data: unfinished } = await supabase
     .from("daily_pages")
-    .select("id, scheduled_for, title_vi")
+    .select("id, scheduled_for, title_vi, published_at")
     .eq("status", "published")
     .is("completed_at", null)
-    .gte("scheduled_for", sevenDaysAgo)
-    .lt("scheduled_for", today)
+    .gte("published_at", fourteenDaysAgoIso)
+    .order("published_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (unfinished) {
     return NextResponse.json({
       published: 0,
-      note: `Skipped — Heo has an unfinished lesson from ${unfinished.scheduled_for}: "${unfinished.title_vi}". Complete it first.`,
+      note: `Skipped — Heo has an unfinished lesson from ${unfinished.scheduled_for}: "${unfinished.title_vi}" (published ${unfinished.published_at}). Complete it first.`,
     });
   }
 
