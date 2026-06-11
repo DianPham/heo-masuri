@@ -125,4 +125,32 @@ I use cron-job.org for this
 
 ---
 
+## CP3 round-3 polish (after round-2 review)
+
+After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed in the follow-up.
+
+### Loading indicator no longer jumps the layout
+- [ ] Hit prev/next week — header height stays constant. "Đang tải…" appears/disappears in-place (visibility toggled, space reserved).
+
+### Quick-block FAB uses explicit submit
+- [ ] Open the sheet → both span and period are toggleable state (no auto-submit on period tap)
+- [ ] Select "Cả tuần" + "Cả ngày" → sheet stays open, "Chặn" button is enabled
+- [ ] Tap "Chặn" → events created, sheet closes
+- [ ] Submit button disabled until a period is chosen
+- [ ] "Hủy" closes without creating
+
+### 30-min event shows half-cell at 1-hour granularity
+- [ ] Switch to 30 phút, tap a single half-hour cell (e.g. the 17:00–17:30 row)
+- [ ] Switch to 1 giờ — the 17:00 cell now shows a half-height fill in the TOP half (not the full hour)
+- [ ] Tap a 17:30–18:00 half-hour cell at 30 phút → switching to 1 giờ shows the BOTTOM half filled
+- [ ] An event that fully covers an hour (e.g. 17:00–18:00 via two consecutive half-hour blocks, OR an hour-granularity tap) still shows the full hour filled
+
+### Block view: today and future only
+- [ ] On any weekday other than Monday, switch to Buổi (block view) — past day cards (cards before today) are gone; today is the first card; remaining future days follow
+- [ ] On Monday, all 7 days visible (nothing in the past for this week)
+- [ ] Navigate to previous week → all day cards hidden (entire week is in the past)
+- [ ] Navigate to next week → all 7 cards visible (entire week is in the future)
+
+---
+
 ## CP4+ — to be added as each phase lands

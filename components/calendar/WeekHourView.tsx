@@ -79,11 +79,26 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
     scrollerRef.current?.scrollTo({ top: targetRow * ROW_HEIGHT_PX, behavior: "instant" as ScrollBehavior });
   }, [mondayVnMs, slotMinutes]);
 
-  // [day][slot] → event ids, split by ownership.
+  // [day][slot] → event ids + sub-cell fill ranges (top + height as 0..1
+  // fractions of the cell). A 30-min event at 17:30 in the 1-hour cell labeled
+  // "17:00" renders as `{ top: 0.5, height: 0.5 }` — the bottom half filled.
+  type CellState = {
+    ownerEventIds: string[];
+    partnerEventIds: string[];
+    ownerRanges: Array<{ top: number; height: number }>;
+    partnerRanges: Array<{ top: number; height: number }>;
+  };
   const grid = useMemo(() => {
-    const g: Array<Array<{ ownerEventIds: string[]; partnerEventIds: string[] }>> = [];
+    const g: CellState[][] = [];
     for (let d = 0; d < 7; d++) {
-      g.push(Array.from({ length: totalSlots }, () => ({ ownerEventIds: [], partnerEventIds: [] })));
+      g.push(
+        Array.from({ length: totalSlots }, () => ({
+          ownerEventIds: [],
+          partnerEventIds: [],
+          ownerRanges: [],
+          partnerRanges: [],
+        }))
+      );
     }
     for (const e of optimisticEvents) {
       const startDay = vnDayIndex(e.start_at, mondayVnMs);
@@ -91,15 +106,27 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
       for (let d = Math.max(0, startDay); d <= Math.min(6, endDay); d++) {
         const dayStartMs = mondayVnMs + d * 86_400_000;
         const dayEndMs = dayStartMs + 86_400_000;
-        const slotStart = Math.max(new Date(e.start_at).getTime(), dayStartMs);
-        const slotEnd = Math.min(new Date(e.end_at).getTime(), dayEndMs);
-        const startMins = Math.floor((slotStart - dayStartMs) / 60_000);
-        const endMins = Math.ceil((slotEnd - dayStartMs) / 60_000);
-        const startRow = Math.floor(startMins / slotMinutes);
-        const endRow = Math.min(totalSlots, Math.ceil(endMins / slotMinutes));
-        for (let r = startRow; r < endRow; r++) {
-          if (e.is_own) g[d][r].ownerEventIds.push(e.id);
-          else g[d][r].partnerEventIds.push(e.id);
+        const eStartInDay = Math.max(new Date(e.start_at).getTime(), dayStartMs);
+        const eEndInDay = Math.min(new Date(e.end_at).getTime(), dayEndMs);
+        const eStartMin = (eStartInDay - dayStartMs) / 60_000;
+        const eEndMin = (eEndInDay - dayStartMs) / 60_000;
+        const firstRow = Math.max(0, Math.floor(eStartMin / slotMinutes));
+        const lastRow = Math.min(totalSlots - 1, Math.ceil(eEndMin / slotMinutes) - 1);
+        for (let r = firstRow; r <= lastRow; r++) {
+          const rowStartMin = r * slotMinutes;
+          const rowEndMin = rowStartMin + slotMinutes;
+          const overlapStart = Math.max(rowStartMin, eStartMin);
+          const overlapEnd = Math.min(rowEndMin, eEndMin);
+          if (overlapEnd <= overlapStart) continue;
+          const top = (overlapStart - rowStartMin) / slotMinutes;
+          const height = (overlapEnd - overlapStart) / slotMinutes;
+          if (e.is_own) {
+            g[d][r].ownerEventIds.push(e.id);
+            g[d][r].ownerRanges.push({ top, height });
+          } else {
+            g[d][r].partnerEventIds.push(e.id);
+            g[d][r].partnerRanges.push({ top, height });
+          }
         }
       }
     }
@@ -239,6 +266,13 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
   );
 }
 
+type CellShape = {
+  ownerEventIds: string[];
+  partnerEventIds: string[];
+  ownerRanges: Array<{ top: number; height: number }>;
+  partnerRanges: Array<{ top: number; height: number }>;
+};
+
 function RowFragment({
   row,
   slotMinutes,
@@ -249,7 +283,7 @@ function RowFragment({
   row: number;
   slotMinutes: 30 | 60;
   hourLabels: { row: number; text: string }[];
-  grid: Array<Array<{ ownerEventIds: string[]; partnerEventIds: string[] }>>;
+  grid: CellShape[][];
   onTap: (day: number, slot: number) => void;
 }) {
   const hourLabel = hourLabels.find((h) => h.row === row);
@@ -265,27 +299,44 @@ function RowFragment({
         const ownerBusy = cell.ownerEventIds.length > 0;
         const partnerBusy = cell.partnerEventIds.length > 0;
         const isBusyCell = ownerBusy || partnerBusy;
-        const overlap = ownerBusy && partnerBusy;
-        const cellBg = overlap
-          ? "rgba(196,168,220,0.7)"
-          : ownerBusy
-          ? "rgba(255,201,213,0.85)"
-          : partnerBusy
-          ? "rgba(196,168,220,0.4)"
-          : "transparent";
+        const isReadonly = !ownerBusy && partnerBusy;
 
         return (
           <button
             key={day}
             onClick={() => onTap(day, row)}
-            className="border-r border-b transition-colors active:opacity-70"
+            className="border-r border-b transition-colors active:opacity-70 relative overflow-hidden"
             style={{
               borderColor: "rgba(255,201,213,0.25)",
-              backgroundColor: cellBg,
-              cursor: !ownerBusy && partnerBusy ? "default" : "pointer",
+              backgroundColor: "transparent",
+              cursor: isReadonly ? "default" : "pointer",
             }}
             aria-label={isBusyCell ? "Bận" : "Trống"}
-          />
+          >
+            {/* Partner fills paint first (background), owner fills paint on top */}
+            {cell.partnerRanges.map((r, i) => (
+              <span
+                key={`p${i}`}
+                className="absolute left-0 right-0 pointer-events-none"
+                style={{
+                  top: `${r.top * 100}%`,
+                  height: `${r.height * 100}%`,
+                  backgroundColor: "rgba(196,168,220,0.4)",
+                }}
+              />
+            ))}
+            {cell.ownerRanges.map((r, i) => (
+              <span
+                key={`o${i}`}
+                className="absolute left-0 right-0 pointer-events-none"
+                style={{
+                  top: `${r.top * 100}%`,
+                  height: `${r.height * 100}%`,
+                  backgroundColor: ownerBusy && partnerBusy ? "rgba(196,168,220,0.85)" : "rgba(255,201,213,0.85)",
+                }}
+              />
+            ))}
+          </button>
         );
       })}
     </>

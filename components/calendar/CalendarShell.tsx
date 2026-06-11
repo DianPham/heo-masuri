@@ -159,9 +159,18 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
           ))}
         </div>
 
-        {loading && (
-          <p className="text-xs text-ink-soft text-center mt-2 opacity-70">Đang tải…</p>
-        )}
+        {/* Fixed-height loading slot so toggling on/off doesn't shift content below. */}
+        <p
+          className="text-xs text-ink-soft text-center mt-2"
+          style={{
+            visibility: loading ? "visible" : "hidden",
+            opacity: 0.7,
+            height: "1em",
+            lineHeight: "1em",
+          }}
+        >
+          Đang tải…
+        </p>
       </header>
 
       {/* View */}

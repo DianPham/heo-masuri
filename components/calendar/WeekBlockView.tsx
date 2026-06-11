@@ -125,15 +125,22 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
   }
 
   // Today comparison via VN-anchored date keys (not getUTCDate() of a UTC ms).
-  const todayKey = useMemo(() => {
+  const { todayKey, todayMsVn } = useMemo(() => {
     const n = new Date(Date.now() + 7 * 3_600_000);
-    return `${n.getUTCFullYear()}-${n.getUTCMonth()}-${n.getUTCDate()}`;
+    const todayMsUtc = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+    return {
+      todayKey: `${n.getUTCFullYear()}-${n.getUTCMonth()}-${n.getUTCDate()}`,
+      todayMsVn: todayMsUtc - 7 * 3_600_000, // VN midnight of today in UTC ms
+    };
   }, []);
 
   return (
     <div className="px-4 py-3 space-y-3">
       {Array.from({ length: 7 }).map((_, d) => {
-        const dayVn = new Date(mondayVnMs + d * 86_400_000 + 7 * 3_600_000);
+        const dayMsVn = mondayVnMs + d * 86_400_000;
+        // Past days suppress entirely — you can't (usefully) block-off the past.
+        if (dayMsVn < todayMsVn) return null;
+        const dayVn = new Date(dayMsVn + 7 * 3_600_000);
         const key = `${dayVn.getUTCFullYear()}-${dayVn.getUTCMonth()}-${dayVn.getUTCDate()}`;
         const isToday = key === todayKey;
         return (
