@@ -1,20 +1,17 @@
 "use client";
 
 /**
- * WeekBlockView — block-mode mobile calendar. 7 days × 4 large pill buttons
- * (Morning / Afternoon / Evening / Late). Blueprint §6.3.
+ * WeekBlockView — block-mode mobile calendar. 7 day cards × 4 large pill
+ * buttons each. Blueprint §6.3.
  *
- * Each block is a fixed time range (in VN local time):
- *   Morning   08:00 – 12:00
- *   Afternoon 12:00 – 17:00
- *   Evening   17:00 – 21:00
- *   Late      21:00 – 24:00
+ * Same timezone anchoring fix as WeekHourView: mondayVnMs = UTC ms of VN
+ * 00:00 Monday. All event placement math derives from it.
  *
- * Tap an own block → if no event covers it, create a quick_block-source
- * event for that range; if an event already covers it, delete the first such
- * owner event. Partner blocks render as busy state only (read-only).
+ * Round-2 polish:
+ *  - Optimistic UI on tap (apply visual state, persist in background)
+ *  - Today card border / shadow upgraded for clearer "you're here" cue
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
 
 const BLOCKS = [
@@ -34,18 +31,25 @@ type Props = {
   onChange: () => void;
 };
 
-function dayIndex(iso: string, mondayMs: number): number {
-  return Math.floor((new Date(iso).getTime() - mondayMs) / 86_400_000);
+function dayIndex(iso: string, mondayVnMs: number): number {
+  return Math.floor((new Date(iso).getTime() - mondayVnMs) / 86_400_000);
 }
 
 export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
-  void viewerId; // owner gating already provided by is_own on the event
-  const mondayMs = useMemo(
-    () => Date.UTC(Number(monday.slice(0, 4)), Number(monday.slice(5, 7)) - 1, Number(monday.slice(8, 10))),
+  const mondayVnMs = useMemo(
+    () =>
+      Date.UTC(
+        Number(monday.slice(0, 4)),
+        Number(monday.slice(5, 7)) - 1,
+        Number(monday.slice(8, 10))
+      ) - 7 * 3_600_000,
     [monday]
   );
 
-  /** Build a [day][block] map of overlapping events split into owner/partner buckets. */
+  // Optimistic mirror; resyncs on prop update from parent reload().
+  const [optimisticEvents, setOptimisticEvents] = useState<VisibleEvent[]>(events);
+  useEffect(() => setOptimisticEvents(events), [events]);
+
   const grid = useMemo(() => {
     const g: Record<string, { ownerEventIds: string[]; partnerEventIds: string[] }>[] = Array.from(
       { length: 7 },
@@ -54,11 +58,11 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
     for (let d = 0; d < 7; d++) {
       for (const b of BLOCKS) g[d][b.key] = { ownerEventIds: [], partnerEventIds: [] };
     }
-    for (const e of events) {
-      const startDay = dayIndex(e.start_at, mondayMs);
-      const endDay = dayIndex(e.end_at, mondayMs);
+    for (const e of optimisticEvents) {
+      const startDay = dayIndex(e.start_at, mondayVnMs);
+      const endDay = dayIndex(e.end_at, mondayVnMs);
       for (let d = Math.max(0, startDay); d <= Math.min(6, endDay); d++) {
-        const dayStartMs = mondayMs + d * 86_400_000;
+        const dayStartMs = mondayVnMs + d * 86_400_000;
         const dayEndMs = dayStartMs + 86_400_000;
         const eStart = Math.max(new Date(e.start_at).getTime(), dayStartMs);
         const eEnd = Math.min(new Date(e.end_at).getTime(), dayEndMs);
@@ -74,65 +78,94 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
       }
     }
     return g;
-  }, [events, mondayMs]);
-
-  const [busy, setBusy] = useState<string | null>(null);
+  }, [optimisticEvents, mondayVnMs]);
 
   async function handleBlockTap(day: number, blockKey: BlockKey) {
     const cell = grid[day][blockKey];
     if (cell.ownerEventIds.length === 0 && cell.partnerEventIds.length > 0) return;
 
-    setBusy(`${day}-${blockKey}`);
-    try {
-      const block = BLOCKS.find((b) => b.key === blockKey)!;
-      if (cell.ownerEventIds.length > 0) {
-        const id = cell.ownerEventIds[0];
-        await fetch(`/api/calendar/events/${id}`, { method: "DELETE" });
-      } else {
-        const dayStartMs = mondayMs + day * 86_400_000;
-        const startMs = dayStartMs + block.startMin * 60_000 - 7 * 3_600_000;
-        const endMs = dayStartMs + block.endMin * 60_000 - 7 * 3_600_000;
-        await fetch("/api/calendar/events", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            start_at: new Date(startMs).toISOString(),
-            end_at: new Date(endMs).toISOString(),
-            source: "quick_block",
-          }),
-        });
-      }
-      onChange();
-    } finally {
-      setBusy(null);
+    const block = BLOCKS.find((b) => b.key === blockKey)!;
+
+    if (cell.ownerEventIds.length > 0) {
+      const id = cell.ownerEventIds[0];
+      setOptimisticEvents((prev) => prev.filter((e) => e.id !== id));
+      fetch(`/api/calendar/events/${id}`, { method: "DELETE" })
+        .then(() => onChange())
+        .catch(() => onChange());
+    } else {
+      const dayStartMs = mondayVnMs + day * 86_400_000;
+      const startMs = dayStartMs + block.startMin * 60_000;
+      const endMs = dayStartMs + block.endMin * 60_000;
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const optimistic: VisibleEvent = {
+        id: tempId,
+        owner: viewerId,
+        start_at: new Date(startMs).toISOString(),
+        end_at: new Date(endMs).toISOString(),
+        source: "quick_block",
+        title: null,
+        note: null,
+        emoji: null,
+        share_details: false,
+        is_own: true,
+      };
+      setOptimisticEvents((prev) => [...prev, optimistic]);
+      fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          start_at: optimistic.start_at,
+          end_at: optimistic.end_at,
+          source: "quick_block",
+        }),
+      })
+        .then(() => onChange())
+        .catch(() => onChange());
     }
   }
+
+  // Today comparison via VN-anchored date keys (not getUTCDate() of a UTC ms).
+  const todayKey = useMemo(() => {
+    const n = new Date(Date.now() + 7 * 3_600_000);
+    return `${n.getUTCFullYear()}-${n.getUTCMonth()}-${n.getUTCDate()}`;
+  }, []);
 
   return (
     <div className="px-4 py-3 space-y-3">
       {Array.from({ length: 7 }).map((_, d) => {
-        const dayMs = mondayMs + d * 86_400_000;
-        const date = new Date(dayMs);
-        const nowVn = new Date(Date.now() + 7 * 3_600_000);
-        const isToday =
-          date.getUTCFullYear() === nowVn.getUTCFullYear() &&
-          date.getUTCMonth() === nowVn.getUTCMonth() &&
-          date.getUTCDate() === nowVn.getUTCDate();
+        const dayVn = new Date(mondayVnMs + d * 86_400_000 + 7 * 3_600_000);
+        const key = `${dayVn.getUTCFullYear()}-${dayVn.getUTCMonth()}-${dayVn.getUTCDate()}`;
+        const isToday = key === todayKey;
         return (
           <section
             key={d}
             className="rounded-2xl p-3"
             style={{
               backgroundColor: "white",
-              border: `1px solid ${isToday ? "rgba(255,201,213,0.7)" : "rgba(255,201,213,0.3)"}`,
-              boxShadow: isToday ? "0 4px 16px rgba(196,102,122,0.08)" : "var(--shadow)",
+              border: isToday
+                ? "2.5px solid rgba(196,102,122,0.7)"
+                : "1px solid rgba(255,201,213,0.3)",
+              boxShadow: isToday
+                ? "0 8px 24px rgba(196,102,122,0.25)"
+                : "var(--shadow)",
             }}
           >
             <div className="flex items-baseline gap-2 mb-2">
               <p className="text-xs font-semibold text-ink-soft">{WEEKDAY_VI[d]}</p>
-              <p className="text-base font-bold" style={{ color: isToday ? "#C4667A" : "#333" }}>
-                {date.getUTCDate()}/{date.getUTCMonth() + 1}
+              <p
+                className="text-base font-bold"
+                style={{ color: isToday ? "#C4667A" : "#333" }}
+              >
+                {dayVn.getUTCDate()}/{dayVn.getUTCMonth() + 1}
               </p>
+              {isToday && (
+                <span
+                  className="ml-auto text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: "#C4667A" }}
+                >
+                  Hôm nay
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-2">
               {BLOCKS.map((b) => {
@@ -147,21 +180,20 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
                   : partnerBusy
                   ? "rgba(196,168,220,0.4)"
                   : "rgba(250,250,250,0.7)";
-                const label =
-                  overlap ? "Cả hai bận"
-                  : ownerBusy ? "Bạn bận"
-                  : partnerBusy ? "Người kia bận"
+                const label = overlap
+                  ? "Cả hai bận"
+                  : ownerBusy
+                  ? "Bạn bận"
+                  : partnerBusy
+                  ? "Người kia bận"
                   : "Trống";
-                const isBusyId = busy === `${d}-${b.key}`;
                 return (
                   <button
                     key={b.key}
                     onClick={() => handleBlockTap(d, b.key)}
-                    disabled={isBusyId}
                     className="rounded-xl px-3 py-3 text-left transition-colors active:opacity-70"
                     style={{
                       backgroundColor: bg,
-                      opacity: isBusyId ? 0.5 : 1,
                       border: "1px solid rgba(220,220,220,0.4)",
                       cursor: !ownerBusy && partnerBusy ? "default" : "pointer",
                     }}
