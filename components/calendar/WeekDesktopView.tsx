@@ -78,6 +78,22 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
       };
   const [sheet, setSheet] = useState<SheetState | null>(null);
 
+  type MenuState =
+    | { kind: "empty"; x: number; y: number; day: number; row: number }
+    | { kind: "own"; x: number; y: number; eventId: string }
+    | { kind: "partner-shared"; x: number; y: number; eventId: string };
+  const [menu, setMenu] = useState<MenuState | null>(null);
+  useEffect(() => {
+    if (!menu) return;
+    function close() { setMenu(null); }
+    window.addEventListener("click", close);
+    window.addEventListener("scroll", close, true);
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [menu]);
+
   // Anchor scroll to (now - 1h) on current-week paint.
   useEffect(() => {
     const nowVn = new Date(Date.now() + 7 * 3_600_000);
@@ -296,31 +312,94 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     (day: number, row: number, e: React.MouseEvent) => {
       e.preventDefault();
       const cell = grid[day][row];
-      if (cell.ownerEventIds.length === 0) {
-        // Empty cell → open create sheet for the single cell
-        const dayStartMs = mondayVnMs + day * 86_400_000;
-        const start_at = new Date(dayStartMs + row * slotMinutes * 60_000).toISOString();
-        const end_at = new Date(dayStartMs + (row + 1) * slotMinutes * 60_000).toISOString();
-        setSheet({ mode: "create", start_at, end_at });
+      if (cell.ownerEventIds.length > 0) {
+        const eventId = cell.ownerEventIds[0];
+        if (eventId.startsWith("temp-")) return;
+        setMenu({ kind: "own", x: e.clientX, y: e.clientY, eventId });
         return;
       }
-      const eventId = cell.ownerEventIds[0];
-      if (eventId.startsWith("temp-")) return;
-      const event = optimisticEvents.find((ev) => ev.id === eventId);
-      if (!event) return;
-      setSheet({
-        mode: "edit",
-        id: eventId,
-        start_at: event.start_at,
-        end_at: event.end_at,
-        title: event.title,
-        note: event.note,
-        emoji: event.emoji,
-        share_details: event.share_details,
-      });
+      if (cell.partnerEventIds.length > 0) {
+        // Show "View details" only if partner shared details.
+        const eventId = cell.partnerEventIds[0];
+        const ev = optimisticEvents.find((x) => x.id === eventId);
+        if (ev && (ev.title || ev.note || ev.emoji)) {
+          setMenu({ kind: "partner-shared", x: e.clientX, y: e.clientY, eventId });
+        }
+        return;
+      }
+      setMenu({ kind: "empty", x: e.clientX, y: e.clientY, day, row });
     },
-    [grid, mondayVnMs, optimisticEvents, slotMinutes]
+    [grid, optimisticEvents]
   );
+
+  // Menu actions
+  async function menuQuickBlock(day: number, row: number) {
+    setMenu(null);
+    const dayStartMs = mondayVnMs + day * 86_400_000;
+    const cellStartMs = dayStartMs + row * slotMinutes * 60_000;
+    const cellEndMs = cellStartMs + slotMinutes * 60_000;
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const optimistic: VisibleEvent = {
+      id: tempId,
+      owner: viewerId,
+      start_at: new Date(cellStartMs).toISOString(),
+      end_at: new Date(cellEndMs).toISOString(),
+      source: "manual",
+      title: null, note: null, emoji: null, share_details: false,
+      is_own: true,
+    };
+    setOptimisticEvents((prev) => [...prev, optimistic]);
+    try {
+      const res = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ start_at: optimistic.start_at, end_at: optimistic.end_at, source: "manual" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOptimisticEvents((prev) => prev.map((e) => (e.id === tempId ? data.event : e)));
+      } else {
+        setOptimisticEvents((prev) => prev.filter((e) => e.id !== tempId));
+      }
+    } catch {
+      setOptimisticEvents((prev) => prev.filter((e) => e.id !== tempId));
+    }
+  }
+
+  function menuNewEvent(day: number, row: number) {
+    setMenu(null);
+    const dayStartMs = mondayVnMs + day * 86_400_000;
+    const start_at = new Date(dayStartMs + row * slotMinutes * 60_000).toISOString();
+    const end_at = new Date(dayStartMs + (row + 1) * slotMinutes * 60_000).toISOString();
+    setSheet({ mode: "create", start_at, end_at });
+  }
+
+  function menuEditOwn(eventId: string) {
+    setMenu(null);
+    const event = optimisticEvents.find((e) => e.id === eventId);
+    if (!event) return;
+    setSheet({
+      mode: "edit",
+      id: eventId,
+      start_at: event.start_at,
+      end_at: event.end_at,
+      title: event.title,
+      note: event.note,
+      emoji: event.emoji,
+      share_details: event.share_details,
+    });
+  }
+
+  async function menuDeleteOwn(eventId: string) {
+    setMenu(null);
+    if (!confirm("Xóa sự kiện này?")) return;
+    try {
+      const res = await fetch(`/api/calendar/events/${eventId}`, { method: "DELETE" });
+      if (res.ok) {
+        setOptimisticEvents((prev) => prev.filter((e) => e.id !== eventId));
+      }
+    } catch { /* swallow */ }
+  }
 
   async function handleSheetSave(values: EventDetailValues): Promise<boolean> {
     if (!sheet) return false;
@@ -601,6 +680,73 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
           onClose={() => setSheet(null)}
         />
       )}
+
+      {menu && (
+        <div
+          role="menu"
+          className="fixed bg-white rounded-xl py-1 text-sm"
+          style={{
+            left: Math.min(menu.x, (typeof window !== "undefined" ? window.innerWidth : 9999) - 200),
+            top: Math.min(menu.y, (typeof window !== "undefined" ? window.innerHeight : 9999) - 160),
+            minWidth: 180,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+            border: "1px solid rgba(220,220,220,0.6)",
+            zIndex: 90,
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {menu.kind === "empty" && (
+            <>
+              <MenuItem onClick={() => menuQuickBlock(menu.day, menu.row)}>Đánh dấu bận</MenuItem>
+              <MenuItem onClick={() => menuNewEvent(menu.day, menu.row)}>Sự kiện mới…</MenuItem>
+            </>
+          )}
+          {menu.kind === "own" && (
+            <>
+              <MenuItem onClick={() => menuEditOwn(menu.eventId)}>Sửa…</MenuItem>
+              <MenuItem onClick={() => menuDeleteOwn(menu.eventId)} danger>Xóa</MenuItem>
+            </>
+          )}
+          {menu.kind === "partner-shared" && (
+            <PartnerDetail
+              event={optimisticEvents.find((e) => e.id === menu.eventId)}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuItem({
+  onClick,
+  children,
+  danger = false,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left px-3 py-2 hover:bg-rose-50 transition-colors"
+      style={{ color: danger ? "#C4667A" : "#333" }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PartnerDetail({ event }: { event?: VisibleEvent }) {
+  if (!event) return null;
+  return (
+    <div className="px-3 py-2">
+      <p className="text-xs font-semibold text-ink-soft mb-1">Người kia bận</p>
+      {event.emoji && <p className="text-base">{event.emoji}</p>}
+      {event.title && <p className="text-sm text-ink">{event.title}</p>}
+      {event.note && <p className="text-xs text-ink-soft mt-1 whitespace-pre-wrap">{event.note}</p>}
     </div>
   );
 }
