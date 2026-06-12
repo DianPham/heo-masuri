@@ -29,6 +29,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
+  // /wardrobe is shared (both users), soft-gate required. Phase 2C.
+  if (path.startsWith("/wardrobe") && who !== "heo" && who !== "masuri") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   // Magic-link routes (/m/*) require masuri cookie for reply routes
   if (path.match(/^\/m\/angry\/[^/]+\/reply\//)) {
     if (who !== "masuri") {
@@ -56,5 +61,7 @@ export const config = {
     "/calendar/:path*",
     "/dates",
     "/dates/:path*",
+    "/wardrobe",
+    "/wardrobe/:path*",
   ],
 };

@@ -393,6 +393,42 @@ create table public.cron_heartbeats (
 );
 -- RLS on, no policies → service-role only.
 
+-- ── wardrobe_items + outfit_suggestions (migration 015) ──────────────────────
+-- Phase 2C outfit picker. Storage bucket "wardrobe" (private) holds the
+-- actual image bytes; this table holds storage paths + metadata.
+create table public.wardrobe_items (
+  id              uuid primary key default gen_random_uuid(),
+  owner           uuid not null references public.users(id),
+  photo_url       text not null,
+  thumbnail_url   text,
+  label           text,
+  tags            text[] not null default '{}',
+  added_at        timestamptz default now(),
+  archived        boolean not null default false,
+  wear_count      int not null default 0,
+  last_worn_at    timestamptz
+);
+create index wardrobe_browse_idx on public.wardrobe_items (owner, archived, added_at desc);
+-- RLS on; "anon read non-archived wardrobe" allows anon SELECT for archived=false.
+
+create table public.outfit_suggestions (
+  id              uuid primary key default gen_random_uuid(),
+  date_id         uuid,                                           -- FK to scheduled_dates added in CP10
+  suggester       uuid not null references public.users(id),
+  target_user     uuid not null references public.users(id),
+  wardrobe_item   uuid not null references public.wardrobe_items(id),
+  note            text,
+  status          text not null default 'pending'
+                    check (status in ('pending','accepted','counter','declined')),
+  counter_item    uuid references public.wardrobe_items(id),
+  responded_at    timestamptz,
+  created_at      timestamptz default now()
+);
+create index outfit_suggestions_target_idx on public.outfit_suggestions (target_user, status, created_at desc);
+-- RLS on; "anon read suggestions" allows anon SELECT (all rows).
+
+-- Storage bucket "wardrobe" (private) registered in storage.buckets.
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- End of schema.
 -- ─────────────────────────────────────────────────────────────────────────────
