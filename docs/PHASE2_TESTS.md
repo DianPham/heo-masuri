@@ -153,4 +153,50 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP3 round-4 — multi-period FAB + partner-blue palette
+
+### Quick-block FAB: multiple periods per submit
+- [ ] Open the FAB sheet → period chips show checkboxes
+- [ ] Tap "Sáng" then "Chiều" — both stay selected (no auto-clear). Submit label changes to "Chặn 2 khoảng"
+- [ ] Tap "Cả ngày" — Sáng/Chiều/Tối/Đêm khuya auto-deselect (mutually exclusive). Label = "Chặn 1 khoảng"
+- [ ] Tap a single non-all-day period — "Cả ngày" deselects. Multi-select among the four works
+- [ ] Submit fires N parallel quick-block POSTs (one per period), then reload. All chosen ranges appear on the grid
+- [ ] Empty selection → submit button is disabled
+
+### Partner cells are now blue
+- [ ] Have Test Masuri block a slot (e.g. via SQL `insert into calendar_events ... share_details=false`)
+- [ ] Soft-gate as Test Heo, switch to hour/30-min granularity → Masuri's slot renders as a soft **blue** fill (not the previous lilac)
+- [ ] If Heo also blocks the same slot → cell shows a **purple** fill (pink × blue mix), distinct from both single cases
+- [ ] Block view: partner Sáng block shows blue background; both-busy block shows purple
+
+---
+
+## CP4 — Phase 2B: desktop calendar (WeekDesktopView) + keyboard nav
+
+### Layout switching
+- [ ] On a viewport ≥ 1024px, navigate to `/calendar` → renders the desktop horizontal week grid (7 day columns × 24 hour rows). The mobile card wrapper is gone — calendar uses full width.
+- [ ] Drag the browser narrower below 1024px → flips back to the mobile WeekHourView (or WeekBlockView if Buổi is selected)
+- [ ] Drag wider again → reverts to desktop
+- [ ] Granularity tabs still work on desktop for hour/30-min. "Buổi" is mobile-only (when selected on desktop, falls back to the mobile block layout — that's expected for now)
+
+### Desktop grid
+- [ ] Hours column on the left (00:00–23:00 labels), 7 day columns to the right
+- [ ] Sticky day header strip with `Thứ 2 … Chủ nhật` + `DD/MM` + "Hôm nay" badge on today
+- [ ] Scrolls vertically; lands near now − 1h on the current week
+- [ ] Now indicator (pink horizontal line) appears across today's column on the current week, hidden on other weeks
+- [ ] Hover over an empty cell → soft rose tint background (desktop hover affordance)
+- [ ] Click an empty cell → cell fills with own-busy pink, persists in DB (optimistic UI)
+- [ ] Click an own busy cell → clears, deletes
+- [ ] Click a partner-only cell → no-op (read-only, as on mobile)
+- [ ] Half-hour granularity on desktop → 48 rows tall, same fractional fills apply
+
+### Keyboard navigation
+- [ ] Press `←` (LeftArrow) on either layout → go to previous week
+- [ ] Press `→` (RightArrow) → next week
+- [ ] Press `t` or `T` → jump back to current week
+- [ ] Focus an `<input>` or `<textarea>` (e.g. inside the GM/GN admin or notebook somewhere) and press `t` → the keyboard handler ignores it (does NOT trigger goToday)
+- [ ] (Esc, Cmd+N, drag-to-create, right-click context menu, inline edit popover — DEFERRED to CP4.5)
+
+---
+
 ## CP4+ — to be added as each phase lands

@@ -181,12 +181,12 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
                 const partnerBusy = cell.partnerEventIds.length > 0;
                 const overlap = ownerBusy && partnerBusy;
                 const bg = overlap
-                  ? "rgba(196,168,220,0.7)"
+                  ? "rgba(180,130,200,0.8)"     // pink + blue → purple
                   : ownerBusy
-                  ? "rgba(255,201,213,0.85)"
+                  ? "rgba(255,201,213,0.85)"    // own busy → pink
                   : partnerBusy
-                  ? "rgba(196,168,220,0.4)"
-                  : "rgba(250,250,250,0.7)";
+                  ? "rgba(120,175,220,0.55)"    // partner busy → blue
+                  : "rgba(250,250,250,0.7)";    // free → neutral
                 const label = overlap
                   ? "Cả hai bận"
                   : ownerBusy

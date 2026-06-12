@@ -11,7 +11,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { WeekHourView } from "./WeekHourView";
 import { WeekBlockView } from "./WeekBlockView";
+import { WeekDesktopView } from "./WeekDesktopView";
 import { QuickBlockFAB } from "./QuickBlockFAB";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { VisibleEvent } from "@/lib/calendar";
 
 export type Granularity = "hour" | "halfhour" | "block";
@@ -114,12 +116,41 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
 
   const weekLabel = useMemo(() => formatWeekLabel(monday), [monday]);
   const isCurrentWeek = monday === thisWeekMondayVN();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
+  // Keyboard navigation (§6.5). Bound at the shell so the same shortcuts work
+  // for either layout. Skips when the focus is inside an input/textarea so
+  // typing a Vietnamese letter "t" inside a future event-detail textarea
+  // doesn't fire goToday().
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goNext();
+      } else if (e.key === "t" || e.key === "T") {
+        e.preventDefault();
+        goToday();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh lg:px-6 lg:py-4">
       {/* Header */}
-      <header className="px-4 pt-6 pb-3 sticky top-0 z-20" style={{ backgroundColor: "rgba(255,249,245,0.94)", backdropFilter: "blur(8px)" }}>
-        <div className="flex items-center gap-2 mb-3">
+      <header
+        className="px-4 pt-6 pb-3 sticky top-0 z-20 lg:px-0 lg:pt-2 lg:pb-3 lg:static"
+        style={{ backgroundColor: "rgba(255,249,245,0.94)", backdropFilter: "blur(8px)" }}
+      >
+        <div className="flex items-center gap-2 mb-3 lg:max-w-screen-2xl lg:mx-auto">
           <button onClick={goPrev} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100" aria-label="Tuần trước">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M11 14 L5 9 L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -173,18 +204,35 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
         </p>
       </header>
 
-      {/* View */}
-      {granularity === "block" ? (
-        <WeekBlockView monday={monday} events={events} viewerId={viewerId} onChange={() => reload(monday)} />
-      ) : (
-        <WeekHourView
-          monday={monday}
-          events={events}
-          viewerId={viewerId}
-          slotMinutes={granularity === "halfhour" ? 30 : 60}
-          onChange={() => reload(monday)}
-        />
-      )}
+      {/* View — desktop horizontal grid (§6.5) when viewport ≥ 1024px,
+         otherwise the existing mobile views per §6.3. Granularity tabs only
+         apply to the time grids (hour/30-min); block view is mobile-only. */}
+      <div className="lg:max-w-screen-2xl lg:mx-auto">
+        {isDesktop && granularity !== "block" ? (
+          <WeekDesktopView
+            monday={monday}
+            events={events}
+            viewerId={viewerId}
+            slotMinutes={granularity === "halfhour" ? 30 : 60}
+            onChange={() => reload(monday)}
+          />
+        ) : granularity === "block" ? (
+          <WeekBlockView
+            monday={monday}
+            events={events}
+            viewerId={viewerId}
+            onChange={() => reload(monday)}
+          />
+        ) : (
+          <WeekHourView
+            monday={monday}
+            events={events}
+            viewerId={viewerId}
+            slotMinutes={granularity === "halfhour" ? 30 : 60}
+            onChange={() => reload(monday)}
+          />
+        )}
+      </div>
 
       <QuickBlockFAB onCreated={() => reload(monday)} />
     </div>

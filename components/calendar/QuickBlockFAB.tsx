@@ -4,12 +4,11 @@
  * QuickBlockFAB — bottom-right FAB + sheet for the Quick-block flow.
  * Blueprint §6.4.
  *
- * Pattern: both span AND period are toggleable state. User confirms via the
- * "Chặn" submit button. No auto-submit on period tap (that raced with the
- * user; first tap closed the sheet before they could express their choice).
- *
- * Z-index + safe-area kept from round-2: FAB stays above the bottom nav
- * even with iPhone safe-area insets.
+ * Pattern: span is single-select. Periods are multi-select — pick any
+ * combination (e.g. Sáng + Chiều, or Sáng + Tối) and one Chặn tap creates
+ * all of them as separate events. "Cả ngày" is mutually exclusive with the
+ * other periods (selecting it clears the rest; selecting another period
+ * clears Cả ngày).
  */
 import { useState } from "react";
 
@@ -33,27 +32,52 @@ const PERIODS: { key: Period; label: string; hint: string }[] = [
 export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [span, setSpan] = useState<Span>("today");
-  const [period, setPeriod] = useState<Period | null>(null);
+  const [periods, setPeriods] = useState<Set<Period>>(new Set());
   const [submitting, setSubmitting] = useState(false);
+
+  function togglePeriod(p: Period) {
+    setPeriods((prev) => {
+      const next = new Set(prev);
+      if (p === "all_day") {
+        // Cả ngày is mutually exclusive with the other periods
+        if (next.has("all_day")) next.delete("all_day");
+        else {
+          next.clear();
+          next.add("all_day");
+        }
+      } else {
+        // Adding a non-all_day period clears all_day
+        next.delete("all_day");
+        if (next.has(p)) next.delete(p);
+        else next.add(p);
+      }
+      return next;
+    });
+  }
 
   function reset() {
     setSpan("today");
-    setPeriod(null);
+    setPeriods(new Set());
   }
 
   async function submit() {
-    if (!period || submitting) return;
+    if (periods.size === 0 || submitting) return;
     setSubmitting(true);
     try {
-      const res = await fetch("/api/calendar/quick-block", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ span, period }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err.error ?? "Block failed");
-        return;
+      // Fire one POST per selected period. Parallel — they don't interact.
+      const results = await Promise.all(
+        Array.from(periods).map((p) =>
+          fetch("/api/calendar/quick-block", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ span, period: p }),
+          }).then(async (res) => ({ ok: res.ok, body: await res.json().catch(() => ({})) }))
+        )
+      );
+      const failed = results.filter((r) => !r.ok);
+      if (failed.length > 0) {
+        alert(failed[0].body?.error ?? "Some blocks failed");
+        // Still call onCreated for the ones that succeeded
       }
       onCreated();
       setOpen(false);
@@ -71,7 +95,6 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
 
   return (
     <>
-      {/* FAB — z-40 + safe-area-aware bottom offset so the nav never paints over it. */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Chặn nhanh"
@@ -130,15 +153,15 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
             </div>
 
             <p className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">
-              Khoảng nào
+              Khoảng nào <span className="opacity-70 normal-case font-normal">(chọn nhiều được)</span>
             </p>
             <div className="space-y-2 mb-5">
               {PERIODS.map((p) => {
-                const selected = period === p.key;
+                const selected = periods.has(p.key);
                 return (
                   <button
                     key={p.key}
-                    onClick={() => setPeriod(p.key)}
+                    onClick={() => togglePeriod(p.key)}
                     disabled={submitting}
                     className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors"
                     style={{
@@ -148,11 +171,26 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
                         : "1px solid rgba(220,220,220,0.5)",
                     }}
                   >
-                    <span
-                      className="text-sm font-semibold"
-                      style={{ color: selected ? "#C4667A" : "#333" }}
-                    >
-                      {p.label}
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="inline-block w-4 h-4 rounded border flex items-center justify-center"
+                        style={{
+                          borderColor: selected ? "#C4667A" : "rgba(200,200,200,0.8)",
+                          backgroundColor: selected ? "#C4667A" : "white",
+                        }}
+                      >
+                        {selected && (
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M2 5 L4 7 L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: selected ? "#C4667A" : "#333" }}
+                      >
+                        {p.label}
+                      </span>
                     </span>
                     <span className="text-xs text-ink-soft">{p.hint}</span>
                   </button>
@@ -160,18 +198,21 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
               })}
             </div>
 
-            {/* Submit + Cancel */}
             <button
               onClick={submit}
-              disabled={!period || submitting}
+              disabled={periods.size === 0 || submitting}
               className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition-opacity"
               style={{
                 backgroundColor: "#C4667A",
-                opacity: !period || submitting ? 0.4 : 1,
+                opacity: periods.size === 0 || submitting ? 0.4 : 1,
                 boxShadow: "0 4px 12px rgba(196,102,122,0.3)",
               }}
             >
-              {submitting ? "Đang lưu…" : "Chặn"}
+              {submitting
+                ? "Đang lưu…"
+                : periods.size === 0
+                ? "Chặn"
+                : `Chặn ${periods.size} khoảng`}
             </button>
             <button
               onClick={closeSheet}

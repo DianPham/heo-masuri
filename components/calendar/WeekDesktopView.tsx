@@ -1,50 +1,51 @@
 "use client";
 
 /**
- * WeekHourView — mobile vertical-scroll week grid at hour or 30-min granularity.
- * Blueprint §6.3 / §6.4.
+ * WeekDesktopView — horizontal Google-Calendar-style week.
+ * Blueprint §6.5.
  *
- * Layout: 7 columns (Mon–Sun) × N rows (24 hours or 48 half-hours).
- * Owner's events render in pink. Partner's events render in lilac (busy-only
- * by default; details only visible if partner opted into share_details).
+ * Layout: 7 day columns × N hour rows. Hours column on the far left, sticky
+ * day headers along the top. Click an empty cell → create. Click an owner
+ * cell → delete (CP4 v1; the §6.5 inline edit popover lands in a later
+ * round). Now indicator paints across today's column.
  *
- * CP3 interactions (with CP3 round-2 polish):
- *  - Tap empty owner cell → optimistically mark busy, create event in background
- *  - Tap owner cell that has an event → optimistically clear, delete in background
- *  - Partner cells are read-only
+ * Shares mondayVnMs anchoring and the same fractional cell-fill model as
+ * WeekHourView, so a 30-min event in 1-hour view shows the right half-cell.
  *
- * Timezone anchoring: ALL day math runs off `mondayVnMs` (UTC ms representing
- * VN midnight of the displayed Monday). The previous code mixed UTC-anchored
- * grid render with VN-anchored click handlers — clicking "17:00" stored
- * 17:00 VN correctly but the grid rendered the mark at row 10 because it
- * used UTC midnight as the day origin.
+ * Keyboard handling lives in CalendarShell so the same shortcuts work
+ * regardless of which view is rendered.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
 
 type Props = {
-  monday: string;              // YYYY-MM-DD VN
+  monday: string;
   events: VisibleEvent[];
   viewerId: string;
   slotMinutes: 30 | 60;
   onChange: () => void;
 };
 
-const WEEKDAY_VI = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-const ROW_HEIGHT_PX = 28;
+const WEEKDAY_VI_LONG = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
+const ROW_HEIGHT_PX = 44;          // taller rows than mobile — desktop has more vertical room
+const HOUR_COL_WIDTH_PX = 60;
 
-/** Day index (0-6, Mon=0) for an event timestamp, anchored on VN midnight. */
 function vnDayIndex(iso: string, mondayVnMs: number): number {
   return Math.floor((new Date(iso).getTime() - mondayVnMs) / 86_400_000);
 }
 
-export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }: Props) {
+type CellState = {
+  ownerEventIds: string[];
+  partnerEventIds: string[];
+  ownerRanges: Array<{ top: number; height: number }>;
+  partnerRanges: Array<{ top: number; height: number }>;
+};
+
+export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChange }: Props) {
   const slotsPerDay = 1440 / slotMinutes;
   const totalSlots = slotsPerDay;
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  // UTC ms representing VN 00:00 of the displayed Monday.
-  // (Date.UTC of a date is its UTC midnight, which is VN 07:00 — subtract 7h.)
   const mondayVnMs = useMemo(
     () =>
       Date.UTC(
@@ -55,40 +56,25 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
     [monday]
   );
 
-  // Optimistic event mirror — used as the render source. Resyncs to server
-  // truth on every prop update from the parent reload().
   const [optimisticEvents, setOptimisticEvents] = useState<VisibleEvent[]>(events);
   useEffect(() => setOptimisticEvents(events), [events]);
 
-  // Scroll to (now - 1h) on first paint of the current week.
+  // Anchor scroll to (now - 1h) on current-week paint.
   useEffect(() => {
-    const nowVnMs = Date.now();
-    const currentMondayVnMs = (() => {
-      const nv = new Date(nowVnMs + 7 * 3_600_000);
-      const dow = nv.getUTCDay() || 7;
-      const m = new Date(nv);
-      m.setUTCDate(nv.getUTCDate() - (dow - 1));
-      return Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate()) - 7 * 3_600_000;
-    })();
+    const nowVn = new Date(Date.now() + 7 * 3_600_000);
+    const dow = nowVn.getUTCDay() || 7;
+    const currentMondayVnMs =
+      Date.UTC(nowVn.getUTCFullYear(), nowVn.getUTCMonth(), nowVn.getUTCDate() - (dow - 1)) -
+      7 * 3_600_000;
     if (currentMondayVnMs !== mondayVnMs) return;
-
-    const nowVn = new Date(nowVnMs + 7 * 3_600_000);
     const nowMinutes = nowVn.getUTCHours() * 60 + nowVn.getUTCMinutes();
     const targetMinutes = Math.max(0, nowMinutes - 60);
     const targetRow = Math.floor(targetMinutes / slotMinutes);
     scrollerRef.current?.scrollTo({ top: targetRow * ROW_HEIGHT_PX, behavior: "instant" as ScrollBehavior });
   }, [mondayVnMs, slotMinutes]);
 
-  // [day][slot] → event ids + sub-cell fill ranges (top + height as 0..1
-  // fractions of the cell). A 30-min event at 17:30 in the 1-hour cell labeled
-  // "17:00" renders as `{ top: 0.5, height: 0.5 }` — the bottom half filled.
-  type CellState = {
-    ownerEventIds: string[];
-    partnerEventIds: string[];
-    ownerRanges: Array<{ top: number; height: number }>;
-    partnerRanges: Array<{ top: number; height: number }>;
-  };
-  const grid = useMemo(() => {
+  // [day][slot] grid with sub-cell range tracking (same shape as WeekHourView).
+  const grid = useMemo<CellState[][]>(() => {
     const g: CellState[][] = [];
     for (let d = 0; d < 7; d++) {
       g.push(
@@ -113,13 +99,13 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
         const firstRow = Math.max(0, Math.floor(eStartMin / slotMinutes));
         const lastRow = Math.min(totalSlots - 1, Math.ceil(eEndMin / slotMinutes) - 1);
         for (let r = firstRow; r <= lastRow; r++) {
-          const rowStartMin = r * slotMinutes;
-          const rowEndMin = rowStartMin + slotMinutes;
-          const overlapStart = Math.max(rowStartMin, eStartMin);
-          const overlapEnd = Math.min(rowEndMin, eEndMin);
-          if (overlapEnd <= overlapStart) continue;
-          const top = (overlapStart - rowStartMin) / slotMinutes;
-          const height = (overlapEnd - overlapStart) / slotMinutes;
+          const rs = r * slotMinutes;
+          const re = rs + slotMinutes;
+          const oS = Math.max(rs, eStartMin);
+          const oE = Math.min(re, eEndMin);
+          if (oE <= oS) continue;
+          const top = (oS - rs) / slotMinutes;
+          const height = (oE - oS) / slotMinutes;
           if (e.is_own) {
             g[d][r].ownerEventIds.push(e.id);
             g[d][r].ownerRanges.push({ top, height });
@@ -133,33 +119,33 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
     return g;
   }, [optimisticEvents, mondayVnMs, totalSlots, slotMinutes]);
 
-  // Day labels — derive the date label from VN midnight + i days.
-  const dayLabels = useMemo(() => {
+  const dayHeaders = useMemo(() => {
     const nowVn = new Date(Date.now() + 7 * 3_600_000);
     const todayKey = `${nowVn.getUTCFullYear()}-${nowVn.getUTCMonth()}-${nowVn.getUTCDate()}`;
     return Array.from({ length: 7 }, (_, i) => {
       const dayVn = new Date(mondayVnMs + i * 86_400_000 + 7 * 3_600_000);
       const key = `${dayVn.getUTCFullYear()}-${dayVn.getUTCMonth()}-${dayVn.getUTCDate()}`;
-      return { label: WEEKDAY_VI[i], date: dayVn.getUTCDate(), isToday: key === todayKey };
+      return {
+        label: WEEKDAY_VI_LONG[i],
+        date: dayVn.getUTCDate(),
+        month: dayVn.getUTCMonth() + 1,
+        isToday: key === todayKey,
+      };
     });
   }, [mondayVnMs]);
 
-  // Now-indicator — only when current week is in view.
   const nowRow = useMemo(() => {
     const nowVn = new Date(Date.now() + 7 * 3_600_000);
     const dow = nowVn.getUTCDay() || 7;
     const todayIdx = dow - 1;
-    const currentMonday = new Date(nowVn);
-    currentMonday.setUTCDate(nowVn.getUTCDate() - todayIdx);
     const currentMondayVnMs =
-      Date.UTC(currentMonday.getUTCFullYear(), currentMonday.getUTCMonth(), currentMonday.getUTCDate()) -
+      Date.UTC(nowVn.getUTCFullYear(), nowVn.getUTCMonth(), nowVn.getUTCDate() - todayIdx) -
       7 * 3_600_000;
     if (currentMondayVnMs !== mondayVnMs) return null;
     const minutes = nowVn.getUTCHours() * 60 + nowVn.getUTCMinutes();
     return { day: todayIdx, top: (minutes / slotMinutes) * ROW_HEIGHT_PX };
   }, [mondayVnMs, slotMinutes]);
 
-  // Tap handler with optimistic update + background persist.
   async function handleCellTap(day: number, slot: number) {
     const cell = grid[day][slot];
     if (cell.ownerEventIds.length === 0 && cell.partnerEventIds.length > 0) return;
@@ -169,7 +155,7 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
       setOptimisticEvents((prev) => prev.filter((e) => e.id !== id));
       fetch(`/api/calendar/events/${id}`, { method: "DELETE" })
         .then(() => onChange())
-        .catch(() => onChange()); // re-sync to truth on either path
+        .catch(() => onChange());
     } else {
       const dayStartMs = mondayVnMs + day * 86_400_000;
       const startMs = dayStartMs + slot * slotMinutes * 60_000;
@@ -202,7 +188,6 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
     }
   }
 
-  // Hour labels (every full hour, even at 30-min granularity)
   const hourLabels = useMemo(() => {
     const labels: { row: number; text: string }[] = [];
     for (let h = 0; h < 24; h++) {
@@ -212,51 +197,84 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
   }, [slotMinutes]);
 
   return (
-    <div className="px-2">
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        backgroundColor: "white",
+        border: "1px solid rgba(255,201,213,0.4)",
+        boxShadow: "0 6px 20px rgba(196,102,122,0.08)",
+      }}
+    >
+      {/* Sticky day header strip */}
       <div
-        className="sticky top-[112px] z-10 grid grid-cols-[40px_repeat(7,1fr)] gap-0 mb-1"
-        style={{ backgroundColor: "rgba(255,249,245,0.94)" }}
+        className="grid sticky top-0 z-10"
+        style={{
+          gridTemplateColumns: `${HOUR_COL_WIDTH_PX}px repeat(7, 1fr)`,
+          backgroundColor: "rgba(255,249,245,0.96)",
+          backdropFilter: "blur(6px)",
+          borderBottom: "1px solid rgba(255,201,213,0.4)",
+        }}
       >
         <div />
-        {dayLabels.map((dl, i) => (
-          <div key={i} className="text-center pt-1 pb-1">
-            <p className="text-xs font-semibold text-ink-soft">{dl.label}</p>
+        {dayHeaders.map((dh, i) => (
+          <div
+            key={i}
+            className="text-center py-2 border-l"
+            style={{
+              borderColor: "rgba(255,201,213,0.25)",
+              backgroundColor: dh.isToday ? "rgba(255,201,213,0.18)" : "transparent",
+            }}
+          >
+            <p className="text-xs font-semibold text-ink-soft">{dh.label}</p>
             <p
-              className="text-sm font-bold mt-0.5"
-              style={{ color: dl.isToday ? "#C4667A" : "#333" }}
+              className="text-base font-bold mt-0.5"
+              style={{ color: dh.isToday ? "#C4667A" : "#333" }}
             >
-              {dl.date}
+              {dh.date}/{dh.month}
             </p>
+            {dh.isToday && (
+              <p className="text-[10px] uppercase tracking-wide font-bold mt-0.5" style={{ color: "#C4667A" }}>
+                Hôm nay
+              </p>
+            )}
           </div>
         ))}
       </div>
 
+      {/* Scrollable grid */}
       <div ref={scrollerRef} className="relative" style={{ maxHeight: "calc(100dvh - 220px)", overflowY: "auto" }}>
         <div
-          className="grid grid-cols-[40px_repeat(7,1fr)] gap-0 relative"
-          style={{ gridAutoRows: `${ROW_HEIGHT_PX}px` }}
+          className="grid relative"
+          style={{
+            gridTemplateColumns: `${HOUR_COL_WIDTH_PX}px repeat(7, 1fr)`,
+            gridAutoRows: `${ROW_HEIGHT_PX}px`,
+          }}
         >
-          {Array.from({ length: totalSlots }).map((_, row) => (
-            <RowFragment
-              key={row}
-              row={row}
-              slotMinutes={slotMinutes}
-              hourLabels={hourLabels}
-              grid={grid}
-              onTap={handleCellTap}
-            />
-          ))}
+          {Array.from({ length: totalSlots }).map((_, row) => {
+            const hourLabel = hourLabels.find((h) => h.row === row);
+            const isHalfHour = slotMinutes === 30 && row % 2 === 1;
+            return (
+              <DesktopRow
+                key={row}
+                row={row}
+                hourLabelText={hourLabel && !isHalfHour ? hourLabel.text : ""}
+                grid={grid}
+                onTap={handleCellTap}
+              />
+            );
+          })}
 
           {nowRow && (
             <div
               className="absolute pointer-events-none"
               style={{
                 top: nowRow.top,
-                left: `calc(40px + ${nowRow.day} * ((100% - 40px) / 7))`,
-                width: `calc((100% - 40px) / 7)`,
-                height: 1.5,
+                left: `calc(${HOUR_COL_WIDTH_PX}px + ${nowRow.day} * ((100% - ${HOUR_COL_WIDTH_PX}px) / 7))`,
+                width: `calc((100% - ${HOUR_COL_WIDTH_PX}px) / 7)`,
+                height: 2,
                 backgroundColor: "#E97A95",
                 boxShadow: "0 0 6px rgba(233,122,149,0.5)",
+                zIndex: 5,
               }}
             />
           )}
@@ -266,54 +284,42 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
   );
 }
 
-type CellShape = {
-  ownerEventIds: string[];
-  partnerEventIds: string[];
-  ownerRanges: Array<{ top: number; height: number }>;
-  partnerRanges: Array<{ top: number; height: number }>;
-};
-
-function RowFragment({
+function DesktopRow({
   row,
-  slotMinutes,
-  hourLabels,
+  hourLabelText,
   grid,
   onTap,
 }: {
   row: number;
-  slotMinutes: 30 | 60;
-  hourLabels: { row: number; text: string }[];
-  grid: CellShape[][];
+  hourLabelText: string;
+  grid: CellState[][];
   onTap: (day: number, slot: number) => void;
 }) {
-  const hourLabel = hourLabels.find((h) => h.row === row);
-  const isHalfHour = slotMinutes === 30 && row % 2 === 1;
-
   return (
     <>
-      <div className="text-[10px] text-ink-soft text-right pr-1 leading-none flex items-start justify-end pt-0.5">
-        {hourLabel && !isHalfHour ? hourLabel.text : ""}
+      <div
+        className="text-xs text-ink-soft text-right pr-2 leading-none flex items-start justify-end pt-1 border-r"
+        style={{ borderColor: "rgba(255,201,213,0.25)" }}
+      >
+        {hourLabelText}
       </div>
       {grid.map((dayCells, day) => {
         const cell = dayCells[row];
         const ownerBusy = cell.ownerEventIds.length > 0;
         const partnerBusy = cell.partnerEventIds.length > 0;
-        const isBusyCell = ownerBusy || partnerBusy;
         const isReadonly = !ownerBusy && partnerBusy;
-
         return (
           <button
             key={day}
             onClick={() => onTap(day, row)}
-            className="border-r border-b transition-colors active:opacity-70 relative overflow-hidden"
+            className="border-r border-b relative overflow-hidden hover:bg-rose-50/40 transition-colors"
             style={{
               borderColor: "rgba(255,201,213,0.25)",
               backgroundColor: "transparent",
               cursor: isReadonly ? "default" : "pointer",
             }}
-            aria-label={isBusyCell ? "Bận" : "Trống"}
+            aria-label={ownerBusy || partnerBusy ? "Bận" : "Trống"}
           >
-            {/* Partner fills paint first (background, blue), owner fills paint on top (pink). */}
             {cell.partnerRanges.map((r, i) => (
               <span
                 key={`p${i}`}
@@ -332,7 +338,6 @@ function RowFragment({
                 style={{
                   top: `${r.top * 100}%`,
                   height: `${r.height * 100}%`,
-                  // When both overlap, mix to purple so it's distinguishable from both single cases.
                   backgroundColor: ownerBusy && partnerBusy
                     ? "rgba(180,130,200,0.85)"
                     : "rgba(255,201,213,0.85)",
