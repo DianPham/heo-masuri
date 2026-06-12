@@ -15,8 +15,9 @@
  * Keyboard handling lives in CalendarShell so the same shortcuts work
  * regardless of which view is rendered.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
+import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
 
 type Props = {
   monday: string;
@@ -58,6 +59,24 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
 
   const [optimisticEvents, setOptimisticEvents] = useState<VisibleEvent[]>(events);
   useEffect(() => setOptimisticEvents(events), [events]);
+
+  // Drag-to-create selection state. {day, startRow, endRow} during a drag; null otherwise.
+  const [drag, setDrag] = useState<{ day: number; startRow: number; endRow: number } | null>(null);
+  const didDragRef = useRef(false);
+
+  type SheetState =
+    | { mode: "create"; start_at: string; end_at: string }
+    | {
+        mode: "edit";
+        id: string;
+        start_at: string;
+        end_at: string;
+        title: string | null;
+        note: string | null;
+        emoji: string | null;
+        share_details: boolean;
+      };
+  const [sheet, setSheet] = useState<SheetState | null>(null);
 
   // Anchor scroll to (now - 1h) on current-week paint.
   useEffect(() => {
@@ -146,7 +165,133 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     return { day: todayIdx, top: (minutes / slotMinutes) * ROW_HEIGHT_PX };
   }, [mondayVnMs, slotMinutes]);
 
+  // Global mouseup: if user dragged across 2+ cells, open the create sheet.
+  useEffect(() => {
+    function onUp() {
+      if (drag && didDragRef.current) {
+        const { day, startRow, endRow } = drag;
+        const lo = Math.min(startRow, endRow);
+        const hi = Math.max(startRow, endRow);
+        const dayStartMs = mondayVnMs + day * 86_400_000;
+        const start_at = new Date(dayStartMs + lo * slotMinutes * 60_000).toISOString();
+        const end_at = new Date(dayStartMs + (hi + 1) * slotMinutes * 60_000).toISOString();
+        setSheet({ mode: "create", start_at, end_at });
+      }
+      setDrag(null);
+    }
+    window.addEventListener("mouseup", onUp);
+    return () => window.removeEventListener("mouseup", onUp);
+  }, [drag, mondayVnMs, slotMinutes]);
+
+  const onCellMouseDown = useCallback((day: number, row: number, e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    setDrag({ day, startRow: row, endRow: row });
+    didDragRef.current = false;
+  }, []);
+
+  const onCellMouseEnter = useCallback((day: number, row: number) => {
+    setDrag((prev) => {
+      if (!prev || prev.day !== day) return prev;
+      if (row !== prev.endRow) didDragRef.current = true;
+      return { day: prev.day, startRow: prev.startRow, endRow: row };
+    });
+  }, []);
+
+  const onCellContextMenu = useCallback(
+    (day: number, row: number, e: React.MouseEvent) => {
+      e.preventDefault();
+      const cell = grid[day][row];
+      if (cell.ownerEventIds.length === 0) {
+        // Empty cell → open create sheet for the single cell
+        const dayStartMs = mondayVnMs + day * 86_400_000;
+        const start_at = new Date(dayStartMs + row * slotMinutes * 60_000).toISOString();
+        const end_at = new Date(dayStartMs + (row + 1) * slotMinutes * 60_000).toISOString();
+        setSheet({ mode: "create", start_at, end_at });
+        return;
+      }
+      const eventId = cell.ownerEventIds[0];
+      if (eventId.startsWith("temp-")) return;
+      const event = optimisticEvents.find((ev) => ev.id === eventId);
+      if (!event) return;
+      setSheet({
+        mode: "edit",
+        id: eventId,
+        start_at: event.start_at,
+        end_at: event.end_at,
+        title: event.title,
+        note: event.note,
+        emoji: event.emoji,
+        share_details: event.share_details,
+      });
+    },
+    [grid, mondayVnMs, optimisticEvents, slotMinutes]
+  );
+
+  async function handleSheetSave(values: EventDetailValues): Promise<boolean> {
+    if (!sheet) return false;
+    if (sheet.mode === "create") {
+      try {
+        const res = await fetch("/api/calendar/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            start_at: sheet.start_at,
+            end_at: sheet.end_at,
+            source: "manual",
+            ...values,
+          }),
+        });
+        if (!res.ok) {
+          alert("Lưu thất bại");
+          return false;
+        }
+        const data = await res.json();
+        setOptimisticEvents((prev) => [...prev, data.event]);
+        return true;
+      } catch {
+        alert("Lỗi mạng");
+        return false;
+      }
+    } else {
+      try {
+        const res = await fetch(`/api/calendar/events/${sheet.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        });
+        if (!res.ok) {
+          alert("Lưu thất bại");
+          return false;
+        }
+        const data = await res.json();
+        setOptimisticEvents((prev) => prev.map((e) => (e.id === sheet.id ? data.event : e)));
+        return true;
+      } catch {
+        alert("Lỗi mạng");
+        return false;
+      }
+    }
+  }
+
+  async function handleSheetDelete() {
+    if (!sheet || sheet.mode !== "edit") return;
+    const id = sheet.id;
+    try {
+      const res = await fetch(`/api/calendar/events/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setOptimisticEvents((prev) => prev.filter((e) => e.id !== id));
+      }
+    } catch {
+      // swallow
+    }
+  }
+
   async function handleCellTap(day: number, slot: number) {
+    // Suppress click that follows a drag.
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
     const cell = grid[day][slot];
     const dayStartMs = mondayVnMs + day * 86_400_000;
     const cellStartMs = dayStartMs + slot * slotMinutes * 60_000;
@@ -325,7 +470,11 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
                 row={row}
                 hourLabelText={hourLabel && !isHalfHour ? hourLabel.text : ""}
                 grid={grid}
+                drag={drag}
                 onTap={handleCellTap}
+                onCellMouseDown={onCellMouseDown}
+                onCellMouseEnter={onCellMouseEnter}
+                onCellContextMenu={onCellContextMenu}
               />
             );
           })}
@@ -346,6 +495,15 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
           )}
         </div>
       </div>
+
+      {sheet && (
+        <EventDetailSheet
+          initial={sheet}
+          onSave={handleSheetSave}
+          onDelete={sheet.mode === "edit" ? handleSheetDelete : undefined}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
 }
@@ -354,12 +512,20 @@ function DesktopRow({
   row,
   hourLabelText,
   grid,
+  drag,
   onTap,
+  onCellMouseDown,
+  onCellMouseEnter,
+  onCellContextMenu,
 }: {
   row: number;
   hourLabelText: string;
   grid: CellState[][];
+  drag: { day: number; startRow: number; endRow: number } | null;
   onTap: (day: number, slot: number) => void;
+  onCellMouseDown: (day: number, row: number, e: React.MouseEvent) => void;
+  onCellMouseEnter: (day: number, row: number) => void;
+  onCellContextMenu: (day: number, row: number, e: React.MouseEvent) => void;
 }) {
   return (
     <>
@@ -374,18 +540,33 @@ function DesktopRow({
         const ownerBusy = cell.ownerEventIds.length > 0;
         const partnerBusy = cell.partnerEventIds.length > 0;
         const isReadonly = !ownerBusy && partnerBusy;
+        const inDrag =
+          drag !== null &&
+          drag.day === day &&
+          row >= Math.min(drag.startRow, drag.endRow) &&
+          row <= Math.max(drag.startRow, drag.endRow);
         return (
           <button
             key={day}
             onClick={() => onTap(day, row)}
+            onMouseDown={(e) => onCellMouseDown(day, row, e)}
+            onMouseEnter={() => onCellMouseEnter(day, row)}
+            onContextMenu={(e) => onCellContextMenu(day, row, e)}
             className="border-r border-b relative overflow-hidden hover:bg-rose-50/40 transition-colors"
             style={{
               borderColor: "rgba(255,201,213,0.25)",
               backgroundColor: "transparent",
               cursor: isReadonly ? "default" : "pointer",
+              userSelect: "none",
             }}
             aria-label={ownerBusy || partnerBusy ? "Bận" : "Trống"}
           >
+            {inDrag && (
+              <span
+                className="absolute inset-0 pointer-events-none"
+                style={{ backgroundColor: "rgba(196,102,122,0.25)" }}
+              />
+            )}
             {cell.partnerRanges.map((r, i) => (
               <span
                 key={`p${i}`}
