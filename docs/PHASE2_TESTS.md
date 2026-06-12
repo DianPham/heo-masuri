@@ -380,4 +380,46 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP7 — Phase 2C: date idea bank + URL preview + iOS Shortcut (§7.1-§7.2)
+
+### Grid page CRUD
+- [ ] Visit `/dates/ideas` as Heo OR Masuri → page renders with "Ngân hàng ý tưởng" header and "+ Thêm ý tưởng" CTA
+- [ ] Filter chips: "Tất cả" + 8 slot types
+- [ ] Click "+ Thêm ý tưởng" → inline form
+- [ ] Paste a public URL (https://example.com) in the URL field → blur or click "Tự lấy" → title/description/thumbnail prefill from the page's og: tags (where present)
+- [ ] Pick slot_type "🍜 Ăn" + tags "outdoor, cheap" → save → polaroid card appears in the grid with title, slot chip, tags
+- [ ] Click a card → inline edit form pre-fills with current values
+- [ ] Edit notes, save → card updates
+- [ ] Click "Lưu trữ ý tưởng này" → card disappears from the grid (archived=true)
+- [ ] Reload → archived items don't reappear (archived items not shown unless ?archived=1)
+- [ ] Filter to "🎬 Phim" → only movie-tagged ideas shown
+- [ ] Filter to "Tất cả" → all (non-archived) ideas shown
+
+### URL preview API
+- [ ] `curl -b "who=heo" "https://heo-masuri-staging.vercel.app/api/dates/preview?url=https://example.com"` → returns `{title,description,image,source}` (image may be null for plain pages)
+- [ ] Preview for `http://localhost` → returns nulls (private hostname rejected)
+- [ ] Preview for `ftp://example.com/file` → returns nulls (non-http protocol rejected)
+- [ ] Preview for a hostile URL that hangs → returns within ~4s (timeout enforced)
+- [ ] Preview unauthenticated (no cookie) → 401
+
+### iOS Shortcut endpoint
+- [ ] On staging, set `SHORTCUT_TOKEN_HEO` env var in Vercel; redeploy
+- [ ] `curl -X POST -H "Content-Type: application/json" -d '{"url":"https://example.com","notes":"test"}' "https://heo-masuri-staging.vercel.app/api/dates/ideas/shortcut?token=$SHORTCUT_TOKEN_HEO"` → 200 `{ok:true, id:...}`
+- [ ] Row created in date_ideas with `added_by` = Heo's id
+- [ ] Same request with a wrong token → 401
+- [ ] Same request with no token env var on the server → 503
+- [ ] Body missing url → 400
+- [ ] After insert, visit `/dates/ideas` → the new card shows up (with preview if og: tags were present on the URL)
+
+### Privacy / RLS
+- [ ] Anon SELECT against `date_ideas` (with anon key) where archived=false → returns rows (policy allows)
+- [ ] Anon SELECT against archived rows → returns nothing
+- [ ] Anon INSERT/UPDATE/DELETE → blocked (no write policy)
+
+### Middleware
+- [ ] Unauthenticated visit to `/dates/ideas` → redirects to `/`
+- [ ] After soft-gate as either Heo or Masuri → loads the page
+
+---
+
 ## CP4+ — to be added as each phase lands
