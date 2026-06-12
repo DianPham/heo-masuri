@@ -292,4 +292,45 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP5 — Phase 2B: recurring schedule template (§6.6)
+
+### Editor page
+- [ ] As Masuri, visit `/masuri/calendar/template` → page renders "Lịch lặp hàng tuần" header, description, enabled checkbox, the 7-col × 24-row grid, and the action buttons (Lưu / Áp dụng tuần này / Áp dụng 4 tuần tới / Xóa hết)
+- [ ] As Heo, visit `/masuri/calendar/template` → middleware redirects to `/`
+- [ ] At `/calendar` while signed in as Masuri → a "Lịch lặp hàng tuần ↗" link appears under the granularity tabs; clicking it navigates to the editor
+- [ ] At `/calendar` while signed in as Heo → the link does NOT appear
+
+### Editing cells
+- [ ] Tap an empty hour cell → fills pink (busy)
+- [ ] Tap a pink cell → clears
+- [ ] Cells across multiple days work independently
+- [ ] Click "Xóa hết" → confirm dialog → all cells clear
+- [ ] Reload the page (without saving) → cells revert to the last-saved state
+
+### Save
+- [ ] Mark e.g. Mon 09:00-12:00 and Wed 14:00-17:00 busy, click "Lưu mẫu" → small green "Đã lưu" hint appears under the buttons (~2s)
+- [ ] Refresh the page → marks persist
+- [ ] In DB: `SELECT template FROM recurring_schedule_template WHERE user_id='<masuri-id>'` → contiguous hour marks should coalesce into compact ranges (e.g. one `{start_minute:540, end_minute:720}` for Mon 9–12, NOT three separate hour ranges)
+
+### Apply to this week
+- [ ] Click "Áp dụng tuần này" → alert "Đã áp dụng cho tuần này: N sự kiện (xóa M cũ)"
+- [ ] Visit `/calendar` (current week, masuri viewer) → the template marks appear pink in the right slots
+- [ ] In DB: `SELECT count(*) FROM calendar_events WHERE owner=<masuri-id> AND source='recurring_template' AND source_ref=<masuri-id> AND start_at >= <monday-of-this-week-utc>` → matches the alert's "N sự kiện" count
+- [ ] Click "Áp dụng tuần này" AGAIN → no duplicate explosion; DB count stays the same (purge-then-insert is idempotent)
+
+### Editing after apply
+- [ ] Edit the template (e.g. remove Mon 09:00, add Tue 10:00), Save, then "Áp dụng tuần này" again → calendar now reflects the edit; the old Mon 09:00 event is gone, Tue 10:00 appears
+- [ ] Manually create a `source='manual'` event at Mon 10:00 in /calendar; re-apply template → the manual event is preserved (only `source='recurring_template'` events are purged)
+
+### Apply forward 4 weeks
+- [ ] Mark a few busy cells, Save, then "Áp dụng 4 tuần tới" → alert "Áp dụng cho 4 tuần (bỏ qua 0 tuần đã có mẫu)"
+- [ ] Visit /calendar and arrow through the next 4 Mondays → each week shows the template marks
+- [ ] Click "Áp dụng 4 tuần tới" again → alert says "Áp dụng cho 0 tuần (bỏ qua 4 tuần đã có mẫu)" — already-templated weeks are skipped (per blueprint §6.6)
+- [ ] Use "Áp dụng tuần này" to refresh THIS week, then "Áp dụng 4 tuần tới" again → still skips this week (it now has template events) and the 3 future weeks already-templated; no duplicates
+
+### Privacy / cross-user
+- [ ] As Heo (different cookie), visit /calendar → Masuri's template events appear blue (partner-busy) for the affected slots, without titles (template events have no title)
+
+---
+
 ## CP4+ — to be added as each phase lands
