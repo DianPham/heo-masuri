@@ -13,6 +13,7 @@ import { WeekHourView } from "./WeekHourView";
 import { WeekBlockView } from "./WeekBlockView";
 import { WeekDesktopView } from "./WeekDesktopView";
 import { QuickBlockFAB } from "./QuickBlockFAB";
+import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { VisibleEvent } from "@/lib/calendar";
 
@@ -61,6 +62,9 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
   const [events, setEvents] = useState<VisibleEvent[]>(initialEvents);
   const [granularity, setGranularity] = useState<Granularity>("hour");
   const [loading, setLoading] = useState(false);
+  const [shellSheet, setShellSheet] = useState<
+    { mode: "create"; start_at: string; end_at: string } | null
+  >(null);
 
   // Restore granularity from localStorage on mount
   useEffect(() => {
@@ -118,6 +122,52 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
   const isCurrentWeek = monday === thisWeekMondayVN();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
+  // Open "new event" sheet with a sensible default time slot:
+  //   - current week → next-rounded-hour today, 1h
+  //   - other weeks → monday 09:00, 1h
+  const openNewEventSheet = useCallback(() => {
+    const mondayMsUtc = Date.UTC(
+      Number(monday.slice(0, 4)),
+      Number(monday.slice(5, 7)) - 1,
+      Number(monday.slice(8, 10))
+    );
+    const mondayVnMs = mondayMsUtc - 7 * 3_600_000;
+    let startMs: number;
+    if (monday === thisWeekMondayVN()) {
+      const nowVn = new Date(Date.now() + 7 * 3_600_000);
+      const dow = (nowVn.getUTCDay() || 7) - 1;
+      const nextHour = nowVn.getUTCHours() + 1;
+      const todayStartVnMs = mondayVnMs + dow * 86_400_000;
+      startMs = todayStartVnMs + Math.min(23, nextHour) * 3_600_000;
+    } else {
+      startMs = mondayVnMs + 9 * 3_600_000;
+    }
+    setShellSheet({
+      mode: "create",
+      start_at: new Date(startMs).toISOString(),
+      end_at: new Date(startMs + 3_600_000).toISOString(),
+    });
+  }, [monday]);
+
+  async function handleShellSave(values: EventDetailValues): Promise<boolean> {
+    if (!shellSheet) return false;
+    try {
+      const res = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          start_at: shellSheet.start_at,
+          end_at: shellSheet.end_at,
+          source: "manual",
+          ...values,
+        }),
+      });
+      if (!res.ok) { alert("Lưu thất bại"); return false; }
+      await reload(monday);
+      return true;
+    } catch { alert("Lỗi mạng"); return false; }
+  }
+
   // Keyboard navigation (§6.5). Bound at the shell so the same shortcuts work
   // for either layout. Skips when the focus is inside an input/textarea so
   // typing a Vietnamese letter "t" inside a future event-detail textarea
@@ -126,6 +176,11 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === "n" || e.key === "N")) {
+        e.preventDefault();
+        openNewEventSheet();
         return;
       }
       if (e.key === "ArrowLeft") {
@@ -141,7 +196,7 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [openNewEventSheet]);
 
   return (
     <div className="min-h-dvh lg:px-6 lg:py-4">
@@ -171,6 +226,20 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
               <path d="M7 4 L13 9 L7 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+          {isDesktop && (
+            <button
+              onClick={openNewEventSheet}
+              className="hidden lg:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{
+                backgroundColor: "#C4667A",
+                boxShadow: "0 4px 12px rgba(196,102,122,0.3)",
+              }}
+              title="Sự kiện mới (⌘N)"
+            >
+              <span aria-hidden>+</span>
+              <span>Sự kiện mới</span>
+            </button>
+          )}
         </div>
 
         {/* Granularity selector */}
@@ -235,6 +304,14 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
       </div>
 
       <QuickBlockFAB onCreated={() => reload(monday)} />
+
+      {shellSheet && (
+        <EventDetailSheet
+          initial={shellSheet}
+          onSave={handleShellSave}
+          onClose={() => setShellSheet(null)}
+        />
+      )}
     </div>
   );
 }
