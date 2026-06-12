@@ -422,4 +422,42 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP8 — Phase 2C: wardrobe + outfit picker (§7.3)
+
+### Schema + storage
+- [X] `wardrobe_items` and `outfit_suggestions` exist with right columns; RLS on; policies "anon read non-archived wardrobe" and "anon read suggestions" present — **SQL-verified**
+- [X] storage bucket "wardrobe" exists with public=false — **SQL-verified**
+- [X] FK constraint on `outfit_suggestions.wardrobe_item` refuses bogus uuid — **SQL-verified**
+- [X] CHECK constraint on `outfit_suggestions.status` refuses unknown values — **SQL-verified**
+
+### Upload + items CRUD (UI/network)
+- [ ] As Heo, visit `/wardrobe` → page renders "Tủ đồ", empty grid, "+ Thêm trang phục" button
+- [ ] Click "+ Thêm trang phục" → file picker opens (camera on phone)
+- [ ] Pick an image → client compresses to ≤1600px JPEG + 200x200 thumb; both PUT to signed Supabase URLs; row appears at the top of the grid
+- [ ] Tile shows the thumbnail (signed URL renders); label "(no label)" if not set
+- [ ] Tap a tile → inline edit card with full photo, label input, tags input, wear stats, Save / Hủy / Lưu trữ
+- [ ] Edit label "blue dress" + tags "casual, date-night" → save → tile updates
+- [ ] Click "Lưu trữ" → tile disappears (archived=true); GET ?archived=1 would return it
+- [ ] DELETE via API (not exposed in UI but verify) → row gone + storage objects removed
+
+### Suggest flow (cross-user)
+- [ ] As Heo on `/wardrobe`, click "Xem tủ đồ của người ấy ↗" → `/wardrobe/masuri` with Masuri's items
+- [ ] Tap an item → SuggestSheet opens with that item's photo + label, note textarea, "Gửi gợi ý" button
+- [ ] Submit → alert "Đã gửi gợi ý 💕"; Masuri receives a push titled "👗 Gợi ý outfit" (subject to outfit_enabled pref)
+- [ ] Switch to Masuri's session → /wardrobe shows the "Gợi ý đang chờ" section with the suggested item + Heo's note
+- [ ] Click "Chốt" → suggestion disappears from inbox; status='accepted'; that wardrobe item's wear_count += 1 and last_worn_at stamped — **SQL-verified the transition flow end-to-end**
+- [ ] Click "Hôm nay thử cái khác nha" → suggestion disappears; status='declined'; no wear bump
+
+### Constraint + RLS posture
+- [X] Anon SELECT on wardrobe_items → only non-archived rows visible (USING archived=false) — policy inspection
+- [X] Anon SELECT on outfit_suggestions → returns all rows (USING true) — policy inspection
+- [X] Anon INSERT/UPDATE/DELETE on either table → blocked (no write policies) — policy inspection
+- [ ] Path-anchor: POST /api/wardrobe/items with photo_path NOT starting with viewer-id → 403
+
+### Middleware
+- [ ] Unauthenticated visit to /wardrobe or /wardrobe/heo → redirects to `/`
+- [ ] As Heo, visit /wardrobe/heo → redirects to /wardrobe (self-route bounces)
+
+---
+
 ## CP4+ — to be added as each phase lands
