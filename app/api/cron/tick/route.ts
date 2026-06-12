@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runDeliverScheduled } from "@/lib/crons/deliver-scheduled";
 import { runGmgnTick } from "@/lib/crons/gmgn-tick";
+import { runImportantDateTick } from "@/lib/crons/important-date-tick";
 
 export const dynamic = "force-dynamic";
 
@@ -103,9 +104,16 @@ async function handle(req: NextRequest) {
     }
   }
 
-  // ── Future hooks (CP3+) ───────────────────────────────────────────────────
-  // Every hour at :00:    runSurpriseTick()
-  // Daily 09:00 VN:       runImportantDateTick()  (Phase 2B)
+  // ── Daily 02:00 UTC (09:00 VN): important-date pushes (CP6, §6.10) ───────
+  if (utcHour === 2 && utcMinute === 0) {
+    try {
+      const r = await runImportantDateTick();
+      result.ran.push("important-date-tick");
+      result.results["important-date-tick"] = r;
+    } catch (err) {
+      result.errors["important-date-tick"] = String(err);
+    }
+  }
 
   return NextResponse.json(result);
 }

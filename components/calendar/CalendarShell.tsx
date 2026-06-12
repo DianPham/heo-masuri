@@ -19,9 +19,12 @@ import type { VisibleEvent } from "@/lib/calendar";
 
 export type Granularity = "hour" | "halfhour" | "block";
 
+export type WeekStar = { day: number; emoji: string; label: string; id: string };
+
 type Props = {
   initialMonday: string;       // YYYY-MM-DD in VN
   initialEvents: VisibleEvent[];
+  initialStars?: WeekStar[];
   viewerId: string;
   /** Soft-gate identity — drives Masuri-only links like "Lịch lặp". */
   who?: "heo" | "masuri" | "";
@@ -59,7 +62,7 @@ function formatWeekLabel(mondayStr: string): string {
   return `${startLabel} – ${endLabel}`;
 }
 
-export function CalendarShell({ initialMonday, initialEvents, viewerId, who }: Props) {
+export function CalendarShell({ initialMonday, initialEvents, initialStars = [], viewerId, who }: Props) {
   const [monday, setMonday] = useState(initialMonday);
   const [events, setEvents] = useState<VisibleEvent[]>(initialEvents);
   const [granularity, setGranularity] = useState<Granularity>("hour");
@@ -251,6 +254,38 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId, who }: P
           >
             Lịch lặp hàng tuần ↗
           </a>
+        )}
+        <a
+          href="/calendar/important-dates"
+          className="block text-center text-xs text-rose-400 underline underline-offset-2 mb-2"
+        >
+          Ngày quan trọng ↗
+        </a>
+
+        {/* Stars strip — important_date occurrences in the displayed week (§6.8). */}
+        {initialStars.length > 0 && (
+          <div
+            className="grid mb-2 px-1"
+            style={{ gridTemplateColumns: `repeat(7, 1fr)`, gap: 4 }}
+          >
+            {Array.from({ length: 7 }, (_, day) => {
+              const today = initialStars.filter((s) => s.day === day);
+              if (today.length === 0) return <div key={day} />;
+              return (
+                <a
+                  key={day}
+                  href="/calendar/important-dates"
+                  className="flex flex-col items-center text-center hover:opacity-80"
+                  title={today.map((s) => s.label).join("\n")}
+                >
+                  <span className="text-base leading-none">{today.map((s) => s.emoji).join("")}</span>
+                  <span className="text-[9px] text-ink-soft mt-0.5 truncate w-full">
+                    {today[0].label}
+                  </span>
+                </a>
+              );
+            })}
+          </div>
         )}
 
         {/* Granularity selector */}

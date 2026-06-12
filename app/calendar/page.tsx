@@ -10,6 +10,15 @@ import { headers, cookies } from "next/headers";
 import { CalendarShell } from "@/components/calendar/CalendarShell";
 import { getViewerUserId } from "@/lib/calendar";
 import type { VisibleEvent } from "@/lib/calendar";
+import { occurrencesInRange, type ImportantDate } from "@/lib/important-dates";
+import { createServerClient } from "@/lib/supabase/server";
+
+export type WeekStar = {
+  day: number;          // 0..6, Mon=0
+  emoji: string;
+  label: string;
+  id: string;
+};
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +60,42 @@ async function fetchWeek(mondayStr: string): Promise<VisibleEvent[]> {
   }
 }
 
+async function fetchWeekStars(monday: string): Promise<WeekStar[]> {
+  try {
+    const supabase = createServerClient();
+    const { data } = await supabase.from("important_dates").select("*");
+    if (!data) return [];
+    const ms = Date.UTC(
+      Number(monday.slice(0, 4)),
+      Number(monday.slice(5, 7)) - 1,
+      Number(monday.slice(8, 10))
+    );
+    const fromYmd = monday;
+    const sundayMs = ms + 6 * 86_400_000;
+    const sd = new Date(sundayMs);
+    const toYmd = `${sd.getUTCFullYear()}-${String(sd.getUTCMonth() + 1).padStart(2, "0")}-${String(sd.getUTCDate()).padStart(2, "0")}`;
+
+    const stars: WeekStar[] = [];
+    for (const row of data as ImportantDate[]) {
+      const occs = occurrencesInRange(row, fromYmd, toYmd);
+      for (const occ of occs) {
+        const [y, m, d] = occ.split("-").map(Number);
+        const dayMs = Date.UTC(y, m - 1, d);
+        const dayIdx = Math.floor((dayMs - ms) / 86_400_000);
+        if (dayIdx < 0 || dayIdx > 6) continue;
+        stars.push({ day: dayIdx, emoji: row.emoji ?? "⭐", label: row.label_vi, id: row.id });
+      }
+    }
+    return stars;
+  } catch {
+    return [];
+  }
+}
+
 export default async function CalendarPage() {
   const viewerId = await getViewerUserId();
   const monday = currentMondayVN();
-  const events = await fetchWeek(monday);
+  const [events, stars] = await Promise.all([fetchWeek(monday), fetchWeekStars(monday)]);
   const cookieStore = await cookies();
   const who = (cookieStore.get("who")?.value ?? "") as "heo" | "masuri" | "";
 
@@ -62,6 +103,7 @@ export default async function CalendarPage() {
     <CalendarShell
       initialMonday={monday}
       initialEvents={events}
+      initialStars={stars}
       viewerId={viewerId ?? ""}
       who={who}
     />

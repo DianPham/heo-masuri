@@ -8,6 +8,7 @@ import { MissingButton } from "@/components/buttons/MissingButton";
 import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 import { Countdown } from "@/components/countdown/Countdown";
 import { Pig } from "@/components/theme/Pig";
+import NextImportantCard from "@/components/home/NextImportantCard";
 
 export default async function HeoHome() {
   const locale = await getLocale();
@@ -105,6 +106,10 @@ export default async function HeoHome() {
         </div>
 
         <ThinkingButtons who="heo" locale={locale} />
+
+        <div className="w-full flex justify-center pt-2">
+          <NextImportantCard />
+        </div>
 
         <Link
           href="/heo/angry"

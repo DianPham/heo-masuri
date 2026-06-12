@@ -339,6 +339,29 @@ create table public.recurring_schedule_template (
 );
 -- BEFORE UPDATE trigger touch_updated_at(). RLS on, server-only.
 
+-- ── important_dates (migration 012) ──────────────────────────────────────────
+-- Generalizes reunion_dates. Yearly/monthly recurrence computed on the fly
+-- (no row-per-occurrence). reunion_dates preserved as fallback until after
+-- Phase 2 ships to production, then dropped in a follow-up migration.
+create table public.important_dates (
+  id              uuid primary key default gen_random_uuid(),
+  label_vi        text not null,
+  label_en        text not null,
+  target_date     date not null,
+  kind            text not null check (kind in (
+    'reunion','anniversary','monthiversary','birthday_heo','birthday_masuri','other'
+  )),
+  recurrence      text not null default 'none'
+                    check (recurrence in ('none','yearly','monthly')),
+  is_current      boolean not null default true,
+  emoji           text,
+  show_on_home    boolean not null default true,
+  created_at      timestamptz default now()
+);
+create index important_dates_kind_target_idx on public.important_dates (kind, target_date);
+create index important_dates_home_idx on public.important_dates (target_date) where show_on_home = true;
+-- RLS: anon SELECT allowed (cross-pair visible); writes service-role only.
+
 -- ─────────────────────────────────────────────────────────────────────────────
--- End of schema. Phase 2B important_dates begins at 012 (CP6).
+-- End of schema.
 -- ─────────────────────────────────────────────────────────────────────────────
