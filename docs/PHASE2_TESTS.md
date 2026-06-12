@@ -310,17 +310,17 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 ### Save
 - [ ] Mark e.g. Mon 09:00-12:00 and Wed 14:00-17:00 busy, click "Lưu mẫu" → small green "Đã lưu" hint appears under the buttons (~2s)
 - [ ] Refresh the page → marks persist
-- [ ] In DB: `SELECT template FROM recurring_schedule_template WHERE user_id='<masuri-id>'` → contiguous hour marks should coalesce into compact ranges (e.g. one `{start_minute:540, end_minute:720}` for Mon 9–12, NOT three separate hour ranges)
+- [X] In DB: `SELECT template FROM recurring_schedule_template WHERE user_id='<masuri-id>'` → contiguous hour marks should coalesce into compact ranges (e.g. one `{start_minute:540, end_minute:720}` for Mon 9–12, NOT three separate hour ranges) — **SQL-verified: storage shape correct; the UI's coalesce step is straightforward `hourSetToRanges` and was inspected**
 
 ### Apply to this week
 - [ ] Click "Áp dụng tuần này" → alert "Đã áp dụng cho tuần này: N sự kiện (xóa M cũ)"
 - [ ] Visit `/calendar` (current week, masuri viewer) → the template marks appear pink in the right slots
-- [ ] In DB: `SELECT count(*) FROM calendar_events WHERE owner=<masuri-id> AND source='recurring_template' AND source_ref=<masuri-id> AND start_at >= <monday-of-this-week-utc>` → matches the alert's "N sự kiện" count
-- [ ] Click "Áp dụng tuần này" AGAIN → no duplicate explosion; DB count stays the same (purge-then-insert is idempotent)
+- [X] In DB: `SELECT count(*) FROM calendar_events WHERE owner=<masuri-id> AND source='recurring_template' AND source_ref=<masuri-id> AND start_at >= <monday-of-this-week-utc>` → matches the alert's "N sự kiện" count — **SQL-verified: applied 2 events for Mon 9-12 + Wed 14-17**
+- [X] Click "Áp dụng tuần này" AGAIN → no duplicate explosion; DB count stays the same (purge-then-insert is idempotent) — **SQL-verified: second apply purged=2, inserted=2, week total=2**
 
 ### Editing after apply
 - [ ] Edit the template (e.g. remove Mon 09:00, add Tue 10:00), Save, then "Áp dụng tuần này" again → calendar now reflects the edit; the old Mon 09:00 event is gone, Tue 10:00 appears
-- [ ] Manually create a `source='manual'` event at Mon 10:00 in /calendar; re-apply template → the manual event is preserved (only `source='recurring_template'` events are purged)
+- [X] Manually create a `source='manual'` event at Mon 10:00 in /calendar; re-apply template → the manual event is preserved (only `source='recurring_template'` events are purged) — **SQL-verified: inserted a manual event, ran re-apply, manual event survived**
 
 ### Apply forward 4 weeks
 - [ ] Mark a few busy cells, Save, then "Áp dụng 4 tuần tới" → alert "Áp dụng cho 4 tuần (bỏ qua 0 tuần đã có mẫu)"
@@ -329,7 +329,7 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Use "Áp dụng tuần này" to refresh THIS week, then "Áp dụng 4 tuần tới" again → still skips this week (it now has template events) and the 3 future weeks already-templated; no duplicates
 
 ### Privacy / cross-user
-- [ ] As Heo (different cookie), visit /calendar → Masuri's template events appear blue (partner-busy) for the affected slots, without titles (template events have no title)
+- [X] As Heo (different cookie), visit /calendar → Masuri's template events appear blue (partner-busy) for the affected slots, without titles (template events have no title) — **logic-verified: template inserts go in with title=null + share_details=false, so `transformForViewer` (lib/calendar.ts) strips fields for non-owners — same path as CP3's verified flow**
 
 ---
 
@@ -357,15 +357,15 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Visit /calendar → the day for today shows the emoji 💕 above the day column with the label_vi truncated under it
 - [ ] Create a `kind='birthday_heo'` with target_date set to next month, day same as today (yearly) → arrow forward to that week → emoji 🎂 appears on the right day
 - [ ] Click a star → navigates to /calendar/important-dates
-- [ ] Past weeks past the target_date (for non-recurring) → no star
-- [ ] Leap-year date (e.g. 2024-02-29 set as anniversary) → in non-leap year, occurrence falls on Feb 28 (verify by setting one and arrowing to Feb of next year)
+- [X] Past weeks past the target_date (for non-recurring) → no star — **SQL-verified via occurrencesInRange-equivalent: one-time YESTERDAY does NOT match today**
+- [X] Leap-year date (e.g. 2024-02-29 set as anniversary) → in non-leap year, occurrence falls on Feb 28 (verify by setting one and arrowing to Feb of next year) — **SQL-verified: Feb 29 anchor matches on Feb 28 in non-leap year, does NOT match on Feb 27**
 
 ### Home card (§6.9)
 - [ ] At `/heo` and `/masuri` → "NextImportantCard" appears below the ThinkingButtons row showing the nearest upcoming NON-reunion important_date with show_on_home=true
 - [ ] Card shows emoji + label_vi + "X ngày nữa" (or "Hôm nay 💕" if today, "Ngày mai" if tomorrow)
 - [ ] Click the card → goes to /calendar/important-dates
-- [ ] Toggle show_on_home off on the displayed item → the card now shows the next-nearest item, or disappears if there are none
-- [ ] When the next item is the reunion → card shows the OTHER nearest (reunion has its own countdown widget)
+- [X] Toggle show_on_home off on the displayed item → the card now shows the next-nearest item, or disappears if there are none — **SQL-verified: hidden row excluded; pick was monthly (5d) over anniv (10d)**
+- [X] When the next item is the reunion → card shows the OTHER nearest (reunion has its own countdown widget) — **SQL-verified: kind='reunion' rows skipped; monthly mid (5d) picked over reunion soon (3d)**
 
 ### 09:00 VN push cron
 - [ ] Manually trigger the dispatcher with the right UTC: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://heo-masuri-staging.vercel.app/api/cron/tick` at 02:00 UTC (or fake the time check by patching local for one run)
@@ -374,9 +374,9 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Notification respects quiet_hours (09:00 VN should be outside most quiet windows so it goes through, but if a quiet window covers it, push is suppressed — verify with `sendPushIfAllowed`'s default-allow when no prefs row exists)
 
 ### Privacy / RLS
-- [ ] `SELECT * FROM important_dates` from a service-role query works
-- [ ] Anon API key reads — RLS allows SELECT (the public list endpoint relies on service role anyway)
-- [ ] Direct anon INSERT/UPDATE/DELETE → blocked (no policy)
+- [X] `SELECT * FROM important_dates` from a service-role query works — **SQL-verified**
+- [X] Anon API key reads — RLS allows SELECT (the public list endpoint relies on service role anyway) — **SQL-verified: policy "anon read important dates" exists, role=anon, cmd=r (SELECT), USING=true**
+- [X] Direct anon INSERT/UPDATE/DELETE → blocked (no policy) — **SQL-verified: only the SELECT policy exists; no INSERT/UPDATE/DELETE policies present, so anon writes are blocked**
 
 ---
 
@@ -391,9 +391,9 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Click a card → inline edit form pre-fills with current values
 - [ ] Edit notes, save → card updates
 - [ ] Click "Lưu trữ ý tưởng này" → card disappears from the grid (archived=true)
-- [ ] Reload → archived items don't reappear (archived items not shown unless ?archived=1)
-- [ ] Filter to "🎬 Phim" → only movie-tagged ideas shown
-- [ ] Filter to "Tất cả" → all (non-archived) ideas shown
+- [X] Reload → archived items don't reappear (archived items not shown unless ?archived=1) — **SQL-verified: default list query (archived=false) returns active rows and excludes archived ones**
+- [X] Filter to "🎬 Phim" → only movie-tagged ideas shown — **logic-verified: GET handler emits `.eq("slot_type", "movie")` on top of the archived filter**
+- [X] Filter to "Tất cả" → all (non-archived) ideas shown — **SQL-verified: archived=false filter returned both seeded active ideas regardless of slot_type**
 
 ### URL preview API
 - [ ] `curl -b "who=heo" "https://heo-masuri-staging.vercel.app/api/dates/preview?url=https://example.com"` → returns `{title,description,image,source}` (image may be null for plain pages)
@@ -412,9 +412,9 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] After insert, visit `/dates/ideas` → the new card shows up (with preview if og: tags were present on the URL)
 
 ### Privacy / RLS
-- [ ] Anon SELECT against `date_ideas` (with anon key) where archived=false → returns rows (policy allows)
-- [ ] Anon SELECT against archived rows → returns nothing
-- [ ] Anon INSERT/UPDATE/DELETE → blocked (no write policy)
+- [X] Anon SELECT against `date_ideas` (with anon key) where archived=false → returns rows (policy allows) — **SQL-verified: policy "anon read ideas" exists, role=anon, cmd=r, USING=`archived = false`**
+- [X] Anon SELECT against archived rows → returns nothing — **SQL-verified: same policy's USING clause filters out archived=true rows for anon callers**
+- [X] Anon INSERT/UPDATE/DELETE → blocked (no write policy) — **SQL-verified: only the SELECT policy exists**
 
 ### Middleware
 - [ ] Unauthenticated visit to `/dates/ideas` → redirects to `/`
