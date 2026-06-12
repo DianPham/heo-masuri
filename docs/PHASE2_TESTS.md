@@ -195,7 +195,27 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Press `→` (RightArrow) → next week
 - [ ] Press `t` or `T` → jump back to current week
 - [ ] Focus an `<input>` or `<textarea>` (e.g. inside the GM/GN admin or notebook somewhere) and press `t` → the keyboard handler ignores it (does NOT trigger goToday)
-- [ ] (Esc, Cmd+N, inline edit popover, drag-to-resize handles — DEFERRED to CP4.5)
+- [ ] (Esc, Cmd+N — covered in CP4 round-2 below; drag-to-resize handles — covered in CP4 final below)
+
+### CP4 final — right-click context menu (replaces previous straight-to-sheet)
+- [ ] Right-click on an empty cell → menu appears at the cursor with "Đánh dấu bận" + "Sự kiện mới…"
+- [ ] Click "Đánh dấu bận" → cell turns pink, persists; menu closes
+- [ ] Click "Sự kiện mới…" → CREATE sheet opens for that single cell
+- [ ] Right-click on your own (pink) event → menu shows "Sửa…" + "Xóa" (Xóa in rose)
+- [ ] "Sửa…" → EDIT sheet opens; "Xóa" → confirm() dialog → event deletes
+- [ ] Right-click on a partner (blue) cell where the partner HAS shared details (title/note set) → small popover shows the title/note/emoji
+- [ ] Right-click on a partner cell with NO shared details → no menu opens (privacy preserved, no native menu either since we still preventDefault)
+- [ ] Click anywhere outside the menu → menu closes
+- [ ] Start scrolling the page → menu closes
+
+### CP4 final — drag-to-resize handles
+- [ ] At `/calendar` on desktop (≥1024px), every own (pink) event shows a small rose handle bar at its bottom edge (4–6px tall, slight horizontal margin, ns-resize cursor on hover)
+- [ ] Mouse-down on the handle and drag DOWN → event's bottom edge extends in slot-sized steps (1h or 30min depending on granularity). The pink fill grows live as you drag.
+- [ ] Drag UP past the start of the event → it does NOT shrink below 1 slot (min duration enforced)
+- [ ] Release → the new end_at is persisted (PATCH). Refresh the page → event still has the new end.
+- [ ] Drag-resize on an event with a title set → title and properties are preserved (PATCH only updates end_at)
+- [ ] During resize, the underlying cell does NOT also trigger click-toggle or drag-to-create
+- [ ] Partner (blue) events do NOT show a resize handle (only own events get them)
 
 ---
 
