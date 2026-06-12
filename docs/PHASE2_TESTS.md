@@ -220,6 +220,16 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Click-drag of just 1 cell (mouse barely moves) → quick-toggle, no sheet
 - [ ] Click-drag of 2+ cells → sheet opens, quick-toggle does NOT also fire
 
+### Top-bar "Add event" button + Cmd/Ctrl+N
+- [ ] At `/calendar` on desktop (≥1024px), a pink "+ Sự kiện mới" pill button appears next to the week navigation arrows
+- [ ] Click the button → CREATE sheet opens with a default 1-hour slot:
+  - Current week → today at the next rounded hour (e.g. it's 14:23 → slot starts 15:00)
+  - Past/future weeks → Monday 09:00 of the displayed week
+- [ ] On mobile (<1024px), the button is NOT shown (mobile users have FAB + long-press)
+- [ ] Press `Cmd+N` (Mac) / `Ctrl+N` (Win) anywhere on the calendar page → CREATE sheet opens with the same default
+- [ ] `Cmd+N` while focused inside a sheet input → still opens a sheet? No — the shell keyboard handler ignores INPUT/TEXTAREA focus, so the shortcut is suppressed mid-edit (verify)
+- [ ] Save a new event via this flow → event appears on the grid after the reload, in the right slot, with the title shown
+
 ### Mobile long-press
 - [ ] On a phone-sized viewport at `/calendar`, long-press (~0.5s) an empty hour-view cell → EventDetailSheet opens as a bottom sheet in CREATE mode for that cell
 - [ ] Long-press a cell containing your own event → EDIT sheet opens, pre-populated
