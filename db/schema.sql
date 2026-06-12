@@ -362,6 +362,27 @@ create index important_dates_kind_target_idx on public.important_dates (kind, ta
 create index important_dates_home_idx on public.important_dates (target_date) where show_on_home = true;
 -- RLS: anon SELECT allowed (cross-pair visible); writes service-role only.
 
+-- ── date_ideas (migration 013) ───────────────────────────────────────────────
+-- Phase 2C idea bank. Shared between users; archive is the soft-delete path.
+create table public.date_ideas (
+  id              uuid primary key default gen_random_uuid(),
+  added_by        uuid not null references public.users(id),
+  url             text,
+  title           text,
+  description     text,
+  notes           text,
+  tags            text[] not null default '{}',
+  slot_type       text check (slot_type in ('eat','drink','activity','walk','movie','drive','home','other')),
+  thumbnail_url   text,
+  archived        boolean not null default false,
+  used_count      int not null default 0,
+  last_used_at    timestamptz,
+  created_at      timestamptz default now()
+);
+create index date_ideas_browse_idx on public.date_ideas (archived, slot_type, created_at desc);
+create index date_ideas_added_by_idx on public.date_ideas (added_by, created_at desc);
+-- RLS: anon SELECT allowed when archived=false; writes service-role only.
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- End of schema.
 -- ─────────────────────────────────────────────────────────────────────────────

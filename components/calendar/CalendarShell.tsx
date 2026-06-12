@@ -255,12 +255,14 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
             Lịch lặp hàng tuần ↗
           </a>
         )}
-        <a
-          href="/calendar/important-dates"
-          className="block text-center text-xs text-rose-400 underline underline-offset-2 mb-2"
-        >
-          Ngày quan trọng ↗
-        </a>
+        <div className="flex justify-center gap-3 mb-2">
+          <a href="/calendar/important-dates" className="text-xs text-rose-400 underline underline-offset-2">
+            Ngày quan trọng ↗
+          </a>
+          <a href="/dates/ideas" className="text-xs text-rose-400 underline underline-offset-2">
+            Ý tưởng hẹn ↗
+          </a>
+        </div>
 
         {/* Stars strip — important_date occurrences in the displayed week (§6.8). */}
         {initialStars.length > 0 && (

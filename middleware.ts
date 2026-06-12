@@ -24,6 +24,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
+  // /dates is shared (both users), soft-gate required. Phase 2C.
+  if (path.startsWith("/dates") && who !== "heo" && who !== "masuri") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   // Magic-link routes (/m/*) require masuri cookie for reply routes
   if (path.match(/^\/m\/angry\/[^/]+\/reply\//)) {
     if (who !== "masuri") {
@@ -42,5 +47,14 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/heo/:path*", "/masuri/:path*", "/m/:path*", "/calendar", "/calendar/:path*"],
+  matcher: [
+    "/",
+    "/heo/:path*",
+    "/masuri/:path*",
+    "/m/:path*",
+    "/calendar",
+    "/calendar/:path*",
+    "/dates",
+    "/dates/:path*",
+  ],
 };
