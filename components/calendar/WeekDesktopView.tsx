@@ -197,6 +197,101 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     });
   }, []);
 
+  // Map cell key "day-row" → list of owner events whose VISUAL BOTTOM edge sits
+  // in this cell, along with the in-cell bottom Y fraction (0..1). Used to
+  // render a drag-to-resize handle on the last slot of each own event.
+  const eventBottomsByCell = useMemo(() => {
+    const map = new Map<string, Array<{ eventId: string; bottomY: number }>>();
+    for (const e of optimisticEvents) {
+      if (!e.is_own) continue;
+      const eEnd = new Date(e.end_at).getTime();
+      const lastDay = Math.min(6, Math.floor((eEnd - 1 - mondayVnMs) / 86_400_000));
+      if (lastDay < 0) continue;
+      const dayStartMs = mondayVnMs + lastDay * 86_400_000;
+      const eEndMin = (eEnd - dayStartMs) / 60_000;
+      const lastRow = Math.min(totalSlots - 1, Math.ceil(eEndMin / slotMinutes) - 1);
+      const rowStartMin = lastRow * slotMinutes;
+      const bottomY = Math.min(1, (eEndMin - rowStartMin) / slotMinutes);
+      const key = `${lastDay}-${lastRow}`;
+      const arr = map.get(key) ?? [];
+      arr.push({ eventId: e.id, bottomY });
+      map.set(key, arr);
+    }
+    return map;
+  }, [optimisticEvents, mondayVnMs, totalSlots, slotMinutes]);
+
+  // Drag-to-resize. Pointer-down on a handle starts a transient drag that
+  // updates the event's end_at optimistically and PATCHes on release.
+  const resizeRef = useRef<{ eventId: string; origEndAt: string; startY: number } | null>(null);
+
+  const onResizeStart = useCallback(
+    (eventId: string, e: React.MouseEvent) => {
+      if (e.button !== 0) return;
+      const event = optimisticEvents.find((ev) => ev.id === eventId);
+      if (!event || event.id.startsWith("temp-")) return;
+      e.stopPropagation();
+      e.preventDefault();
+      didDragRef.current = true; // suppress the trailing click on the underlying cell
+      resizeRef.current = { eventId, origEndAt: event.end_at, startY: e.clientY };
+
+      function onMove(me: MouseEvent) {
+        const r = resizeRef.current;
+        if (!r) return;
+        const deltaSlots = Math.round((me.clientY - r.startY) / ROW_HEIGHT_PX);
+        const origEndMs = new Date(r.origEndAt).getTime();
+        const newEndMs = origEndMs + deltaSlots * slotMinutes * 60_000;
+        setOptimisticEvents((prev) =>
+          prev.map((ev) => {
+            if (ev.id !== r.eventId) return ev;
+            const startMs = new Date(ev.start_at).getTime();
+            // Min duration = 1 slot
+            if (newEndMs <= startMs + slotMinutes * 60_000) return ev;
+            return { ...ev, end_at: new Date(newEndMs).toISOString() };
+          })
+        );
+      }
+      async function onUp() {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        const r = resizeRef.current;
+        resizeRef.current = null;
+        if (!r) return;
+        // Read latest end_at via setter callback (avoids stale closure).
+        let finalEndAt: string | null = null;
+        setOptimisticEvents((prev) => {
+          const ev = prev.find((x) => x.id === r.eventId);
+          if (ev) finalEndAt = ev.end_at;
+          return prev;
+        });
+        if (!finalEndAt || finalEndAt === r.origEndAt) return;
+        try {
+          const res = await fetch(`/api/calendar/events/${r.eventId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ end_at: finalEndAt }),
+          });
+          if (!res.ok) {
+            setOptimisticEvents((prev) =>
+              prev.map((ev) => (ev.id === r.eventId ? { ...ev, end_at: r.origEndAt } : ev))
+            );
+          } else {
+            const data = await res.json();
+            setOptimisticEvents((prev) =>
+              prev.map((ev) => (ev.id === r.eventId ? data.event : ev))
+            );
+          }
+        } catch {
+          setOptimisticEvents((prev) =>
+            prev.map((ev) => (ev.id === r.eventId ? { ...ev, end_at: r.origEndAt } : ev))
+          );
+        }
+      }
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    },
+    [optimisticEvents, slotMinutes]
+  );
+
   const onCellContextMenu = useCallback(
     (day: number, row: number, e: React.MouseEvent) => {
       e.preventDefault();
@@ -471,10 +566,12 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
                 hourLabelText={hourLabel && !isHalfHour ? hourLabel.text : ""}
                 grid={grid}
                 drag={drag}
+                eventBottomsByCell={eventBottomsByCell}
                 onTap={handleCellTap}
                 onCellMouseDown={onCellMouseDown}
                 onCellMouseEnter={onCellMouseEnter}
                 onCellContextMenu={onCellContextMenu}
+                onResizeStart={onResizeStart}
               />
             );
           })}
@@ -513,19 +610,23 @@ function DesktopRow({
   hourLabelText,
   grid,
   drag,
+  eventBottomsByCell,
   onTap,
   onCellMouseDown,
   onCellMouseEnter,
   onCellContextMenu,
+  onResizeStart,
 }: {
   row: number;
   hourLabelText: string;
   grid: CellState[][];
   drag: { day: number; startRow: number; endRow: number } | null;
+  eventBottomsByCell: Map<string, Array<{ eventId: string; bottomY: number }>>;
   onTap: (day: number, slot: number) => void;
   onCellMouseDown: (day: number, row: number, e: React.MouseEvent) => void;
   onCellMouseEnter: (day: number, row: number) => void;
   onCellContextMenu: (day: number, row: number, e: React.MouseEvent) => void;
+  onResizeStart: (eventId: string, e: React.MouseEvent) => void;
 }) {
   return (
     <>
@@ -589,6 +690,24 @@ function DesktopRow({
                     ? "rgba(180,130,200,0.85)"
                     : "rgba(255,201,213,0.85)",
                 }}
+              />
+            ))}
+            {(eventBottomsByCell.get(`${day}-${row}`) ?? []).map(({ eventId, bottomY }) => (
+              <span
+                key={`h${eventId}`}
+                onMouseDown={(e) => onResizeStart(eventId, e)}
+                onClick={(e) => e.stopPropagation()}
+                onContextMenu={(e) => e.stopPropagation()}
+                className="absolute left-2 right-2 hover:bg-rose-500"
+                style={{
+                  top: `calc(${bottomY * 100}% - 4px)`,
+                  height: 6,
+                  backgroundColor: "rgba(196,102,122,0.85)",
+                  borderRadius: 3,
+                  cursor: "ns-resize",
+                  zIndex: 3,
+                }}
+                title="Kéo để mở rộng"
               />
             ))}
           </button>
