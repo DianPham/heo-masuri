@@ -333,4 +333,51 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP6 — Phase 2B: important_dates + stars + home card + 09:00 VN cron
+
+### List page CRUD
+- [ ] Visit `/calendar/important-dates` as Heo OR Masuri → page renders with "Ngày quan trọng" header and the "+ Thêm ngày quan trọng" CTA
+- [ ] Click "+ Thêm ngày quan trọng" → inline form with VI/EN labels, date picker, kind, recurrence, emoji, show_on_home
+- [ ] Pick kind = "Kỷ niệm tháng" → recurrence auto-sets to "Hàng tháng" and emoji to "💕" (if emoji was empty)
+- [ ] Pick kind = "Sinh nhật Heo" → recurrence auto-sets to "Hàng năm", emoji "🎂"
+- [ ] Save → row appears in the correct section (Sắp tới / Hàng tháng / Hàng năm) and persists across reload
+- [ ] Click an existing row → inline edit form pre-fills with current values
+- [ ] Edit label_vi, save → row updates immediately
+- [ ] Click "Xóa ngày này" → confirm dialog → row removed
+- [ ] Sections empty when there are no rows of that recurrence type
+- [ ] Both Heo and Masuri can edit any row (shared resource)
+
+### Calendar header links
+- [ ] At `/calendar` → "Ngày quan trọng ↗" link appears under granularity tabs (both users)
+- [ ] Click it → navigates to `/calendar/important-dates`
+- [ ] Masuri's existing "Lịch lặp hàng tuần ↗" still works alongside
+
+### Stars on the week grid
+- [ ] Create a `kind='monthiversary'` with target_date=today (monthly recurrence)
+- [ ] Visit /calendar → the day for today shows the emoji 💕 above the day column with the label_vi truncated under it
+- [ ] Create a `kind='birthday_heo'` with target_date set to next month, day same as today (yearly) → arrow forward to that week → emoji 🎂 appears on the right day
+- [ ] Click a star → navigates to /calendar/important-dates
+- [ ] Past weeks past the target_date (for non-recurring) → no star
+- [ ] Leap-year date (e.g. 2024-02-29 set as anniversary) → in non-leap year, occurrence falls on Feb 28 (verify by setting one and arrowing to Feb of next year)
+
+### Home card (§6.9)
+- [ ] At `/heo` and `/masuri` → "NextImportantCard" appears below the ThinkingButtons row showing the nearest upcoming NON-reunion important_date with show_on_home=true
+- [ ] Card shows emoji + label_vi + "X ngày nữa" (or "Hôm nay 💕" if today, "Ngày mai" if tomorrow)
+- [ ] Click the card → goes to /calendar/important-dates
+- [ ] Toggle show_on_home off on the displayed item → the card now shows the next-nearest item, or disappears if there are none
+- [ ] When the next item is the reunion → card shows the OTHER nearest (reunion has its own countdown widget)
+
+### 09:00 VN push cron
+- [ ] Manually trigger the dispatcher with the right UTC: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://heo-masuri-staging.vercel.app/api/cron/tick` at 02:00 UTC (or fake the time check by patching local for one run)
+- [ ] Create an important_date with target_date=today, recurrence='none', and the test user has `important_date_enabled=true` and a push subscription
+- [ ] When the dispatcher fires the important-date-tick → that user receives a push: title `${emoji} ${label_vi}`, body "Hôm nay là ngày này!" (or "Hôm nay là dịp đặc biệt 💕" for recurring), url `/calendar/important-dates`
+- [ ] Notification respects quiet_hours (09:00 VN should be outside most quiet windows so it goes through, but if a quiet window covers it, push is suppressed — verify with `sendPushIfAllowed`'s default-allow when no prefs row exists)
+
+### Privacy / RLS
+- [ ] `SELECT * FROM important_dates` from a service-role query works
+- [ ] Anon API key reads — RLS allows SELECT (the public list endpoint relies on service role anyway)
+- [ ] Direct anon INSERT/UPDATE/DELETE → blocked (no policy)
+
+---
+
 ## CP4+ — to be added as each phase lands
