@@ -11,8 +11,9 @@
  *  - Optimistic UI on tap (apply visual state, persist in background)
  *  - Today card border / shadow upgraded for clearer "you're here" cue
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
+import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
 
 const BLOCKS = [
   { key: "morning",   label: "Sáng",      startMin: 8 * 60,  endMin: 12 * 60 },
@@ -50,6 +51,111 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
   const [optimisticEvents, setOptimisticEvents] = useState<VisibleEvent[]>(events);
   useEffect(() => setOptimisticEvents(events), [events]);
 
+  type SheetState =
+    | { mode: "create"; start_at: string; end_at: string }
+    | {
+        mode: "edit";
+        id: string;
+        start_at: string;
+        end_at: string;
+        title: string | null;
+        note: string | null;
+        emoji: string | null;
+        share_details: boolean;
+      };
+  const [sheet, setSheet] = useState<SheetState | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressedRef = useRef(false);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const startLongPress = useCallback(
+    (day: number, blockKey: BlockKey) => {
+      cancelLongPress();
+      longPressedRef.current = false;
+      longPressTimerRef.current = window.setTimeout(() => {
+        longPressedRef.current = true;
+        const block = BLOCKS.find((b) => b.key === blockKey)!;
+        const dayStartMs = mondayVnMs + day * 86_400_000;
+        const blockStartMs = dayStartMs + block.startMin * 60_000;
+        const blockEndMs = dayStartMs + block.endMin * 60_000;
+        const ownerCell = optimisticEvents.find((e) => {
+          if (!e.is_own) return false;
+          const s = new Date(e.start_at).getTime();
+          const en = new Date(e.end_at).getTime();
+          return s < blockEndMs && en > blockStartMs && !e.id.startsWith("temp-");
+        });
+        if (ownerCell) {
+          setSheet({
+            mode: "edit",
+            id: ownerCell.id,
+            start_at: ownerCell.start_at,
+            end_at: ownerCell.end_at,
+            title: ownerCell.title,
+            note: ownerCell.note,
+            emoji: ownerCell.emoji,
+            share_details: ownerCell.share_details,
+          });
+        } else {
+          setSheet({
+            mode: "create",
+            start_at: new Date(blockStartMs).toISOString(),
+            end_at: new Date(blockEndMs).toISOString(),
+          });
+        }
+      }, 500);
+    },
+    [cancelLongPress, mondayVnMs, optimisticEvents]
+  );
+
+  async function handleSheetSave(values: EventDetailValues): Promise<boolean> {
+    if (!sheet) return false;
+    if (sheet.mode === "create") {
+      try {
+        const res = await fetch("/api/calendar/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            start_at: sheet.start_at,
+            end_at: sheet.end_at,
+            source: "manual",
+            ...values,
+          }),
+        });
+        if (!res.ok) { alert("Lưu thất bại"); return false; }
+        const data = await res.json();
+        setOptimisticEvents((prev) => [...prev, data.event]);
+        return true;
+      } catch { alert("Lỗi mạng"); return false; }
+    } else {
+      try {
+        const res = await fetch(`/api/calendar/events/${sheet.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        });
+        if (!res.ok) { alert("Lưu thất bại"); return false; }
+        const data = await res.json();
+        setOptimisticEvents((prev) => prev.map((e) => (e.id === sheet.id ? data.event : e)));
+        return true;
+      } catch { alert("Lỗi mạng"); return false; }
+    }
+  }
+
+  async function handleSheetDelete() {
+    if (!sheet || sheet.mode !== "edit") return;
+    const id = sheet.id;
+    try {
+      const res = await fetch(`/api/calendar/events/${id}`, { method: "DELETE" });
+      if (res.ok) setOptimisticEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch { /* swallow */ }
+  }
+
   const grid = useMemo(() => {
     const g: Record<string, { ownerEventIds: string[]; partnerEventIds: string[] }>[] = Array.from(
       { length: 7 },
@@ -81,6 +187,10 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
   }, [optimisticEvents, mondayVnMs]);
 
   async function handleBlockTap(day: number, blockKey: BlockKey) {
+    if (longPressedRef.current) {
+      longPressedRef.current = false;
+      return;
+    }
     const cell = grid[day][blockKey];
     const block = BLOCKS.find((b) => b.key === blockKey)!;
     const dayStartMs = mondayVnMs + day * 86_400_000;
@@ -264,6 +374,11 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
                   <button
                     key={b.key}
                     onClick={() => handleBlockTap(d, b.key)}
+                    onTouchStart={() => startLongPress(d, b.key)}
+                    onTouchMove={cancelLongPress}
+                    onTouchEnd={cancelLongPress}
+                    onTouchCancel={cancelLongPress}
+                    onContextMenu={(e) => e.preventDefault()}
                     className="rounded-xl px-3 py-3 text-left transition-colors active:opacity-70"
                     style={{
                       backgroundColor: bg,
@@ -280,6 +395,15 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
           </section>
         );
       })}
+
+      {sheet && (
+        <EventDetailSheet
+          initial={sheet}
+          onSave={handleSheetSave}
+          onDelete={sheet.mode === "edit" ? handleSheetDelete : undefined}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
 }

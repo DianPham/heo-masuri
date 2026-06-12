@@ -19,8 +19,9 @@
  * 17:00 VN correctly but the grid rendered the mark at row 10 because it
  * used UTC midnight as the day origin.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
+import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
 
 type Props = {
   monday: string;              // YYYY-MM-DD VN
@@ -59,6 +60,113 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
   // truth on every prop update from the parent reload().
   const [optimisticEvents, setOptimisticEvents] = useState<VisibleEvent[]>(events);
   useEffect(() => setOptimisticEvents(events), [events]);
+
+  // Long-press → open sheet. Timer fires after 500ms of contact. Touch-move
+  // or release before then cancels (so scrolling doesn't pop the sheet).
+  type SheetState =
+    | { mode: "create"; start_at: string; end_at: string }
+    | {
+        mode: "edit";
+        id: string;
+        start_at: string;
+        end_at: string;
+        title: string | null;
+        note: string | null;
+        emoji: string | null;
+        share_details: boolean;
+      };
+  const [sheet, setSheet] = useState<SheetState | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressedRef = useRef(false);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const startLongPress = useCallback(
+    (day: number, slot: number) => {
+      cancelLongPress();
+      longPressedRef.current = false;
+      longPressTimerRef.current = window.setTimeout(() => {
+        longPressedRef.current = true;
+        const dayStartMs = mondayVnMs + day * 86_400_000;
+        const cellStartMs = dayStartMs + slot * slotMinutes * 60_000;
+        const cellEndMs = cellStartMs + slotMinutes * 60_000;
+        // If cell has an own event, open edit; else create.
+        const ownerCell = optimisticEvents.find((e) => {
+          if (!e.is_own) return false;
+          const s = new Date(e.start_at).getTime();
+          const en = new Date(e.end_at).getTime();
+          return s < cellEndMs && en > cellStartMs && !e.id.startsWith("temp-");
+        });
+        if (ownerCell) {
+          setSheet({
+            mode: "edit",
+            id: ownerCell.id,
+            start_at: ownerCell.start_at,
+            end_at: ownerCell.end_at,
+            title: ownerCell.title,
+            note: ownerCell.note,
+            emoji: ownerCell.emoji,
+            share_details: ownerCell.share_details,
+          });
+        } else {
+          setSheet({
+            mode: "create",
+            start_at: new Date(cellStartMs).toISOString(),
+            end_at: new Date(cellEndMs).toISOString(),
+          });
+        }
+      }, 500);
+    },
+    [cancelLongPress, mondayVnMs, optimisticEvents, slotMinutes]
+  );
+
+  async function handleSheetSave(values: EventDetailValues): Promise<boolean> {
+    if (!sheet) return false;
+    if (sheet.mode === "create") {
+      try {
+        const res = await fetch("/api/calendar/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            start_at: sheet.start_at,
+            end_at: sheet.end_at,
+            source: "manual",
+            ...values,
+          }),
+        });
+        if (!res.ok) { alert("Lưu thất bại"); return false; }
+        const data = await res.json();
+        setOptimisticEvents((prev) => [...prev, data.event]);
+        return true;
+      } catch { alert("Lỗi mạng"); return false; }
+    } else {
+      try {
+        const res = await fetch(`/api/calendar/events/${sheet.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        });
+        if (!res.ok) { alert("Lưu thất bại"); return false; }
+        const data = await res.json();
+        setOptimisticEvents((prev) => prev.map((e) => (e.id === sheet.id ? data.event : e)));
+        return true;
+      } catch { alert("Lỗi mạng"); return false; }
+    }
+  }
+
+  async function handleSheetDelete() {
+    if (!sheet || sheet.mode !== "edit") return;
+    const id = sheet.id;
+    try {
+      const res = await fetch(`/api/calendar/events/${id}`, { method: "DELETE" });
+      if (res.ok) setOptimisticEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch { /* swallow */ }
+  }
 
   // Scroll to (now - 1h) on first paint of the current week.
   useEffect(() => {
@@ -163,6 +271,11 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
   // call onChange after taps, so no reload→repaint flicker. Persistence
   // runs in the background; only on failure do we revert.
   async function handleCellTap(day: number, slot: number) {
+    // Suppress click after a long-press; the sheet opened instead.
+    if (longPressedRef.current) {
+      longPressedRef.current = false;
+      return;
+    }
     const cell = grid[day][slot];
     const dayStartMs = mondayVnMs + day * 86_400_000;
     const cellStartMs = dayStartMs + slot * slotMinutes * 60_000;
@@ -321,6 +434,8 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
               hourLabels={hourLabels}
               grid={grid}
               onTap={handleCellTap}
+              onLongPressStart={startLongPress}
+              onLongPressCancel={cancelLongPress}
             />
           ))}
 
@@ -339,6 +454,15 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
           )}
         </div>
       </div>
+
+      {sheet && (
+        <EventDetailSheet
+          initial={sheet}
+          onSave={handleSheetSave}
+          onDelete={sheet.mode === "edit" ? handleSheetDelete : undefined}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
 }
@@ -356,12 +480,16 @@ function RowFragment({
   hourLabels,
   grid,
   onTap,
+  onLongPressStart,
+  onLongPressCancel,
 }: {
   row: number;
   slotMinutes: 30 | 60;
   hourLabels: { row: number; text: string }[];
   grid: CellShape[][];
   onTap: (day: number, slot: number) => void;
+  onLongPressStart: (day: number, row: number) => void;
+  onLongPressCancel: () => void;
 }) {
   const hourLabel = hourLabels.find((h) => h.row === row);
   const isHalfHour = slotMinutes === 30 && row % 2 === 1;
@@ -382,6 +510,11 @@ function RowFragment({
           <button
             key={day}
             onClick={() => onTap(day, row)}
+            onTouchStart={() => onLongPressStart(day, row)}
+            onTouchMove={onLongPressCancel}
+            onTouchEnd={onLongPressCancel}
+            onTouchCancel={onLongPressCancel}
+            onContextMenu={(e) => e.preventDefault()}
             className="border-r border-b transition-colors active:opacity-70 relative overflow-hidden"
             style={{
               borderColor: "rgba(255,201,213,0.25)",
