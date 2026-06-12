@@ -195,7 +195,39 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Press `→` (RightArrow) → next week
 - [ ] Press `t` or `T` → jump back to current week
 - [ ] Focus an `<input>` or `<textarea>` (e.g. inside the GM/GN admin or notebook somewhere) and press `t` → the keyboard handler ignores it (does NOT trigger goToday)
-- [ ] (Esc, Cmd+N, drag-to-create, right-click context menu, inline edit popover — DEFERRED to CP4.5)
+- [ ] (Esc, Cmd+N, inline edit popover, drag-to-resize handles — DEFERRED to CP4.5)
+
+---
+
+## CP4 round-2 — EventDetailSheet wiring
+
+### Desktop drag-to-create
+- [ ] At `/calendar` on desktop (≥1024px), click-and-drag vertically across multiple cells in one column → a soft rose highlight follows the drag
+- [ ] Release the mouse → EventDetailSheet opens in CREATE mode, centered as a modal
+- [ ] Time-range line in the sheet matches the dragged span (e.g. "Mon 16/06 · 09:00 – 11:30")
+- [ ] Fill in title "Họp dự án", optional note, save → sheet closes, the dragged span paints pink with the title baked in
+- [ ] Drag again over an existing own event area → release opens create (not edit); will overlap the existing event
+
+### Desktop right-click edit
+- [ ] Right-click on an EMPTY cell → CREATE sheet opens for just that 1-cell slot (no native context menu)
+- [ ] Right-click on a cell that overlaps your own event → EDIT sheet opens, fields pre-populated from the event
+- [ ] Edit the title in the sheet, save → the event's title updates, sheet closes
+- [ ] Open edit sheet again, click "Xóa sự kiện" → confirm dialog → event disappears from the grid
+- [ ] Press `Esc` while a sheet is open → sheet closes without saving
+
+### Desktop click vs drag
+- [ ] Single click on an empty cell (no drag) → still does the existing quick-toggle (cell becomes pink, no sheet opens)
+- [ ] Click-drag of just 1 cell (mouse barely moves) → quick-toggle, no sheet
+- [ ] Click-drag of 2+ cells → sheet opens, quick-toggle does NOT also fire
+
+### Mobile long-press
+- [ ] On a phone-sized viewport at `/calendar`, long-press (~0.5s) an empty hour-view cell → EventDetailSheet opens as a bottom sheet in CREATE mode for that cell
+- [ ] Long-press a cell containing your own event → EDIT sheet opens, pre-populated
+- [ ] Vertical-scroll the calendar (touch + drag) → no sheet opens; scroll cancels the long-press timer
+- [ ] Quick tap (no hold) → still runs the existing quick-toggle (no sheet)
+- [ ] Block view: long-press a free "Sáng" pill → CREATE sheet for the 8–12 window
+- [ ] Block view: long-press a pink "Sáng" pill (your own block) → EDIT sheet for the underlying event
+- [ ] Save → optimistic update reflects immediately; closing & reopening shows the persisted edit
 
 ---
 
