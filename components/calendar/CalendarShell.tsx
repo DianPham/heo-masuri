@@ -23,6 +23,8 @@ type Props = {
   initialMonday: string;       // YYYY-MM-DD in VN
   initialEvents: VisibleEvent[];
   viewerId: string;
+  /** Soft-gate identity — drives Masuri-only links like "Lịch lặp". */
+  who?: "heo" | "masuri" | "";
 };
 
 const STORAGE_GRANULARITY = "calendar.granularity";
@@ -57,7 +59,7 @@ function formatWeekLabel(mondayStr: string): string {
   return `${startLabel} – ${endLabel}`;
 }
 
-export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props) {
+export function CalendarShell({ initialMonday, initialEvents, viewerId, who }: Props) {
   const [monday, setMonday] = useState(initialMonday);
   const [events, setEvents] = useState<VisibleEvent[]>(initialEvents);
   const [granularity, setGranularity] = useState<Granularity>("hour");
@@ -241,6 +243,15 @@ export function CalendarShell({ initialMonday, initialEvents, viewerId }: Props)
             </button>
           )}
         </div>
+
+        {who === "masuri" && (
+          <a
+            href="/masuri/calendar/template"
+            className="block text-center text-xs text-rose-400 underline underline-offset-2 mb-2"
+          >
+            Lịch lặp hàng tuần ↗
+          </a>
+        )}
 
         {/* Granularity selector */}
         <div className="flex rounded-2xl overflow-hidden text-xs font-medium" style={{ border: "1px solid rgba(255,201,213,0.5)" }}>

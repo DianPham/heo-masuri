@@ -55,12 +55,15 @@ export default async function CalendarPage() {
   const viewerId = await getViewerUserId();
   const monday = currentMondayVN();
   const events = await fetchWeek(monday);
+  const cookieStore = await cookies();
+  const who = (cookieStore.get("who")?.value ?? "") as "heo" | "masuri" | "";
 
   return (
     <CalendarShell
       initialMonday={monday}
       initialEvents={events}
       viewerId={viewerId ?? ""}
+      who={who}
     />
   );
 }
