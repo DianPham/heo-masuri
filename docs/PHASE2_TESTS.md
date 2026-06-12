@@ -199,4 +199,35 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP3/CP4 round-5 — flicker / split / overlay / side nav
+
+### No more flicker on cell tap
+- [ ] Tap an empty cell → cell goes pink and STAYS pink (no white flash from "Đang tải…" load cycle)
+- [ ] Tap the same cell again → cell clears and stays cleared (no flicker)
+- [ ] Loading indicator only appears on week prev/next and FAB submit, never on individual taps
+
+### Partial unblock splits the underlying event
+- [ ] Use FAB to block "Hôm nay × Sáng" (8-12, a single 4-hour event)
+- [ ] Hour view: tap the 10:00 cell → only the 10:00 cell clears. 8:00, 9:00, 11:00 stay pink
+- [ ] Inspect DB (or refresh) — the original 8-12 event is replaced by two events: 8-10 and 11-12
+- [ ] Tap 8:00 (left edge of an 8-10 event) → 8:00 clears; the event becomes 9-10
+- [ ] Tap 11:00 (right edge of an 11-12 event) → 11:00 clears; the event becomes empty (deleted)
+- [ ] Tap the only remaining cell of a 1-cell event → cell clears and event deletes (no fragmentation)
+
+### Overlay onto a partner cell
+- [ ] Have Test Masuri block a cell (insert via SQL or via Masuri's session)
+- [ ] As Heo, tap that blue partner cell → it turns purple (overlap), an own event is created on top
+- [ ] Tap the now-purple cell as Heo → own event removed (splits or deletes as above); cell returns to blue (partner still busy)
+- [ ] Masuri's event is untouched throughout
+
+### Side nav on desktop (lg+)
+- [ ] `/calendar` at desktop width → a narrow left sidebar appears with Home / Sổ tay / Lịch / Cài đặt; the floating bottom-nav pill is gone
+- [ ] Active item highlighted with a soft rose background
+- [ ] Calendar grid uses the space to the right of the sidebar (no overlap)
+- [ ] Resize narrower than 1024px → sidebar disappears, floating bottom-nav pill returns
+- [ ] Click a sidebar item → navigates to that route
+- [ ] Non-calendar routes (e.g. `/heo`, `/masuri`) still show the bottom nav as before (this change is scoped to /calendar's layout)
+
+---
+
 ## CP4+ — to be added as each phase lands

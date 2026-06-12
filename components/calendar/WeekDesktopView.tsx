@@ -148,33 +148,89 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
 
   async function handleCellTap(day: number, slot: number) {
     const cell = grid[day][slot];
-    if (cell.ownerEventIds.length === 0 && cell.partnerEventIds.length > 0) return;
+    const dayStartMs = mondayVnMs + day * 86_400_000;
+    const cellStartMs = dayStartMs + slot * slotMinutes * 60_000;
+    const cellEndMs = cellStartMs + slotMinutes * 60_000;
 
     if (cell.ownerEventIds.length > 0) {
-      const id = cell.ownerEventIds[0];
-      setOptimisticEvents((prev) => prev.filter((e) => e.id !== id));
-      fetch(`/api/calendar/events/${id}`, { method: "DELETE" })
-        .then(() => onChange())
-        .catch(() => onChange());
-    } else {
-      const dayStartMs = mondayVnMs + day * 86_400_000;
-      const startMs = dayStartMs + slot * slotMinutes * 60_000;
-      const endMs = startMs + slotMinutes * 60_000;
-      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      const optimistic: VisibleEvent = {
-        id: tempId,
+      const eventId = cell.ownerEventIds[0];
+      const event = optimisticEvents.find((e) => e.id === eventId);
+      if (!event) return;
+
+      const eStartMs = new Date(event.start_at).getTime();
+      const eEndMs = new Date(event.end_at).getTime();
+      const ranges: Array<{ start: number; end: number }> = [];
+      if (eStartMs < cellStartMs) ranges.push({ start: eStartMs, end: cellStartMs });
+      if (eEndMs > cellEndMs) ranges.push({ start: cellEndMs, end: eEndMs });
+
+      const tempEvents: VisibleEvent[] = ranges.map((r) => ({
+        id: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         owner: viewerId,
-        start_at: new Date(startMs).toISOString(),
-        end_at: new Date(endMs).toISOString(),
-        source: "manual",
-        title: null,
-        note: null,
-        emoji: null,
-        share_details: false,
+        start_at: new Date(r.start).toISOString(),
+        end_at: new Date(r.end).toISOString(),
+        source: event.source,
+        title: event.title,
+        note: event.note,
+        emoji: event.emoji,
+        share_details: event.share_details,
         is_own: true,
-      };
-      setOptimisticEvents((prev) => [...prev, optimistic]);
-      fetch("/api/calendar/events", {
+      }));
+
+      setOptimisticEvents((prev) => [
+        ...prev.filter((e) => e.id !== eventId),
+        ...tempEvents,
+      ]);
+
+      const revert = () =>
+        setOptimisticEvents((prev) => [
+          ...prev.filter((e) => !tempEvents.some((t) => t.id === e.id)),
+          event,
+        ]);
+      try {
+        if (!eventId.startsWith("temp-")) {
+          const del = await fetch(`/api/calendar/events/${eventId}`, { method: "DELETE" });
+          if (!del.ok) {
+            revert();
+            return;
+          }
+        }
+        for (const tmp of tempEvents) {
+          const res = await fetch("/api/calendar/events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ start_at: tmp.start_at, end_at: tmp.end_at, source: event.source }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setOptimisticEvents((prev) =>
+              prev.map((e) => (e.id === tmp.id ? data.event : e))
+            );
+          }
+        }
+      } catch {
+        revert();
+      }
+      return;
+    }
+
+    // Empty OR partner-only — create own.
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const optimistic: VisibleEvent = {
+      id: tempId,
+      owner: viewerId,
+      start_at: new Date(cellStartMs).toISOString(),
+      end_at: new Date(cellEndMs).toISOString(),
+      source: "manual",
+      title: null,
+      note: null,
+      emoji: null,
+      share_details: false,
+      is_own: true,
+    };
+    setOptimisticEvents((prev) => [...prev, optimistic]);
+
+    try {
+      const res = await fetch("/api/calendar/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -182,11 +238,21 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
           end_at: optimistic.end_at,
           source: "manual",
         }),
-      })
-        .then(() => onChange())
-        .catch(() => onChange());
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOptimisticEvents((prev) =>
+          prev.map((e) => (e.id === tempId ? data.event : e))
+        );
+      } else {
+        setOptimisticEvents((prev) => prev.filter((e) => e.id !== tempId));
+      }
+    } catch {
+      setOptimisticEvents((prev) => prev.filter((e) => e.id !== tempId));
     }
   }
+
+  void onChange;
 
   const hourLabels = useMemo(() => {
     const labels: { row: number; text: string }[] = [];

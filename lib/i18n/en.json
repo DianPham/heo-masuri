@@ -67,6 +67,7 @@
   "nav": {
     "home": "Home",
     "notebook": "Notebook",
+    "calendar": "Calendar",
     "settings": "Settings"
   },
   "settings": {
