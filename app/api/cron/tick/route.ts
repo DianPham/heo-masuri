@@ -21,6 +21,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { runDeliverScheduled } from "@/lib/crons/deliver-scheduled";
 import { runGmgnTick } from "@/lib/crons/gmgn-tick";
 import { runImportantDateTick } from "@/lib/crons/important-date-tick";
+import { createServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,18 @@ async function selfFetch(path: string, secret: string): Promise<unknown> {
   return res.json().catch(() => ({}));
 }
 
+async function recordHeartbeat(name: string, payload: unknown) {
+  try {
+    const supabase = createServerClient();
+    await supabase.from("cron_heartbeats").upsert(
+      { name, fired_at: new Date().toISOString(), payload: payload as object },
+      { onConflict: "name" }
+    );
+  } catch (err) {
+    console.error("[cron heartbeat]", name, err);
+  }
+}
+
 async function handle(req: NextRequest) {
   const secret = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!secret || secret !== process.env.CRON_SECRET) {
@@ -60,6 +73,10 @@ async function handle(req: NextRequest) {
     results: {},
     errors: {},
   };
+
+  // Heartbeat: every authenticated dispatcher invocation. Lets us answer
+  // "is the pinger still firing?" via a single SQL query.
+  await recordHeartbeat("dispatcher", { utc: now.toISOString() });
 
   // ── Every minute: GM / GN auto-notes ──────────────────────────────────────
   try {
@@ -110,6 +127,7 @@ async function handle(req: NextRequest) {
       const r = await runImportantDateTick();
       result.ran.push("important-date-tick");
       result.results["important-date-tick"] = r;
+      await recordHeartbeat("important-date-tick", r);
     } catch (err) {
       result.errors["important-date-tick"] = String(err);
     }

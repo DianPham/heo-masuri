@@ -383,6 +383,16 @@ create index date_ideas_browse_idx on public.date_ideas (archived, slot_type, cr
 create index date_ideas_added_by_idx on public.date_ideas (added_by, created_at desc);
 -- RLS: anon SELECT allowed when archived=false; writes service-role only.
 
+-- ── cron_heartbeats (migration 014) ──────────────────────────────────────────
+-- Observability for the cron-job.org pinger + dispatched workers.
+-- One row per name; upserted whenever a worker invocation completes.
+create table public.cron_heartbeats (
+  name        text primary key,
+  fired_at    timestamptz not null default now(),
+  payload     jsonb
+);
+-- RLS on, no policies → service-role only.
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- End of schema.
 -- ─────────────────────────────────────────────────────────────────────────────
