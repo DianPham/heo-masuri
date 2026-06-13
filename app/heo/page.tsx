@@ -9,6 +9,7 @@ import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 import { Countdown } from "@/components/countdown/Countdown";
 import { Pig } from "@/components/theme/Pig";
 import NextImportantCard from "@/components/home/NextImportantCard";
+import PlanSomethingCard from "@/components/home/PlanSomethingCard";
 
 export default async function HeoHome() {
   const locale = await getLocale();
@@ -109,6 +110,10 @@ export default async function HeoHome() {
 
         <div className="w-full flex justify-center pt-2">
           <NextImportantCard />
+        </div>
+
+        <div className="w-full flex justify-center">
+          <PlanSomethingCard />
         </div>
 
         <Link

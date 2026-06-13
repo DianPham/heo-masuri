@@ -12,6 +12,7 @@
  * is the natural next iteration.
  */
 import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import type { DateIdea } from "@/components/dates/DateIdeasGrid";
 import type { SlotCandidate } from "@/lib/spin";
 
@@ -29,6 +30,9 @@ export type ScheduledDate = {
   start_at: string;
   end_at: string;
   title: string | null;
+  dress_code: string | null;
+  dress_code_emoji: string | null;
+  calendar_event_id: string | null;
   outline_template: string | null;
   outline_snapshot: OutlineSlot[] | null;
   itinerary: ItineraryPick[] | null;
@@ -76,6 +80,31 @@ type Props = {
 export function PlanShell({ initial, templates, viewerId }: Props) {
   const [date, setDate] = useState<ScheduledDate>(initial);
   const [saving, setSaving] = useState(false);
+
+  // Realtime: subscribe to scheduled_date:{id} so partner updates appear without
+  // refresh. Deferred from CP9. Re-fetches the row on any broadcast from another viewer.
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return;
+    const supabase = createClient(url, key);
+    const channel = supabase.channel(`scheduled_date:${initial.id}`);
+    channel
+      .on("broadcast", { event: "update" }, async (msg) => {
+        const payload = msg.payload as { by?: string } | undefined;
+        if (payload?.by === viewerId) return;
+        try {
+          const res = await fetch(`/api/dates/scheduled/${initial.id}`, { cache: "no-store" });
+          if (!res.ok) return;
+          const { date: fresh } = await res.json();
+          setDate(fresh);
+        } catch { /* ignore */ }
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [initial.id, viewerId]);
 
   async function patch(body: Partial<ScheduledDate>): Promise<void> {
     setSaving(true);

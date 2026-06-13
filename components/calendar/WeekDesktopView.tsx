@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
 import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
+import { DateSchedulerSheet } from "@/components/dates/DateSchedulerSheet";
 
 type Props = {
   monday: string;
@@ -77,6 +78,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
         share_details: boolean;
       };
   const [sheet, setSheet] = useState<SheetState | null>(null);
+  const [scheduler, setScheduler] = useState<{ start_at: string; end_at: string } | null>(null);
 
   type MenuState =
     | { kind: "empty"; x: number; y: number; day: number; row: number }
@@ -372,6 +374,15 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     const start_at = new Date(dayStartMs + row * slotMinutes * 60_000).toISOString();
     const end_at = new Date(dayStartMs + (row + 1) * slotMinutes * 60_000).toISOString();
     setSheet({ mode: "create", start_at, end_at });
+  }
+
+  function menuPlanDate(day: number, row: number) {
+    setMenu(null);
+    const dayStartMs = mondayVnMs + day * 86_400_000;
+    const start_at = new Date(dayStartMs + row * slotMinutes * 60_000).toISOString();
+    // Default duration: 2 hours.
+    const end_at = new Date(new Date(start_at).getTime() + 2 * 3_600_000).toISOString();
+    setScheduler({ start_at, end_at });
   }
 
   function menuEditOwn(eventId: string) {
@@ -681,6 +692,18 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
         />
       )}
 
+      {scheduler && (
+        <DateSchedulerSheet
+          defaultStart={scheduler.start_at}
+          defaultEnd={scheduler.end_at}
+          onClose={() => setScheduler(null)}
+          onCreated={() => {
+            setScheduler(null);
+            onChange();
+          }}
+        />
+      )}
+
       {menu && (
         <div
           role="menu"
@@ -700,6 +723,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
             <>
               <MenuItem onClick={() => menuQuickBlock(menu.day, menu.row)}>Đánh dấu bận</MenuItem>
               <MenuItem onClick={() => menuNewEvent(menu.day, menu.row)}>Sự kiện mới…</MenuItem>
+              <MenuItem onClick={() => menuPlanDate(menu.day, menu.row)}>Lên kế hoạch hẹn 💕</MenuItem>
             </>
           )}
           {menu.kind === "own" && (
