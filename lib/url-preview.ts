@@ -208,11 +208,119 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
     } catch { /* fall through to scrape */ }
   }
 
-  // oEmbed failed (region lock, deleted post, malformed canonical) → fall back
-  // to scraping the canonical page directly with a real browser UA. TikTok
-  // ships og:* meta tags inline.
+  // oEmbed failed — usually a region block on the staging server. Try TikTok's
+  // own page: fetch with a mobile UA (gets a different SSR payload than
+  // desktop), then extract from the injected __UNIVERSAL_DATA_FOR_REHYDRATION__
+  // JSON. That has the real video metadata. og:* tags are unreliable here —
+  // TikTok sometimes serves the homepage to scrapers, with just "TikTok - Make
+  // Your Day" as og:title and no image.
+  const fromState = await fetchTikTokViaPageState(canonical);
+  if (fromState) return fromState;
+
+  // Last-ditch og:* scrape. If even this returns the homepage title we'll
+  // detect it and null out so the form falls back to manual entry.
   const scraped = await fetchGenericPreview(canonical);
+  if (
+    scraped.title &&
+    /^TikTok\b/i.test(scraped.title.trim()) &&
+    !scraped.image
+  ) {
+    return { ...NULL, source: "tiktok.com" };
+  }
   return { ...scraped, source: "tiktok.com" };
+}
+
+/**
+ * Extract video metadata from TikTok's page state JSON. TikTok injects a
+ * <script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application/json">
+ * with the full video object when the page loads — same data the React app
+ * hydrates from. Reading this directly avoids the og:* tag inconsistency.
+ *
+ * Mobile UA + Accept-Language give us a more og:-friendly response too.
+ */
+async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
+  const MOBILE_UA =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 " +
+    "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+
+  const res = await fetchWithTimeout(url.toString(), {
+    method: "GET",
+    headers: {
+      "User-Agent": MOBILE_UA,
+      Accept: "text/html,application/xhtml+xml",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+    redirect: "follow",
+  });
+  if (!res || !res.ok) return null;
+  const html = await readBodyCapped(res);
+  if (!html) return null;
+
+  // The script tag is always: id="__UNIVERSAL_DATA_FOR_REHYDRATION__".
+  const stateMatch = /<script[^>]+id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/i.exec(
+    html
+  );
+  if (stateMatch && stateMatch[1]) {
+    try {
+      const data = JSON.parse(stateMatch[1]);
+      const item =
+        data?.__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct ??
+        null;
+      if (item) {
+        const author = item.author?.uniqueId || item.author?.nickname || null;
+        const caption = typeof item.desc === "string" ? item.desc.trim() : null;
+        const cover =
+          item.video?.cover ||
+          item.video?.originCover ||
+          item.video?.dynamicCover ||
+          null;
+        const title =
+          caption && author
+            ? `@${author} · ${caption}`
+            : caption || (author ? `@${author}` : null);
+        if (title || cover) {
+          return {
+            title,
+            description: author ? `@${author}` : null,
+            image: cover,
+            source: "tiktok.com",
+          };
+        }
+      }
+    } catch { /* fall through */ }
+  }
+
+  // Older pages use SIGI_STATE — same idea, different shape.
+  const sigiMatch = /<script[^>]+id="SIGI_STATE"[^>]*>([\s\S]*?)<\/script>/i.exec(html);
+  if (sigiMatch && sigiMatch[1]) {
+    try {
+      const data = JSON.parse(sigiMatch[1]);
+      const itemMap = data?.ItemModule;
+      if (itemMap && typeof itemMap === "object") {
+        const firstId = Object.keys(itemMap)[0];
+        const item = firstId ? itemMap[firstId] : null;
+        if (item) {
+          const author = item.author || null;
+          const caption = typeof item.desc === "string" ? item.desc.trim() : null;
+          const cover = item.video?.cover || item.video?.originCover || null;
+          const title =
+            caption && author
+              ? `@${author} · ${caption}`
+              : caption || (author ? `@${author}` : null);
+          if (title || cover) {
+            return {
+              title,
+              description: author ? `@${author}` : null,
+              image: cover,
+              source: "tiktok.com",
+            };
+          }
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  return null;
 }
 
 /**
