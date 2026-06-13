@@ -11,7 +11,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, Settings } from "lucide-react";
+import { Home, Settings, Heart } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { NotebookIcon } from "@/components/notebook/NotebookIcon";
 
@@ -47,8 +47,9 @@ export function SideNav({ who }: { who: "heo" | "masuri" }) {
 
   const links: { href: string; icon: NavIcon; label: string; matchPrefix?: boolean }[] = [
     { href: base, icon: Home as NavIcon, label: t("home") },
-    { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook"), matchPrefix: true },
     { href: "/calendar", icon: CalendarIcon as NavIcon, label: t("calendar") ?? "Lịch", matchPrefix: true },
+    { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook"), matchPrefix: true },
+    { href: "/dates", icon: Heart as NavIcon, label: t("dates"), matchPrefix: true },
     { href: `${base}/settings`, icon: Settings as NavIcon, label: t("settings") },
   ];
 

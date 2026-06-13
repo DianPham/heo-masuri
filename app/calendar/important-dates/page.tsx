@@ -3,6 +3,7 @@
  * Blueprint §6.7.
  */
 import { headers, cookies } from "next/headers";
+import Link from "next/link";
 import { ImportantDatesList } from "@/components/calendar/ImportantDatesList";
 import type { ImportantDate } from "@/lib/important-dates";
 
@@ -34,6 +35,9 @@ export default async function ImportantDatesPage() {
   const dates = await fetchDates();
   return (
     <div className="px-5 pb-10 pt-6">
+      <Link href="/calendar" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+        ← Lịch
+      </Link>
       <h1
         className="text-2xl font-bold text-ink mb-1"
         style={{ fontFamily: "var(--font-handwritten)" }}

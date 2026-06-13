@@ -34,18 +34,18 @@ export default async function IdeasPage() {
   return (
     <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
       <div className="max-w-3xl mx-auto">
+        <Link href="/dates" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+          ← Hẹn hò
+        </Link>
         <h1
           className="text-2xl font-bold text-ink mb-1"
           style={{ fontFamily: "var(--font-handwritten)" }}
         >
           Ngân hàng ý tưởng
         </h1>
-        <p className="text-xs text-ink-soft mb-2">
+        <p className="text-xs text-ink-soft mb-5">
           Thả vào những ý tưởng hẹn hò để dùng sau. Dán link TikTok / IG để tự lấy ảnh + tiêu đề.
         </p>
-        <Link href="/dates/plan" className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-5">
-          Lên kế hoạch hẹn ↗
-        </Link>
         <DateIdeasGrid initial={ideas} />
       </div>
     </div>

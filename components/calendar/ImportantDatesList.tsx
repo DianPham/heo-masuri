@@ -3,9 +3,11 @@
 /**
  * ImportantDatesList — list view grouped by recurrence (one-time, monthly,
  * yearly), each section sorted by next-occurrence. Each item is tappable to
- * open an inline edit form. Blueprint §6.7.
+ * open an inline edit form. Future rows get a "Plan a date for this day"
+ * shortcut to the date scheduler (§7.5).
  */
 import { useMemo, useState } from "react";
+import { DateSchedulerSheet } from "@/components/dates/DateSchedulerSheet";
 import {
   type ImportantDate,
   type Occurrence,
@@ -42,6 +44,8 @@ function emptyForm(): FormState {
 export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
   const [dates, setDates] = useState<ImportantDate[]>(initial);
   const [editing, setEditing] = useState<string | "new" | null>(null);
+  // { occ: YYYY-MM-DD VN } → opens the scheduler sheet with that day's 19:00 prefill.
+  const [schedulingFor, setSchedulingFor] = useState<{ occ: string; label: string } | null>(null);
 
   const groups = useMemo(() => {
     const today = todayVN();
@@ -89,14 +93,25 @@ export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
         </button>
       )}
 
-      <Section title="Sắp tới" items={groups.once} {...{ editing, setEditing, dates, setDates }} />
-      <Section title="Hàng tháng" items={groups.monthly} {...{ editing, setEditing, dates, setDates }} />
-      <Section title="Hàng năm" items={groups.yearly} {...{ editing, setEditing, dates, setDates }} />
+      <Section title="Sắp tới" items={groups.once} {...{ editing, setEditing, dates, setDates, setSchedulingFor }} />
+      <Section title="Hàng tháng" items={groups.monthly} {...{ editing, setEditing, dates, setDates, setSchedulingFor }} />
+      <Section title="Hàng năm" items={groups.yearly} {...{ editing, setEditing, dates, setDates, setSchedulingFor }} />
 
       {dates.length === 0 && (
         <p className="text-center text-sm text-ink-soft py-8">
           Chưa có ngày quan trọng nào. Thêm ngày đầu tiên ở trên ↑
         </p>
+      )}
+
+      {schedulingFor && (
+        <DateSchedulerSheet
+          // Prefill 19:00 VN on the picked occurrence; the scheduler form
+          // shifts end by the same delta if start changes.
+          defaultStart={new Date(`${schedulingFor.occ}T19:00:00+07:00`).toISOString()}
+          defaultEnd={new Date(`${schedulingFor.occ}T21:00:00+07:00`).toISOString()}
+          defaultTitle={schedulingFor.label}
+          onClose={() => setSchedulingFor(null)}
+        />
       )}
     </div>
   );
@@ -109,6 +124,7 @@ function Section({
   setEditing,
   dates,
   setDates,
+  setSchedulingFor,
 }: {
   title: string;
   items: Occurrence[];
@@ -116,6 +132,7 @@ function Section({
   setEditing: (s: string | "new" | null) => void;
   dates: ImportantDate[];
   setDates: React.Dispatch<React.SetStateAction<ImportantDate[]>>;
+  setSchedulingFor: (v: { occ: string; label: string } | null) => void;
 }) {
   if (items.length === 0) return null;
   return (
@@ -156,7 +173,12 @@ function Section({
                 }}
               />
             ) : (
-              <Row d={d} occ={occ} onClick={() => setEditing(d.id)} />
+              <Row
+                d={d}
+                occ={occ}
+                onClick={() => setEditing(d.id)}
+                onPlan={() => setSchedulingFor({ occ, label: d.label_vi })}
+              />
             )}
           </li>
         ))}
@@ -165,24 +187,48 @@ function Section({
   );
 }
 
-function Row({ d, occ, onClick }: { d: ImportantDate; occ: string; onClick: () => void }) {
+function Row({
+  d,
+  occ,
+  onClick,
+  onPlan,
+}: {
+  d: ImportantDate;
+  occ: string;
+  onClick: () => void;
+  onPlan: () => void;
+}) {
   const days = daysFromTodayVN(occ);
   const dayLabel = days === 0 ? "Hôm nay" : days === 1 ? "Ngày mai" : `${days} ngày nữa`;
   return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-left hover:bg-rose-50 transition-all active:scale-[0.98]"
+    <div
+      className="w-full rounded-2xl bg-white text-left hover:bg-rose-50 transition-all"
       style={{ border: "1px solid rgba(255,201,213,0.4)" }}
     >
-      <span className="text-2xl" aria-hidden>{d.emoji ?? "⭐"}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-ink truncate">{d.label_vi}</p>
-        <p className="text-xs text-ink-soft">{occ} · {KIND_LABEL_VI[d.kind]}</p>
-      </div>
-      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: days === 0 ? "#C4667A" : "#888" }}>
-        {dayLabel}
-      </span>
-    </button>
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full flex items-center gap-3 px-4 py-3 active:scale-[0.98] transition-transform"
+      >
+        <span className="text-2xl" aria-hidden>{d.emoji ?? "⭐"}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-ink truncate">{d.label_vi}</p>
+          <p className="text-xs text-ink-soft">{occ} · {KIND_LABEL_VI[d.kind]}</p>
+        </div>
+        <span className="text-xs font-semibold whitespace-nowrap" style={{ color: days === 0 ? "#C4667A" : "#888" }}>
+          {dayLabel}
+        </span>
+      </button>
+      {days >= 0 && (
+        <button
+          type="button"
+          onClick={onPlan}
+          className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-100/50 active:scale-[0.98] transition-all border-t border-rose-100"
+        >
+          + Lên kế hoạch hẹn cho ngày này 💕
+        </button>
+      )}
+    </div>
   );
 }
 

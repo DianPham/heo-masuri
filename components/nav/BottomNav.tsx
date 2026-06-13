@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, Settings } from "lucide-react";
+import { Home, Settings, Calendar, Heart } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 import { NotebookIcon } from "@/components/notebook/NotebookIcon";
@@ -44,9 +44,11 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
   const base = `/${who}`;
   const unseenAsks = useUnseenAskCount(who);
 
-  const links: { href: string; icon: NavIcon; label: string }[] = [
+  const links: { href: string; icon: NavIcon; label: string; matchPrefix?: boolean }[] = [
     { href: base, icon: Home as NavIcon, label: t("home") },
-    { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook") },
+    { href: "/calendar", icon: Calendar as NavIcon, label: t("calendar"), matchPrefix: true },
+    { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook"), matchPrefix: true },
+    { href: "/dates", icon: Heart as NavIcon, label: t("dates"), matchPrefix: true },
     { href: `${base}/settings`, icon: Settings as NavIcon, label: t("settings") },
   ];
 
@@ -65,13 +67,9 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
         WebkitBackdropFilter: "blur(16px)",
       } as React.CSSProperties}
     >
-      <div className="flex items-center justify-around px-8 pt-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))] max-w-md mx-auto md:max-w-lg md:pb-3">
-        {links.map(({ href, icon: Icon, label }) => {
-          // Home: exact match. Notebook: starts-with (has sub-pages). Settings: exact.
-          const active =
-            href.endsWith("/notebook")
-              ? pathname.startsWith(href)
-              : pathname === href;
+      <div className="flex items-center justify-around px-3 pt-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))] max-w-md mx-auto md:max-w-lg md:pb-3">
+        {links.map(({ href, icon: Icon, label, matchPrefix }) => {
+          const active = matchPrefix ? pathname.startsWith(href) : pathname === href;
           const isNotebook = href.endsWith("/notebook");
           const showBadge = isNotebook && unseenAsks > 0;
 
@@ -79,7 +77,7 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
             <Link
               key={href}
               href={href}
-              className="relative flex flex-col items-center gap-1.5 py-2 px-8 rounded-2xl outline-none"
+              className="relative flex flex-col items-center gap-1 py-2 px-3 rounded-2xl outline-none active:scale-95 transition-transform"
             >
               {active && (
                 <motion.div
@@ -106,7 +104,7 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
                 )}
               </span>
               <span
-                className={`relative z-10 text-sm font-accent transition-colors duration-200 ${
+                className={`relative z-10 text-xs font-accent transition-colors duration-200 ${
                   active ? "text-rose-500" : "text-rose-300"
                 }`}
               >

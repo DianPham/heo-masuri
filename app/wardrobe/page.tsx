@@ -46,11 +46,14 @@ export default async function WardrobePage() {
   return (
     <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
       <div className="max-w-3xl mx-auto">
+        <Link href="/dates" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+          ← Hẹn hò
+        </Link>
         <h1 className="text-2xl font-bold text-ink mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
           Tủ đồ
         </h1>
         <p className="text-xs text-ink-soft mb-2">Trang phục của bạn — nhấn để chỉnh.</p>
-        <Link href={`/wardrobe/${partner}`} className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-4">
+        <Link href={`/wardrobe/${partner}`} className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-4 active:scale-95 transition-all">
           Xem tủ đồ của người ấy ↗
         </Link>
 

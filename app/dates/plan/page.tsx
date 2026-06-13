@@ -4,6 +4,7 @@
  * minimal entry point so CP9 is end-to-end testable.
  */
 import { headers, cookies } from "next/headers";
+import Link from "next/link";
 import { PlanIndex } from "@/components/dates/PlanIndex";
 import type { ScheduledDate } from "@/components/dates/PlanShell";
 
@@ -34,6 +35,9 @@ export default async function PlanIndexPage() {
   return (
     <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
       <div className="max-w-2xl mx-auto">
+        <Link href="/dates" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+          ← Hẹn hò
+        </Link>
         <h1 className="text-2xl font-bold text-ink mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
           Lên kế hoạch hẹn
         </h1>
