@@ -429,6 +429,50 @@ create index outfit_suggestions_target_idx on public.outfit_suggestions (target_
 
 -- Storage bucket "wardrobe" (private) registered in storage.buckets.
 
+-- ── date_outline_templates (migration 016) ───────────────────────────────────
+-- 8 seeded templates per blueprint §4.3. is_system=true; not user-editable.
+create table public.date_outline_templates (
+  id              uuid primary key default gen_random_uuid(),
+  label_vi        text not null,
+  label_en        text not null,
+  description_vi  text,
+  description_en  text,
+  slots           jsonb not null,
+  sort_order      int not null default 100,
+  is_system       boolean not null default false,
+  archived        boolean not null default false,
+  created_at      timestamptz default now()
+);
+-- RLS on; "anon read templates" allows anon SELECT for archived=false.
+
+-- ── scheduled_dates (migration 017) ──────────────────────────────────────────
+-- The user-visible "scheduled date" — connects calendar + outline + itinerary.
+-- CP9 creates the table; CP10 backfills calendar_event_id + dress code flow.
+create table public.scheduled_dates (
+  id                uuid primary key default gen_random_uuid(),
+  created_by        uuid not null references public.users(id),
+  start_at          timestamptz not null,
+  end_at            timestamptz not null,
+  title             text,
+  dress_code        text,
+  dress_code_emoji  text,
+  outline_template  uuid references public.date_outline_templates(id),
+  outline_snapshot  jsonb,
+  itinerary         jsonb,
+  flipped_at        timestamptz,
+  calendar_event_id uuid references public.calendar_events(id),
+  status            text not null default 'planning'
+                      check (status in ('planning','ready','done','cancelled')),
+  created_at        timestamptz default now(),
+  constraint chk_scheduled_dates_end_after_start check (end_at > start_at)
+);
+create index scheduled_dates_status_start_idx on public.scheduled_dates (status, start_at);
+create index scheduled_dates_created_by_idx on public.scheduled_dates (created_by, created_at desc);
+-- RLS on; "anon read scheduled dates" allows anon SELECT (all rows).
+
+-- outfit_suggestions.date_id was created as plain uuid in 015; in 017 we add
+-- the FK now that scheduled_dates exists.
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- End of schema.
 -- ─────────────────────────────────────────────────────────────────────────────

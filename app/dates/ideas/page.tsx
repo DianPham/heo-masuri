@@ -39,9 +39,12 @@ export default async function IdeasPage() {
         >
           Ngân hàng ý tưởng
         </h1>
-        <p className="text-xs text-ink-soft mb-5">
+        <p className="text-xs text-ink-soft mb-2">
           Thả vào những ý tưởng hẹn hò để dùng sau. Dán link TikTok / IG để tự lấy ảnh + tiêu đề.
         </p>
+        <a href="/dates/plan" className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-5">
+          Lên kế hoạch hẹn ↗
+        </a>
         <DateIdeasGrid initial={ideas} />
       </div>
     </div>
