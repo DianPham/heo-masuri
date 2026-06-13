@@ -271,7 +271,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
       className="min-h-screen pb-24"
       style={{ background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)" }}
     >
-      <div className="max-w-[420px] mx-auto">
+      <div className="max-w-[420px] lg:max-w-[640px] mx-auto">
 
         {/* ── Header ── */}
         <motion.div

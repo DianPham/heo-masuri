@@ -38,6 +38,7 @@ export default async function MasuriGmGnPage() {
 
   return (
     <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
+      <div className="max-w-3xl mx-auto">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-ink leading-tight" style={{ fontFamily: "var(--font-handwritten)" }}>
           Good morning / Good night 🌸
@@ -50,6 +51,7 @@ export default async function MasuriGmGnPage() {
       <div className="space-y-6">
         <GmGnAdmin kind="gm" initial={gm} />
         <GmGnAdmin kind="gn" initial={gn} />
+      </div>
       </div>
     </div>
   );

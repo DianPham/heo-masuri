@@ -65,6 +65,7 @@ export default async function MasuriSurprisesPage() {
 
   return (
     <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
+      <div className="max-w-3xl mx-auto">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-ink leading-tight" style={{ fontFamily: "var(--font-handwritten)" }}>
           Surprise pool 🎁
@@ -83,6 +84,7 @@ export default async function MasuriSurprisesPage() {
       </header>
 
       <SurprisePoolAdmin initialItems={items} />
+      </div>
     </div>
   );
 }
