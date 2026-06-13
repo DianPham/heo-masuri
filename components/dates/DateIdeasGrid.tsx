@@ -250,7 +250,21 @@ function IdeaForm({
     try {
       const res = await fetch(`/api/dates/preview?url=${encodeURIComponent(values.url)}`);
       if (!res.ok) return;
-      const data = await res.json();
+      let data = await res.json();
+
+      // If server returned nulls for TikTok, retry from the browser. TikTok
+      // gates its endpoints by IP — Vercel's edge gets blocked, the user's
+      // browser doesn't. TikTok's oEmbed allows CORS so this just works.
+      if (
+        !data.title &&
+        !data.image &&
+        data.source === "tiktok.com" &&
+        data.canonical_url
+      ) {
+        const retry = await tryClientTikTokOembed(data.canonical_url);
+        if (retry) data = { ...data, ...retry };
+      }
+
       setValues((prev) => ({
         ...prev,
         title: prev.title || data.title || "",
@@ -259,6 +273,25 @@ function IdeaForm({
       }));
     } finally {
       setPreviewing(false);
+    }
+  }
+
+  async function tryClientTikTokOembed(canonicalUrl: string) {
+    try {
+      const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(canonicalUrl)}`;
+      const r = await fetch(oembedUrl, { headers: { Accept: "application/json" } });
+      if (!r.ok) return null;
+      const d = await r.json();
+      const title =
+        d.title && d.author_name ? `${d.author_name} · ${d.title}` : d.title || d.author_name || "";
+      if (!title && !d.thumbnail_url) return null;
+      return {
+        title,
+        description: d.author_name || "",
+        image: d.thumbnail_url || "",
+      };
+    } catch {
+      return null;
     }
   }
 

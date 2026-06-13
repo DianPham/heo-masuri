@@ -23,6 +23,12 @@ export type Preview = {
   description: string | null;
   image: string | null;
   source: string | null;
+  /**
+   * Canonical URL after redirect resolution. Returned even on null previews so
+   * the client can retry the oEmbed call from the browser (where TikTok's
+   * residential-IP gate is much friendlier). Always present for TikTok URLs.
+   */
+  canonical_url?: string | null;
 };
 
 const NULL: Preview = { title: null, description: null, image: null, source: null };
@@ -173,61 +179,104 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
   const canonical = isTikTokShortLink(url.hostname)
     ? await resolveTikTokShortLink(url)
     : url;
+  const canonicalStr = canonical.toString();
 
-  const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(canonical.toString())}`;
-  const res = await fetchWithTimeout(oembedUrl, {
-    method: "GET",
-    headers: {
-      "User-Agent": BROWSER_UA,
-      Accept: "application/json",
-    },
-    redirect: "follow",
-  });
-  if (res && res.ok) {
-    type TikTokOembed = {
-      title?: string;
-      author_name?: string;
-      thumbnail_url?: string;
-    };
-    try {
-      const data = (await res.json()) as TikTokOembed;
-      // TikTok puts the caption in `title`. Compose "@author · caption" so
-      // the polaroid label reads well instead of just "TikTok".
-      const title =
-        data.title && data.author_name
-          ? `${data.author_name} · ${data.title}`
-          : data.title ?? data.author_name ?? null;
-      if (title || data.thumbnail_url) {
-        return {
-          title,
-          description: data.author_name ?? null,
-          image: data.thumbnail_url ?? null,
-          source: "tiktok.com",
-        };
-      }
-    } catch { /* fall through to scrape */ }
-  }
+  // Tier 1: TikTok's own oEmbed endpoint.
+  const oembed = await tryTikTokOembed(canonicalStr);
+  if (oembed) return { ...oembed, canonical_url: canonicalStr };
 
-  // oEmbed failed — usually a region block on the staging server. Try TikTok's
-  // own page: fetch with a mobile UA (gets a different SSR payload than
-  // desktop), then extract from the injected __UNIVERSAL_DATA_FOR_REHYDRATION__
-  // JSON. That has the real video metadata. og:* tags are unreliable here —
-  // TikTok sometimes serves the homepage to scrapers, with just "TikTok - Make
-  // Your Day" as og:title and no image.
+  // Tier 2: noembed.com — a free public oEmbed aggregator that proxies
+  // TikTok requests through its own infrastructure. Often succeeds when
+  // TikTok rate-limits our Vercel edge IP directly.
+  const noembed = await tryNoembed(canonicalStr);
+  if (noembed) return { ...noembed, canonical_url: canonicalStr };
+
+  // Tier 3: TikTok's own page → __UNIVERSAL_DATA_FOR_REHYDRATION__ JSON.
   const fromState = await fetchTikTokViaPageState(canonical);
-  if (fromState) return fromState;
+  if (fromState) return { ...fromState, canonical_url: canonicalStr };
 
-  // Last-ditch og:* scrape. If even this returns the homepage title we'll
-  // detect it and null out so the form falls back to manual entry.
+  // Tier 4: og:* scrape, with homepage detection so we don't save a
+  // "TikTok - Make Your Day" placeholder.
   const scraped = await fetchGenericPreview(canonical);
-  if (
+  const isHomepageHit =
     scraped.title &&
     /^TikTok\b/i.test(scraped.title.trim()) &&
-    !scraped.image
-  ) {
-    return { ...NULL, source: "tiktok.com" };
+    !scraped.image;
+  if (isHomepageHit) {
+    // Hand the canonical URL back so the client can retry from the browser.
+    return { ...NULL, source: "tiktok.com", canonical_url: canonicalStr };
   }
-  return { ...scraped, source: "tiktok.com" };
+  return { ...scraped, source: "tiktok.com", canonical_url: canonicalStr };
+}
+
+/** TikTok oEmbed — clean fast path when it works. */
+async function tryTikTokOembed(canonicalUrl: string): Promise<Preview | null> {
+  const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(canonicalUrl)}`;
+  const res = await fetchWithTimeout(oembedUrl, {
+    method: "GET",
+    headers: { "User-Agent": BROWSER_UA, Accept: "application/json" },
+    redirect: "follow",
+  });
+  if (!res || !res.ok) return null;
+  type TikTokOembed = {
+    title?: string;
+    author_name?: string;
+    thumbnail_url?: string;
+  };
+  try {
+    const data = (await res.json()) as TikTokOembed;
+    const title =
+      data.title && data.author_name
+        ? `${data.author_name} · ${data.title}`
+        : data.title ?? data.author_name ?? null;
+    if (title || data.thumbnail_url) {
+      return {
+        title,
+        description: data.author_name ?? null,
+        image: data.thumbnail_url ?? null,
+        source: "tiktok.com",
+      };
+    }
+  } catch { /* fall through */ }
+  return null;
+}
+
+/**
+ * noembed.com — public oEmbed proxy. Free, no auth, handles TikTok by
+ * routing through its own infrastructure. Often clears TikTok's IP gate
+ * when our direct oEmbed call doesn't.
+ */
+async function tryNoembed(canonicalUrl: string): Promise<Preview | null> {
+  const noembedUrl = `https://noembed.com/embed?url=${encodeURIComponent(canonicalUrl)}`;
+  const res = await fetchWithTimeout(noembedUrl, {
+    method: "GET",
+    headers: { "User-Agent": BROWSER_UA, Accept: "application/json" },
+    redirect: "follow",
+  });
+  if (!res || !res.ok) return null;
+  type NoembedRes = {
+    title?: string;
+    author_name?: string;
+    thumbnail_url?: string;
+    error?: string;
+  };
+  try {
+    const data = (await res.json()) as NoembedRes;
+    if (data.error) return null;
+    const title =
+      data.title && data.author_name
+        ? `${data.author_name} · ${data.title}`
+        : data.title ?? data.author_name ?? null;
+    if (title || data.thumbnail_url) {
+      return {
+        title,
+        description: data.author_name ?? null,
+        image: data.thumbnail_url ?? null,
+        source: "tiktok.com",
+      };
+    }
+  } catch { /* fall through */ }
+  return null;
 }
 
 /**
