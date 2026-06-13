@@ -179,6 +179,11 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
   const canonical = isTikTokShortLink(url.hostname)
     ? await resolveTikTokShortLink(url)
     : url;
+  // ALWAYS strip query params before talking to oEmbed. TikTok preserves a
+  // `?_r=1&_t=ZS-...` tracking string when the user shares a link, and oEmbed
+  // returns 400 the moment it sees them. The short-link resolver strips them,
+  // but a long URL pasted directly arrives with them intact — strip again here.
+  canonical.search = "";
   const canonicalStr = canonical.toString();
 
   // Tier 1: TikTok's own oEmbed endpoint.
@@ -312,16 +317,25 @@ async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
   if (stateMatch && stateMatch[1]) {
     try {
       const data = JSON.parse(stateMatch[1]);
+      const scope = data?.__DEFAULT_SCOPE__ ?? {};
+      // Video posts live under webapp.video-detail; photo posts (carousels)
+      // hydrate from webapp.photo-detail or webapp.image-detail depending on
+      // page version. Try them all.
       const item =
-        data?.__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct ??
+        scope["webapp.video-detail"]?.itemInfo?.itemStruct ??
+        scope["webapp.photo-detail"]?.itemInfo?.itemStruct ??
+        scope["webapp.image-detail"]?.itemInfo?.itemStruct ??
         null;
       if (item) {
         const author = item.author?.uniqueId || item.author?.nickname || null;
         const caption = typeof item.desc === "string" ? item.desc.trim() : null;
+        // Photo posts put their first image under imagePost.images[0].imageURL.
         const cover =
           item.video?.cover ||
           item.video?.originCover ||
           item.video?.dynamicCover ||
+          item.imagePost?.images?.[0]?.imageURL?.urlList?.[0] ||
+          item.imagePost?.cover?.imageURL?.urlList?.[0] ||
           null;
         const title =
           caption && author
@@ -448,9 +462,12 @@ async function fetchGenericPreview(url: URL): Promise<Preview> {
 }
 
 export async function fetchUrlPreview(input: string): Promise<Preview> {
+  // Trim whitespace — copy/paste from mobile share sheets often prepends a
+  // leading space. new URL() tolerates trailing whitespace but not leading.
+  const trimmed = input.trim();
   let url: URL;
   try {
-    url = new URL(input);
+    url = new URL(trimmed);
   } catch {
     return NULL;
   }

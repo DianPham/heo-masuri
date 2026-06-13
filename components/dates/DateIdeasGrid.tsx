@@ -245,10 +245,11 @@ function IdeaForm({
   }
 
   async function tryPreview() {
-    if (!values.url.trim()) return;
+    const cleanedInput = values.url.trim();
+    if (!cleanedInput) return;
     setPreviewing(true);
     try {
-      const res = await fetch(`/api/dates/preview?url=${encodeURIComponent(values.url)}`);
+      const res = await fetch(`/api/dates/preview?url=${encodeURIComponent(cleanedInput)}`);
       if (!res.ok) return;
       let data = await res.json();
 
@@ -277,8 +278,17 @@ function IdeaForm({
   }
 
   async function tryClientTikTokOembed(canonicalUrl: string) {
+    // TikTok preserves a tracking `?_r=...&_t=...` query string on shared
+    // links — oEmbed responds 400 if those are present. Strip before calling.
+    let cleanUrl = canonicalUrl;
     try {
-      const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(canonicalUrl)}`;
+      const u = new URL(canonicalUrl);
+      u.search = "";
+      cleanUrl = u.toString();
+    } catch { /* fall through with original */ }
+
+    try {
+      const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(cleanUrl)}`;
       const r = await fetch(oembedUrl, { headers: { Accept: "application/json" } });
       if (!r.ok) return null;
       const d = await r.json();
