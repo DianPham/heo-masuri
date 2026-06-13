@@ -53,7 +53,8 @@ export default async function PartnerWardrobePage({
         <h1 className="text-2xl font-bold text-ink mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
           Tủ đồ của {user === "heo" ? "Heo" : "Masuri"}
         </h1>
-        <Link href="/wardrobe" className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-4">
+        <p className="text-xs text-ink-soft mb-3">Nhấn vào một món để gợi ý cho người ấy mặc 💕</p>
+        <Link href="/wardrobe" className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-4 active:scale-95 transition-all">
           ← Về tủ đồ của bạn
         </Link>
         <WardrobePartner partnerSlug={user as "heo" | "masuri"} initial={items} />

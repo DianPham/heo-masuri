@@ -103,13 +103,13 @@ export function DateSchedulerSheet({
   async function submit() {
     if (busy) return;
     if (!start || !end) {
-      alert("Cần chọn thời gian");
+      alert("Chọn giờ giúp mình với 💕");
       return;
     }
     const startIso = localToIso(start);
     const endIso = localToIso(end);
     if (new Date(endIso) <= new Date(startIso)) {
-      alert("Kết thúc phải sau bắt đầu");
+      alert("Giờ kết thúc phải sau giờ bắt đầu nha");
       return;
     }
     setBusy(true);
@@ -126,7 +126,7 @@ export function DateSchedulerSheet({
         }),
       });
       if (!res.ok) {
-        alert("Tạo thất bại");
+        alert("Không tạo được, thử lại nha");
         return;
       }
       const { date } = (await res.json()) as { date: ScheduledDate };
@@ -152,11 +152,11 @@ export function DateSchedulerSheet({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold text-ink" style={{ fontFamily: "var(--font-handwritten)" }}>
-          Lên kế hoạch hẹn 💕
+          Hẹn nhau lúc nào? 💕
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Bắt đầu">
+          <Field label="Bắt đầu từ">
             <input
               type="datetime-local"
               value={start}
@@ -166,7 +166,7 @@ export function DateSchedulerSheet({
               style={{ border: "1px solid rgba(220,220,220,0.6)" }}
             />
           </Field>
-          <Field label="Kết thúc">
+          <Field label="Đến">
             <input
               type="datetime-local"
               value={end}
@@ -178,7 +178,7 @@ export function DateSchedulerSheet({
           </Field>
         </div>
 
-        <Field label="Tiêu đề (tùy chọn)">
+        <Field label="Tên buổi hẹn (nếu muốn)">
           <input
             type="text"
             value={title}
@@ -190,7 +190,7 @@ export function DateSchedulerSheet({
         </Field>
 
         <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Field label="Dress code (tùy chọn)">
+          <Field label="Dress code (nếu muốn)">
             <input
               type="text"
               value={dressCode}
@@ -219,7 +219,7 @@ export function DateSchedulerSheet({
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform"
             style={{ backgroundColor: "#C4667A", opacity: busy || loadingDefaults ? 0.5 : 1 }}
           >
-            {busy ? "Đang tạo…" : "Tạo & lên outline"}
+            {busy ? "Đang tạo…" : "Tạo & lên kế hoạch"}
           </button>
           <button
             onClick={onClose}

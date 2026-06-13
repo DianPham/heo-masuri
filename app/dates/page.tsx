@@ -137,7 +137,7 @@ export default async function DatesHubPage() {
           Hẹn hò 💕
         </h1>
         <p className="text-sm text-ink-soft mb-6">
-          Tất cả về kế hoạch hẹn của Heo & Masuri.
+          Kế hoạch, ý tưởng, outfit, ngày đặc biệt của hai đứa.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -147,10 +147,10 @@ export default async function DatesHubPage() {
             label="Lên kế hoạch hẹn"
             sub={
               counts.upcomingDates === 0
-                ? "Chưa có hẹn nào sắp tới"
+                ? "Chưa có hẹn nào sắp tới — bắt đầu nha"
                 : counts.nextDateAt
-                ? `Tới: ${formatDateShort(counts.nextDateAt)}`
-                : `${counts.upcomingDates} kế hoạch đang chờ`
+                ? `Sắp hẹn: ${formatDateShort(counts.nextDateAt)}`
+                : `${counts.upcomingDates} kế hoạch đang lên`
             }
             badge={counts.upcomingDates > 0 ? counts.upcomingDates : null}
             primary
@@ -158,11 +158,11 @@ export default async function DatesHubPage() {
           <HubCard
             href="/dates/ideas"
             icon="💡"
-            label="Ngân hàng ý tưởng"
+            label="Kho ý tưởng"
             sub={
               counts.ideas === 0
-                ? "Lưu link TikTok / IG về đây"
-                : `${counts.ideas} ý tưởng`
+                ? "Lưu link TikTok / IG để dùng sau"
+                : `${counts.ideas} ý tưởng đã lưu`
             }
           />
           <HubCard
@@ -171,25 +171,25 @@ export default async function DatesHubPage() {
             label="Tủ đồ"
             sub={
               counts.pendingSuggestions > 0
-                ? `${counts.pendingSuggestions} gợi ý đang chờ bạn`
+                ? `${counts.pendingSuggestions} gợi ý chờ bạn chốt`
                 : counts.wardrobeOwn === 0
-                ? "Thêm đồ vào tủ"
-                : `${counts.wardrobeOwn} món của bạn · ${counts.wardrobePartner} của người ấy`
+                ? "Thêm đồ vào tủ để người ấy chọn cho"
+                : `Tủ bạn ${counts.wardrobeOwn} món · tủ người ấy ${counts.wardrobePartner}`
             }
             badge={counts.pendingSuggestions > 0 ? counts.pendingSuggestions : null}
           />
           <HubCard
             href="/calendar/important-dates"
             icon={counts.nextImportantEmoji ?? "⭐"}
-            label="Ngày quan trọng"
+            label="Ngày đặc biệt"
             sub={
               counts.nextImportantDays == null
-                ? "Thêm sinh nhật / kỷ niệm…"
+                ? "Sinh nhật, kỷ niệm — thêm để được nhắc"
                 : counts.nextImportantDays === 0
                 ? `Hôm nay là ${counts.nextImportantLabel} 💕`
                 : counts.nextImportantDays === 1
                 ? `Ngày mai: ${counts.nextImportantLabel}`
-                : `${counts.nextImportantDays} ngày nữa: ${counts.nextImportantLabel}`
+                : `Còn ${counts.nextImportantDays} ngày nữa: ${counts.nextImportantLabel}`
             }
           />
         </div>
@@ -199,7 +199,7 @@ export default async function DatesHubPage() {
             href={who ? `/${who}` : "/"}
             className="text-xs text-ink-soft hover:text-ink active:scale-95 transition-all"
           >
-            ← Trở về trang chính
+            ← Về trang chính
           </Link>
         </div>
       </div>

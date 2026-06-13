@@ -42,10 +42,10 @@ export default async function ImportantDatesPage() {
         className="text-2xl font-bold text-ink mb-1"
         style={{ fontFamily: "var(--font-handwritten)" }}
       >
-        Ngày quan trọng
+        Ngày đặc biệt
       </h1>
       <p className="text-xs text-ink-soft mb-5">
-        Đoàn tụ, kỷ niệm, sinh nhật. Tự động lên lịch và nhắc 9h sáng mỗi ngày trùng.
+        Đoàn tụ, kỷ niệm, sinh nhật — sẽ được nhắc lúc 9h sáng vào ngày đó 💕
       </p>
       <ImportantDatesList initial={dates} />
     </div>

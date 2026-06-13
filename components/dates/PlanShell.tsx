@@ -114,7 +114,7 @@ export function PlanShell({ initial, templates, viewerId }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) { alert("Lưu thất bại"); return; }
+      if (!res.ok) { alert("Lưu không được, thử lại nha"); return; }
       const { date: updated } = await res.json();
       setDate(updated);
     } finally {
@@ -136,7 +136,7 @@ export function PlanShell({ initial, templates, viewerId }: Props) {
           setSaving(true);
           try {
             const res = await fetch(`/api/dates/scheduled/${date.id}/spin`, { method: "POST" });
-            if (!res.ok) { alert("Spin thất bại"); return; }
+            if (!res.ok) { alert("Quay không được, thử lại nha"); return; }
             const { date: updated } = await res.json();
             setDate(updated);
           } finally {
@@ -180,7 +180,7 @@ function TemplatePicker({
   }
   return (
     <div>
-      <h2 className="text-sm font-semibold text-ink-soft mb-3">Chọn khung hẹn</h2>
+      <h2 className="text-sm font-semibold text-ink-soft mb-3">Bắt đầu từ khung mẫu nào nha?</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {templates.map((t) => (
           <button
@@ -284,8 +284,8 @@ function OutlineEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-ink-soft">Bước hẹn ({slots.length})</h2>
-        <p className="text-xs text-ink-soft">{totalCandidates} ứng viên</p>
+        <h2 className="text-sm font-semibold text-ink-soft">Các bước ({slots.length})</h2>
+        <p className="text-xs text-ink-soft">{totalCandidates} ý tưởng</p>
       </div>
 
       <ol className="space-y-3">
@@ -319,7 +319,7 @@ function OutlineEditor({
             boxShadow: allHaveCandidates ? "0 6px 16px rgba(196,102,122,0.35)" : "none",
           }}
         >
-          {saving ? "Đang spin…" : allHaveCandidates ? "Spin 🎲" : "Cần ít nhất 1 ứng viên mỗi bước"}
+          {saving ? "Đang quay…" : allHaveCandidates ? "Quay vòng 🎲" : "Mỗi bước cần ít nhất 1 ý tưởng"}
         </button>
       </div>
     </div>
@@ -386,7 +386,7 @@ function SlotCard({
         onClick={() => setExpanded((v) => !v)}
         className="text-xs text-rose-500 underline underline-offset-2 mb-2"
       >
-        {expanded ? "Ẩn ứng viên" : "Thêm ứng viên"}
+        {expanded ? "Ẩn ý tưởng" : "Thêm ý tưởng"}
       </button>
 
       {expanded && (
@@ -537,7 +537,7 @@ function ItineraryView({
             <li key={i} className="rounded-2xl bg-white p-3" style={{ border: "1px solid rgba(255,201,213,0.4)" }}>
               <p className="text-[10px] font-semibold text-ink-soft uppercase tracking-wide">{slotEmoji} · Bước {i + 1}</p>
               <p className="text-sm font-bold text-ink mt-1">
-                {it.pick?.label_vi ?? "(không có ứng viên)"}
+                {it.pick?.label_vi ?? "(chưa có ý tưởng)"}
               </p>
               {it.manually_overridden && (
                 <p className="text-[10px] text-rose-500 mt-1">đã chọn tay</p>
@@ -554,7 +554,7 @@ function ItineraryView({
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-ink-soft active:scale-95 transition-transform"
             style={{ border: "1px solid rgba(220,220,220,0.6)" }}
           >
-            Sửa lại
+            Quay lại 🎲
           </button>
         </div>
       )}

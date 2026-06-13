@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendPushIfAllowed(partner.id, "date_planning_enabled", {
         title: msg,
-        body: title ?? "Mở app để cùng lên outline nhé",
+        body: title ?? "Mở app để cùng lên kế hoạch nha 💕",
         url: `/dates/plan/${dateRow.id}`,
       });
     } catch (e) {

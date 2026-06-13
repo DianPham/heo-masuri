@@ -107,7 +107,7 @@ export function EventDetailSheet({ initial, onSave, onDelete, onClose }: Props) 
 
   async function handleDelete() {
     if (!onDelete || saving) return;
-    if (!confirm("Xóa sự kiện này?")) return;
+    if (!confirm("Xóa sự kiện này nha?")) return;
     setSaving(true);
     try {
       await onDelete();
@@ -142,21 +142,21 @@ export function EventDetailSheet({ initial, onSave, onDelete, onClose }: Props) 
         </p>
 
         <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">
-          Tiêu đề
+          Đặt tên
         </label>
         <input
           ref={titleRef}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ví dụ: Họp dự án"
+          placeholder="Họp, đi học, đi gym…"
           maxLength={200}
           className="w-full text-sm rounded-xl px-3 py-2 mb-3 outline-none"
           style={{ border: "1px solid rgba(220,220,220,0.6)" }}
         />
 
         <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">
-          Ghi chú
+          Ghi chú (nếu cần)
         </label>
         <textarea
           value={note}
@@ -170,7 +170,7 @@ export function EventDetailSheet({ initial, onSave, onDelete, onClose }: Props) 
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1">
             <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">
-              Biểu tượng
+              Emoji
             </label>
             <input
               type="text"
@@ -189,7 +189,7 @@ export function EventDetailSheet({ initial, onSave, onDelete, onClose }: Props) 
               className="w-4 h-4 accent-rose-400"
             />
             <span className="text-xs text-ink leading-snug">
-              Cho người kia<br />thấy chi tiết
+              Người ấy được<br />xem chi tiết
             </span>
           </label>
         </div>
@@ -223,7 +223,7 @@ export function EventDetailSheet({ initial, onSave, onDelete, onClose }: Props) 
             disabled={saving}
             className="w-full mt-3 py-2 text-sm text-rose-500 underline underline-offset-2 disabled:opacity-50"
           >
-            Xóa sự kiện
+Xóa sự kiện này
           </button>
         )}
       </div>

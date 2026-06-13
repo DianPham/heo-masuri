@@ -22,7 +22,7 @@ type FormState = Omit<ImportantDate, "id" | "created_at" | "is_current">;
 
 const KIND_LABEL_VI: Record<ImportantDate["kind"], string> = {
   reunion: "Đoàn tụ",
-  anniversary: "Kỷ niệm năm",
+  anniversary: "Kỷ niệm",
   monthiversary: "Kỷ niệm tháng",
   birthday_heo: "Sinh nhật Heo",
   birthday_masuri: "Sinh nhật Masuri",
@@ -76,7 +76,7 @@ export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(values),
             });
-            if (!res.ok) { alert("Lưu thất bại"); return false; }
+            if (!res.ok) { alert("Lưu không được, thử lại nha"); return false; }
             const { date } = await res.json();
             setDates((prev) => [date, ...prev]);
             setEditing(null);
@@ -89,7 +89,7 @@ export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
           className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
           style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)" }}
         >
-          + Thêm ngày quan trọng
+          + Thêm ngày đặc biệt
         </button>
       )}
 
@@ -99,7 +99,7 @@ export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
 
       {dates.length === 0 && (
         <p className="text-center text-sm text-ink-soft py-8">
-          Chưa có ngày quan trọng nào. Thêm ngày đầu tiên ở trên ↑
+          Chưa có ngày nào — thêm sinh nhật, kỷ niệm ở trên ↑
         </p>
       )}
 
@@ -154,7 +154,7 @@ function Section({
                 }}
                 onCancel={() => setEditing(null)}
                 onDelete={async () => {
-                  if (!confirm("Xóa ngày này?")) return;
+                  if (!confirm("Xóa ngày này nha?")) return;
                   await fetch(`/api/important-dates/${d.id}`, { method: "DELETE" });
                   setDates(dates.filter((x) => x.id !== d.id));
                   setEditing(null);
@@ -165,7 +165,7 @@ function Section({
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(values),
                   });
-                  if (!res.ok) { alert("Lưu thất bại"); return false; }
+                  if (!res.ok) { alert("Lưu không được, thử lại nha"); return false; }
                   const { date } = await res.json();
                   setDates((prev) => prev.map((x) => (x.id === d.id ? date : x)));
                   setEditing(null);
@@ -265,7 +265,7 @@ function DateForm({
   async function handleSave() {
     if (saving) return;
     if (!labelVi.trim() || !labelEn.trim()) {
-      alert("Cần nhập cả label VI và EN");
+      alert("Nhớ điền cả tiếng Việt và tiếng Anh nha");
       return;
     }
     setSaving(true);
@@ -286,12 +286,12 @@ function DateForm({
 
   return (
     <div className="rounded-2xl bg-white p-4 space-y-3" style={{ border: "1px solid rgba(255,201,213,0.6)" }}>
-      <FieldText label="Nhãn (VI)" value={labelVi} onChange={setLabelVi} placeholder="Ngày yêu nhau" />
-      <FieldText label="Label (EN)" value={labelEn} onChange={setLabelEn} placeholder="Anniversary" />
+      <FieldText label="Tên (tiếng Việt)" value={labelVi} onChange={setLabelVi} placeholder="Ngày yêu nhau" />
+      <FieldText label="Tên (English)" value={labelEn} onChange={setLabelEn} placeholder="Anniversary" />
       <div className="grid grid-cols-2 gap-3">
         <FieldText label="Ngày" value={targetDate} onChange={setTargetDate} type="date" />
         <div>
-          <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Biểu tượng</label>
+          <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Emoji</label>
           <input
             type="text"
             value={emoji}
@@ -311,7 +311,7 @@ function DateForm({
             style={{ border: "1px solid rgba(220,220,220,0.6)" }}
           >
             <option value="reunion">Đoàn tụ</option>
-            <option value="anniversary">Kỷ niệm năm</option>
+            <option value="anniversary">Kỷ niệm</option>
             <option value="monthiversary">Kỷ niệm tháng</option>
             <option value="birthday_heo">Sinh nhật Heo</option>
             <option value="birthday_masuri">Sinh nhật Masuri</option>
@@ -339,7 +339,7 @@ function DateForm({
           onChange={(e) => setShowOnHome(e.target.checked)}
           className="w-4 h-4 accent-rose-400"
         />
-        <span className="text-sm text-ink">Hiện trên trang chính</span>
+        <span className="text-sm text-ink">Hiện thẻ nhắc trên trang chính</span>
       </label>
       <div className="flex gap-2 pt-2">
         <button
@@ -356,7 +356,7 @@ function DateForm({
       </div>
       {onDelete && (
         <button onClick={onDelete} className="w-full text-xs text-rose-500 underline underline-offset-2">
-          Xóa ngày này
+          Xóa ngày này khỏi danh sách
         </button>
       )}
     </div>

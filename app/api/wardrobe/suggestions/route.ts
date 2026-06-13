@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
   // Notify the target.
   try {
     await sendPushIfAllowed(targetId, "outfit_enabled", {
-      title: "👗 Gợi ý outfit",
-      body: item.label ? `Người ấy gợi ý "${item.label}"` : "Người ấy có gợi ý outfit cho bạn",
+      title: "👗 Người ấy chọn đồ cho bạn 💕",
+      body: item.label ? `Gợi ý mặc "${item.label}" nha` : "Mở tủ đồ xem nha",
       url: "/wardrobe",
     });
   } catch (e) {

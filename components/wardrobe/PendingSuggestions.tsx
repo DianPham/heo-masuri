@@ -21,12 +21,12 @@ export function PendingSuggestions({ initial }: { initial: SuggestionWithItem[] 
       body: JSON.stringify({ status }),
     });
     if (res.ok) setList((prev) => prev.filter((s) => s.id !== id));
-    else alert("Không phản hồi được");
+    else alert("Không gửi được, thử lại nha");
   }
 
   return (
     <section className="mb-6">
-      <h2 className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">Gợi ý đang chờ</h2>
+      <h2 className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">Gợi ý từ người ấy 💕</h2>
       <ul className="space-y-3">
         {list.map((s) => {
           const src = s.item?.thumbnail_signed_url ?? s.item?.photo_signed_url ?? "";
@@ -37,7 +37,7 @@ export function PendingSuggestions({ initial }: { initial: SuggestionWithItem[] 
                 style={{ backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-ink truncate">{s.item?.label || "(no label)"}</p>
+                <p className="text-sm font-semibold text-ink truncate">{s.item?.label || "Đồ chưa đặt tên"}</p>
                 {s.note && <p className="text-xs text-ink-soft mt-0.5 line-clamp-2">{s.note}</p>}
                 <div className="flex gap-2 mt-2">
                   <button

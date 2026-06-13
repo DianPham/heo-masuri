@@ -89,7 +89,7 @@ export function WardrobeOwn({ initial }: { initial: VisibleWardrobeItem[] }) {
         className="block w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white text-center cursor-pointer active:scale-[0.98] transition-transform"
         style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)", opacity: uploading ? 0.5 : 1 }}
       >
-        {uploading ? "Đang tải…" : "+ Thêm trang phục"}
+        {uploading ? "Đang tải lên…" : "+ Thêm đồ"}
         <input
           type="file"
           accept="image/*"
@@ -104,7 +104,7 @@ export function WardrobeOwn({ initial }: { initial: VisibleWardrobeItem[] }) {
       </label>
 
       {items.length === 0 ? (
-        <p className="text-center text-sm text-ink-soft py-8">Chưa có trang phục nào.</p>
+        <p className="text-center text-sm text-ink-soft py-8">Tủ trống — thêm vài món để người ấy chọn cho nha 💕</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {items.map((it) =>
@@ -175,7 +175,7 @@ function EditCard({
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder="Nhãn"
+            placeholder="Tên gọi (váy đỏ, áo trắng…)"
             className="w-full text-sm rounded-xl px-3 py-2 outline-none"
             style={{ border: "1px solid rgba(220,220,220,0.6)" }}
           />
@@ -183,7 +183,7 @@ function EditCard({
             type="text"
             value={tagsStr}
             onChange={(e) => setTagsStr(e.target.value)}
-            placeholder="tags, cách nhau dấu phẩy"
+            placeholder="thẻ, cách nhau dấu phẩy"
             className="w-full text-sm rounded-xl px-3 py-2 outline-none"
             style={{ border: "1px solid rgba(220,220,220,0.6)" }}
           />
@@ -205,8 +205,8 @@ function EditCard({
           Hủy
         </button>
       </div>
-      <button onClick={onArchive} className="w-full text-xs text-rose-500 underline underline-offset-2">
-        Lưu trữ
+      <button onClick={onArchive} className="w-full text-xs text-rose-500 underline underline-offset-2 active:scale-95 transition-transform">
+        Cất món này đi
       </button>
     </div>
   );

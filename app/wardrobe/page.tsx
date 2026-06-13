@@ -52,7 +52,7 @@ export default async function WardrobePage() {
         <h1 className="text-2xl font-bold text-ink mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
           Tủ đồ
         </h1>
-        <p className="text-xs text-ink-soft mb-2">Trang phục của bạn — nhấn để chỉnh.</p>
+        <p className="text-xs text-ink-soft mb-2">Đồ của bạn — nhấn vào để chỉnh ✏️</p>
         <Link href={`/wardrobe/${partner}`} className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-4 active:scale-95 transition-all">
           Xem tủ đồ của người ấy ↗
         </Link>

@@ -29,10 +29,10 @@ export default async function PlanSomethingCard() {
       <span className="text-2xl" aria-hidden>💕</span>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-ink-soft">Chưa có hẹn nào sắp tới</p>
-        <p className="text-sm font-semibold text-ink">Lên kế hoạch hẹn nhé?</p>
+        <p className="text-sm font-semibold text-ink">Lên kế hoạch hẹn nhé? 💕</p>
       </div>
       <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "#C4667A" }}>
-        Mở →
+        →
       </span>
     </Link>
   );

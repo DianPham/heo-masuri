@@ -68,8 +68,8 @@ function SuggestSheet({
           note: note.trim() || null,
         }),
       });
-      if (!res.ok) { alert("Gợi ý thất bại"); return; }
-      alert("Đã gửi gợi ý 💕");
+      if (!res.ok) { alert("Gửi không được, thử lại nha"); return; }
+      alert("Đã gửi cho người ấy 💕");
       onClose();
     } finally {
       setSaving(false);
@@ -85,8 +85,8 @@ function SuggestSheet({
         style={{ zIndex: 110, boxShadow: "0 -8px 30px rgba(0,0,0,0.15)", paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
       >
         <div className="w-12 h-1.5 rounded-full bg-rose-100 mx-auto mb-4 lg:hidden" />
-        <h2 className="text-lg font-bold text-ink mb-1">Gợi ý outfit</h2>
-        <p className="text-xs text-ink-soft mb-3">Người ấy sẽ nhận được thông báo.</p>
+        <h2 className="text-lg font-bold text-ink mb-1">Chọn cho người ấy mặc nha 💕</h2>
+        <p className="text-xs text-ink-soft mb-3">Người ấy sẽ nhận được thông báo gợi ý.</p>
 
         <div className="flex gap-3 mb-3">
           <div
@@ -94,14 +94,14 @@ function SuggestSheet({
             style={{ backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}
           />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-ink">{item.label || "(no label)"}</p>
+            <p className="text-sm font-semibold text-ink">{item.label || "Đồ chưa đặt tên"}</p>
             {item.tags.length > 0 && (
               <p className="text-xs text-ink-soft mt-1">{item.tags.map((t) => `#${t}`).join(" ")}</p>
             )}
           </div>
         </div>
 
-        <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Lời nhắn (tùy chọn)</label>
+        <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Lời nhắn (nếu muốn)</label>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
