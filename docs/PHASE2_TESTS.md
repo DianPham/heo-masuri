@@ -536,6 +536,31 @@ from prior CPs:
 
 No `<TouchActionMenu>` umbrella component was needed; the per-component `onContextMenu` approach already covers every surface the blueprint lists.
 
+### §8.4 Performance audit
+
+Build run 2026-06-13 against staging branch after CP12 §8.3.
+
+Shared chunks (all routes): 105 kB total (48.3 kB + 54.2 kB + 2 kB other) — well under the per-chunk 200 KB threshold.
+
+Routes whose **First Load JS** total exceeds 200 KB:
+
+| Route | First Load | Suspected pull |
+|---|---|---|
+| /heo | 225 kB | Countdown + MissingButton + ThinkingButtons + NextImportantCard + PlanSomethingCard all eager |
+| /heo/notebook/scrapbook/[id] | 225 kB | StoriesRenderer + motion/react |
+| /heo/notebook/today | 222 kB | StoriesRenderer + motion/react |
+| /heo/angry/[id] | 219 kB | Angry reply UI + canvas/audio + motion |
+| /masuri/notebook | 209 kB | Heavy notebook home with Pig + Sticker + Tape + motion |
+| /masuri/angry/[id] | 204 kB | Same as Heo angry |
+
+Findings:
+
+- [x] No single JS chunk exceeds 200 KB. The blueprint threshold is per-chunk; per-route First Load includes shared infra and is over 200 KB on six routes.
+- [ ] DEFERRED to a later perf pass: pull StoriesRenderer (and its motion/react dependency) behind a dynamic import on `/heo/notebook/today` and `/scrapbook/[id]`. Likely saves ~50 kB on first paint when the user lands on the home before tapping into a story.
+- [ ] DEFERRED: code-split MissingButton/ThinkingButtons on `/heo` so the love-bar and the home countdown don't ship together. Currently both eager.
+- [ ] DEFERRED: Lighthouse PWA score check — needs the staging URL run manually; assistant can't browse.
+- [ ] DEFERRED: calendar week query latency — needs server-side instrumentation; not added in CP12 to keep this slice non-invasive.
+
 ### §8.3 Notification pref UI
 
 - [ ] Open `/heo/settings` and `/masuri/settings` → Notifications section now has 5 new rows: Bất ngờ ngẫu nhiên, Chào sáng / chúc ngủ, Lên kế hoạch hẹn, Gợi ý outfit, Ngày quan trọng (manual UI check)
