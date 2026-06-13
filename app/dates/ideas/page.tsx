@@ -2,6 +2,7 @@
  * /dates/ideas — shared idea bank. Blueprint §7.1.
  */
 import { headers, cookies } from "next/headers";
+import Link from "next/link";
 import { DateIdeasGrid, type DateIdea } from "@/components/dates/DateIdeasGrid";
 
 export const dynamic = "force-dynamic";
@@ -42,9 +43,9 @@ export default async function IdeasPage() {
         <p className="text-xs text-ink-soft mb-2">
           Thả vào những ý tưởng hẹn hò để dùng sau. Dán link TikTok / IG để tự lấy ảnh + tiêu đề.
         </p>
-        <a href="/dates/plan" className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-5">
+        <Link href="/dates/plan" className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-5">
           Lên kế hoạch hẹn ↗
-        </a>
+        </Link>
         <DateIdeasGrid initial={ideas} />
       </div>
     </div>
