@@ -460,4 +460,60 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP9 — Phase 2C: decision flipper / outline builder (§7.4)
+
+### Schema + seed + constraints
+- [X] `date_outline_templates` has the 8 system-seeded rows (Gặp nhanh / Ăn sáng / Đi ăn tối / Xem phim / Cả ngày / Đêm khuya / Ở nhà / Trống) with sort_order 10..100 — **SQL-verified**
+- [X] `scheduled_dates` exists with FK to outline_template + calendar_events, status CHECK (planning/ready/done/cancelled), end_at > start_at CHECK — **SQL-verified all three constraints fire**
+- [X] `outfit_suggestions.date_id` now has FK to scheduled_dates with ON DELETE SET NULL — **SQL-verified**
+- [X] RLS on both tables; "anon read templates" (archived=false) and "anon read scheduled dates" (true) policies present — **SQL-verified**
+- [X] End-to-end spin write-side: insert outline_snapshot, simulate the PATCH the /spin handler emits — itinerary written, flipped_at stamped, picked date_idea's used_count bumped + last_used_at stamped — **SQL-verified**
+
+### Index page (/dates/plan)
+- [ ] Visit /dates/plan as Heo or Masuri → renders "Lên kế hoạch hẹn" header, "+ Lên kế hoạch mới" CTA, empty list
+- [ ] Click "+ Lên kế hoạch mới" → inline form: start_at, end_at, optional title
+- [ ] Submit with end ≤ start → 400 from API; alert "Tạo thất bại"
+- [ ] Submit valid → row appears in list with "🆕 Chọn template" badge; can also see it from the other user's session
+- [ ] Click a list item → navigates to /dates/plan/[id]
+
+### Template picker phase
+- [ ] At /dates/plan/[id] before any template picked → grid of 8 templates with label_vi + description + slot count
+- [ ] Pick "Đi ăn tối" → page transitions to outline editor with the template's 4 slots (eat / activity / drive / home)
+- [ ] DB: outline_snapshot is the array of {id, type, label_vi, label_en, candidates: []}
+
+### Outline editor phase
+- [ ] Slots show in order; each shows step number + slot emoji + label_vi
+- [ ] ↑↓ buttons reorder; can't move beyond start/end
+- [ ] ✕ button removes a slot (no undo, no confirm by design — quick to revise)
+- [ ] "+ Chèn bước sau bước này" expands → tap a slot type → new slot inserted after current
+- [ ] Bottom "+ Thêm bước" → expands the same picker; tap a type → slot appended
+- [ ] Per-slot "Thêm ứng viên" → expands. Shows date_ideas with matching slot_type as checkboxes
+- [ ] Tick an idea → appears as a removable chip below the slot header
+- [ ] Type free text + "Thêm" → custom candidate appears as a chip (source=custom)
+- [ ] Click a chip → removes it
+- [ ] "Spin 🎲" is disabled (gray) while any slot has 0 candidates; copy reads "Cần ít nhất 1 ứng viên mỗi bước"
+- [ ] Once all slots have ≥1 candidate → button turns pink; click → server picks, response replaces local state
+- [ ] No flicker: optimistic refresh patches the date in place
+
+### Itinerary phase
+- [ ] After spin → page transitions to itinerary view
+- [ ] Slots reveal sequentially at ~450ms intervals, with a pulsing "…" placeholder before each
+- [ ] Each pick shows slot emoji + step number + the picked label_vi
+- [ ] DB: scheduled_dates.itinerary is non-null, flipped_at is set
+- [ ] DB: every date_idea referenced by a pick has used_count incremented and last_used_at = flipped_at (within seconds)
+- [ ] "Sửa lại" button (after all revealed) → PATCH itinerary=null, transitions back to outline editor with candidates preserved
+
+### Spin weighting (logic-verified)
+- [X] Equal weight when no history present — **logic in lib/spin.ts:pickForSlot**
+- [X] last_used_at < 30 days → multiplier 0.3 — **inspected**
+- [X] used_count > average → multiplier 0.7 — **inspected**
+- [X] Custom candidates (no date_idea_id) always full weight — **inspected**
+- [X] Server-side spin POST → PATCH scheduled_dates + UPDATE date_ideas — **SQL-simulated end to end**
+
+### Cross-user (manual, two browsers)
+- [ ] Both users can see/edit the same plan (read open; PATCH open). No realtime sync yet — partner adds visible after refresh
+- [ ] Both can spin; the last to spin wins (overwrites itinerary). Acceptable for CP9; CP10 will broadcast plan state.
+
+---
+
 ## CP4+ — to be added as each phase lands
