@@ -60,6 +60,42 @@ function isTikTok(hostname: string): boolean {
   );
 }
 
+function isTikTokShortLink(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return h === "vt.tiktok.com" || h === "vm.tiktok.com" || h === "vs.tiktok.com";
+}
+
+/**
+ * Resolve a short link (vt.tiktok.com/XXX) to its canonical
+ * (www.tiktok.com/@user/video/123) form. TikTok's oEmbed endpoint only accepts
+ * canonical URLs — passing a short link returns 404 with no body.
+ *
+ * Strategy: GET with redirect=follow, abort the body read once headers land,
+ * read `res.url` for the post-redirect URL. Strip query strings (TikTok adds a
+ * tracking `?_t=...&_r=...` that oEmbed will reject too).
+ */
+async function resolveTikTokShortLink(url: URL): Promise<URL> {
+  const res = await fetchWithTimeout(url.toString(), {
+    method: "GET",
+    headers: {
+      "User-Agent": BROWSER_UA,
+      Accept: "text/html",
+    },
+    redirect: "follow",
+  });
+  // Abort the body — we only wanted the final URL.
+  res?.body?.cancel().catch(() => undefined);
+  if (!res || !res.url) return url;
+  try {
+    const resolved = new URL(res.url);
+    // Strip TikTok's tracking query string; the path alone identifies the video.
+    resolved.search = "";
+    return resolved;
+  } catch {
+    return url;
+  }
+}
+
 function isInstagram(hostname: string): boolean {
   const h = hostname.toLowerCase();
   return h === "instagram.com" || h.endsWith(".instagram.com");
@@ -133,7 +169,12 @@ async function readBodyCapped(res: Response): Promise<string | null> {
  * short-link form gets resolved server-side by TikTok inside the oembed call.
  */
 async function fetchTikTokPreview(url: URL): Promise<Preview> {
-  const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url.toString())}`;
+  // Expand short links (vt./vm./vs.tiktok.com) before hitting oEmbed.
+  const canonical = isTikTokShortLink(url.hostname)
+    ? await resolveTikTokShortLink(url)
+    : url;
+
+  const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(canonical.toString())}`;
   const res = await fetchWithTimeout(oembedUrl, {
     method: "GET",
     headers: {
@@ -142,31 +183,36 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
     },
     redirect: "follow",
   });
-  if (!res || !res.ok) return { ...NULL, source: url.hostname };
-  type TikTokOembed = {
-    title?: string;
-    author_name?: string;
-    thumbnail_url?: string;
-  };
-  let data: TikTokOembed;
-  try {
-    data = (await res.json()) as TikTokOembed;
-  } catch {
-    return { ...NULL, source: url.hostname };
+  if (res && res.ok) {
+    type TikTokOembed = {
+      title?: string;
+      author_name?: string;
+      thumbnail_url?: string;
+    };
+    try {
+      const data = (await res.json()) as TikTokOembed;
+      // TikTok puts the caption in `title`. Compose "@author · caption" so
+      // the polaroid label reads well instead of just "TikTok".
+      const title =
+        data.title && data.author_name
+          ? `${data.author_name} · ${data.title}`
+          : data.title ?? data.author_name ?? null;
+      if (title || data.thumbnail_url) {
+        return {
+          title,
+          description: data.author_name ?? null,
+          image: data.thumbnail_url ?? null,
+          source: "tiktok.com",
+        };
+      }
+    } catch { /* fall through to scrape */ }
   }
-  // TikTok puts the actual caption in `title`. Prefix the author so the
-  // user-facing label reads "@user · caption" — way more useful than just
-  // "TikTok" or the bare caption alone.
-  const title =
-    data.title && data.author_name
-      ? `${data.author_name} · ${data.title}`
-      : data.title ?? data.author_name ?? null;
-  return {
-    title,
-    description: data.author_name ?? null,
-    image: data.thumbnail_url ?? null,
-    source: "tiktok.com",
-  };
+
+  // oEmbed failed (region lock, deleted post, malformed canonical) → fall back
+  // to scraping the canonical page directly with a real browser UA. TikTok
+  // ships og:* meta tags inline.
+  const scraped = await fetchGenericPreview(canonical);
+  return { ...scraped, source: "tiktok.com" };
 }
 
 /**
