@@ -17,6 +17,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
 import { DateSchedulerSheet } from "@/components/dates/DateSchedulerSheet";
 
@@ -29,8 +30,13 @@ type Props = {
 };
 
 const WEEKDAY_VI_LONG = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
-const ROW_HEIGHT_PX = 44;          // taller rows than mobile — desktop has more vertical room
-const HOUR_COL_WIDTH_PX = 60;
+// Full-size cells for ≥1440px viewports (external monitor); compact cells for
+// laptop screens like the 1280-1440px Macbook Pro range where the full size
+// felt crowded (per CP10 test-pass feedback).
+const ROW_HEIGHT_FULL = 44;
+const ROW_HEIGHT_COMPACT = 32;
+const HOUR_COL_WIDTH_FULL = 60;
+const HOUR_COL_WIDTH_COMPACT = 44;
 
 function vnDayIndex(iso: string, mondayVnMs: number): number {
   return Math.floor((new Date(iso).getTime() - mondayVnMs) / 86_400_000);
@@ -47,6 +53,11 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
   const slotsPerDay = 1440 / slotMinutes;
   const totalSlots = slotsPerDay;
   const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // Compact mode kicks in at typical laptop widths.
+  const isCompact = useMediaQuery("(max-width: 1440px)");
+  const ROW_HEIGHT_PX = isCompact ? ROW_HEIGHT_COMPACT : ROW_HEIGHT_FULL;
+  const HOUR_COL_WIDTH_PX = isCompact ? HOUR_COL_WIDTH_COMPACT : HOUR_COL_WIDTH_FULL;
 
   const mondayVnMs = useMemo(
     () =>
@@ -108,7 +119,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     const targetMinutes = Math.max(0, nowMinutes - 60);
     const targetRow = Math.floor(targetMinutes / slotMinutes);
     scrollerRef.current?.scrollTo({ top: targetRow * ROW_HEIGHT_PX, behavior: "instant" as ScrollBehavior });
-  }, [mondayVnMs, slotMinutes]);
+  }, [mondayVnMs, slotMinutes, ROW_HEIGHT_PX]);
 
   // [day][slot] grid with sub-cell range tracking (same shape as WeekHourView).
   const grid = useMemo<CellState[][]>(() => {
@@ -181,7 +192,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     if (currentMondayVnMs !== mondayVnMs) return null;
     const minutes = nowVn.getUTCHours() * 60 + nowVn.getUTCMinutes();
     return { day: todayIdx, top: (minutes / slotMinutes) * ROW_HEIGHT_PX };
-  }, [mondayVnMs, slotMinutes]);
+  }, [mondayVnMs, slotMinutes, ROW_HEIGHT_PX]);
 
   // Global mouseup: if user dragged across 2+ cells, open the create sheet.
   useEffect(() => {
@@ -221,6 +232,28 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
       return { day: prev.day, startRow: prev.startRow, endRow: row };
     });
   }, []);
+
+  // Map cell key "day-row" → true if a partner event with shared details
+  // STARTS in this cell. Used to render a tiny ⓘ badge so the viewer can
+  // discover which blue blocks have title/note info available via right-click.
+  // (Partner privacy default is share_details=false; the badge only surfaces
+  // when the partner explicitly opted in. Blueprint §6.2.)
+  const partnerSharedStartsByCell = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of optimisticEvents) {
+      if (e.is_own) continue;
+      if (!e.share_details) continue;
+      if (!e.title && !e.note && !e.emoji) continue;
+      const eStartMs = new Date(e.start_at).getTime();
+      const firstDay = Math.floor((eStartMs - mondayVnMs) / 86_400_000);
+      if (firstDay < 0 || firstDay > 6) continue;
+      const dayStartMs = mondayVnMs + firstDay * 86_400_000;
+      const eStartMin = (eStartMs - dayStartMs) / 60_000;
+      const firstRow = Math.max(0, Math.floor(eStartMin / slotMinutes));
+      set.add(`${firstDay}-${firstRow}`);
+    }
+    return set;
+  }, [optimisticEvents, mondayVnMs, slotMinutes]);
 
   // Map cell key "day-row" → list of owner events whose VISUAL BOTTOM edge sits
   // in this cell, along with the in-cell bottom Y fraction (0..1). Used to
@@ -314,7 +347,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     },
-    [optimisticEvents, slotMinutes]
+    [optimisticEvents, slotMinutes, ROW_HEIGHT_PX]
   );
 
   const onCellContextMenu = useCallback(
@@ -672,6 +705,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
                 grid={grid}
                 drag={drag}
                 eventBottomsByCell={eventBottomsByCell}
+                partnerSharedStartsByCell={partnerSharedStartsByCell}
                 onTap={handleCellTap}
                 onCellMouseDown={onCellMouseDown}
                 onCellMouseEnter={onCellMouseEnter}
@@ -796,6 +830,7 @@ function DesktopRow({
   grid,
   drag,
   eventBottomsByCell,
+  partnerSharedStartsByCell,
   onTap,
   onCellMouseDown,
   onCellMouseEnter,
@@ -807,6 +842,7 @@ function DesktopRow({
   grid: CellState[][];
   drag: { day: number; startRow: number; endRow: number } | null;
   eventBottomsByCell: Map<string, Array<{ eventId: string; bottomY: number }>>;
+  partnerSharedStartsByCell: Set<string>;
   onTap: (day: number, slot: number) => void;
   onCellMouseDown: (day: number, row: number, e: React.MouseEvent) => void;
   onCellMouseEnter: (day: number, row: number) => void;
@@ -864,6 +900,20 @@ function DesktopRow({
                 }}
               />
             ))}
+            {partnerSharedStartsByCell.has(`${day}-${row}`) && (
+              <span
+                className="absolute top-0.5 right-0.5 pointer-events-none text-[9px] leading-none font-semibold rounded-full px-1 py-0.5"
+                style={{
+                  color: "#3a6da0",
+                  backgroundColor: "rgba(255,255,255,0.85)",
+                  zIndex: 2,
+                }}
+                aria-label="Đối phương đã chia sẻ chi tiết"
+                title="Đối phương đã chia sẻ chi tiết — chuột phải để xem"
+              >
+                ⓘ
+              </span>
+            )}
             {cell.ownerRanges.map((r, i) => (
               <span
                 key={`o${i}`}

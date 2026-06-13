@@ -8,7 +8,7 @@
  * CP3 ships hour, 30-min, and block granularities — mobile only. CP4 will
  * add the desktop layout under `md:`.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WeekHourView } from "./WeekHourView";
 import { WeekBlockView } from "./WeekBlockView";
 import { WeekDesktopView } from "./WeekDesktopView";
@@ -79,11 +79,6 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
     }
   }, []);
 
-  // Persist granularity
-  useEffect(() => {
-    localStorage.setItem(STORAGE_GRANULARITY, granularity);
-  }, [granularity]);
-
   // Fetch events when week changes
   const reload = useCallback(async (m: string) => {
     setLoading(true);
@@ -112,6 +107,21 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
   useEffect(() => {
     if (monday !== initialMonday) reload(monday);
   }, [monday, initialMonday, reload]);
+
+  // Persist granularity + refetch on swap so the new view doesn't render with
+  // stale shell state. Each child view holds an optimistic copy of `events`
+  // for its own local mutations; swapping views remounts that copy from the
+  // shell prop, so any add/delete made inside the previous view would disappear
+  // until the next manual reload. Reloading here keeps the swap seamless.
+  const didMountGranularityRef = useRef(false);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_GRANULARITY, granularity);
+    if (!didMountGranularityRef.current) {
+      didMountGranularityRef.current = true;
+      return;
+    }
+    reload(monday);
+  }, [granularity, monday, reload]);
 
   function goPrev() {
     setMonday((m) => addDaysVN(m, -7));
