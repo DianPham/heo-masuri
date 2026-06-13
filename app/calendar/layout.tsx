@@ -29,7 +29,7 @@ export default async function CalendarLayout({ children }: { children: React.Rea
         style={{ background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)" }}
       >
         <SideNav who={who} />
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 lg:pl-20">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 lg:pl-60">
           <div className="mx-auto w-full max-w-md md:max-w-lg md:min-h-[calc(100dvh-6rem)] md:my-6 md:rounded-3xl md:border md:border-rose-100/60 md:overflow-hidden md:bg-[#FFF9F5] md:shadow-[0_10px_40px_rgba(196,102,122,0.12)] lg:max-w-none lg:my-0 lg:rounded-none lg:border-0 lg:shadow-none lg:bg-transparent lg:overflow-visible lg:min-h-screen">
             {children}
           </div>
