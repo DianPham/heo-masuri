@@ -551,7 +551,7 @@ function ItineraryView({
           <button
             onClick={onReset}
             disabled={saving}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-ink-soft"
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-ink-soft active:scale-95 transition-transform"
             style={{ border: "1px solid rgba(220,220,220,0.6)" }}
           >
             Sửa lại

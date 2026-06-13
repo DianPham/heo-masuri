@@ -354,10 +354,10 @@ function IdeaForm({
         </div>
       )}
       <div className="flex gap-2 pt-1">
-        <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ backgroundColor: "#C4667A", opacity: saving ? 0.5 : 1 }}>
+        <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform" style={{ backgroundColor: "#C4667A", opacity: saving ? 0.5 : 1 }}>
           {saving ? "Đang lưu…" : "Lưu"}
         </button>
-        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
+        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
           Hủy
         </button>
       </div>

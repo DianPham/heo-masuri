@@ -23,12 +23,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { VisibleEvent } from "@/lib/calendar";
 import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
 
+type WeekStar = { day: number; emoji: string; label: string; id: string };
+
 type Props = {
   monday: string;              // YYYY-MM-DD VN
   events: VisibleEvent[];
   viewerId: string;
   slotMinutes: 30 | 60;
   onChange: () => void;
+  stars?: WeekStar[];
 };
 
 const WEEKDAY_VI = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
@@ -39,7 +42,7 @@ function vnDayIndex(iso: string, mondayVnMs: number): number {
   return Math.floor((new Date(iso).getTime() - mondayVnMs) / 86_400_000);
 }
 
-export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }: Props) {
+export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, stars = [] }: Props) {
   const slotsPerDay = 1440 / slotMinutes;
   const totalSlots = slotsPerDay;
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -79,6 +82,13 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
   const longPressTimerRef = useRef<number | null>(null);
   const longPressedRef = useRef(false);
 
+  // Mobile drag-select state. After a 500ms long-press over an empty cell we
+  // enter "selection" mode (haptic buzz). Touchmove tracks via elementFromPoint;
+  // touchend opens the create sheet for the spanned range.
+  const [touchDrag, setTouchDrag] = useState<{ day: number; startRow: number; endRow: number } | null>(null);
+  const touchDragRef = useRef<{ day: number; startRow: number; endRow: number } | null>(null);
+  touchDragRef.current = touchDrag;
+
   const cancelLongPress = useCallback(() => {
     if (longPressTimerRef.current !== null) {
       window.clearTimeout(longPressTimerRef.current);
@@ -95,7 +105,8 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
         const dayStartMs = mondayVnMs + day * 86_400_000;
         const cellStartMs = dayStartMs + slot * slotMinutes * 60_000;
         const cellEndMs = cellStartMs + slotMinutes * 60_000;
-        // If cell has an own event, open edit; else create.
+        // If cell has an own event, open edit immediately. Otherwise enter
+        // drag-select mode so the user can extend the create range.
         const ownerCell = optimisticEvents.find((e) => {
           if (!e.is_own) return false;
           const s = new Date(e.start_at).getTime();
@@ -114,16 +125,53 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
             share_details: ownerCell.share_details,
           });
         } else {
-          setSheet({
-            mode: "create",
-            start_at: new Date(cellStartMs).toISOString(),
-            end_at: new Date(cellEndMs).toISOString(),
-          });
+          if (navigator.vibrate) navigator.vibrate(30);
+          setTouchDrag({ day, startRow: slot, endRow: slot });
         }
       }, 500);
     },
     [cancelLongPress, mondayVnMs, optimisticEvents, slotMinutes]
   );
+
+  // While in drag-select mode, intercept touchmove globally so the page doesn't
+  // scroll and we can update the selection via elementFromPoint.
+  useEffect(() => {
+    if (!touchDrag) return;
+    function onMove(e: TouchEvent) {
+      const t = e.touches[0];
+      if (!t) return;
+      const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null;
+      const dayAttr = el?.closest("[data-slot]") as HTMLElement | null;
+      if (!dayAttr) return;
+      const day = Number(dayAttr.getAttribute("data-day"));
+      const slot = Number(dayAttr.getAttribute("data-slot"));
+      const cur = touchDragRef.current;
+      if (!cur || cur.day !== day) return;
+      if (slot !== cur.endRow) {
+        e.preventDefault();
+        setTouchDrag({ ...cur, endRow: slot });
+      }
+    }
+    function onEnd() {
+      const d = touchDragRef.current;
+      if (!d) return;
+      const lo = Math.min(d.startRow, d.endRow);
+      const hi = Math.max(d.startRow, d.endRow);
+      const dayStartMs = mondayVnMs + d.day * 86_400_000;
+      const start_at = new Date(dayStartMs + lo * slotMinutes * 60_000).toISOString();
+      const end_at = new Date(dayStartMs + (hi + 1) * slotMinutes * 60_000).toISOString();
+      setTouchDrag(null);
+      setSheet({ mode: "create", start_at, end_at });
+    }
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd);
+    window.addEventListener("touchcancel", onEnd);
+    return () => {
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("touchcancel", onEnd);
+    };
+  }, [touchDrag, mondayVnMs, slotMinutes]);
 
   async function handleSheetSave(values: EventDetailValues): Promise<boolean> {
     if (!sheet) return false;
@@ -408,17 +456,40 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
         style={{ backgroundColor: "rgba(255,249,245,0.94)" }}
       >
         <div />
-        {dayLabels.map((dl, i) => (
-          <div key={i} className="text-center pt-1 pb-1">
-            <p className="text-xs font-semibold text-ink-soft">{dl.label}</p>
-            <p
-              className="text-sm font-bold mt-0.5"
-              style={{ color: dl.isToday ? "#C4667A" : "#333" }}
-            >
-              {dl.date}
-            </p>
-          </div>
-        ))}
+        {dayLabels.map((dl, i) => {
+          const dayStars = stars.filter((s) => s.day === i);
+          return (
+            <div key={i} className="text-center pt-1 pb-1">
+              <p className="text-xs font-semibold text-ink-soft">{dl.label}</p>
+              <p
+                className="text-sm font-bold mt-0.5"
+                style={{ color: dl.isToday ? "#C4667A" : "#333" }}
+              >
+                {dl.date}
+              </p>
+              {(dl.isToday || dayStars.length > 0) && (
+                <div className="flex items-center justify-center gap-0.5 mt-0.5">
+                  {dl.isToday && (
+                    <span className="text-[9px] uppercase tracking-wide font-bold leading-none" style={{ color: "#C4667A" }}>
+                      hôm nay
+                    </span>
+                  )}
+                  {dayStars.map((s) => (
+                    <a
+                      key={s.id}
+                      href="/calendar/important-dates"
+                      title={s.label}
+                      className="text-sm leading-none hover:opacity-80"
+                      aria-label={s.label}
+                    >
+                      {s.emoji}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div ref={scrollerRef} className="relative" style={{ maxHeight: "calc(100dvh - 220px)", overflowY: "auto" }}>
@@ -433,6 +504,7 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange }
               slotMinutes={slotMinutes}
               hourLabels={hourLabels}
               grid={grid}
+              touchDrag={touchDrag}
               onTap={handleCellTap}
               onLongPressStart={startLongPress}
               onLongPressCancel={cancelLongPress}
@@ -482,6 +554,7 @@ function RowFragment({
   onTap,
   onLongPressStart,
   onLongPressCancel,
+  touchDrag,
 }: {
   row: number;
   slotMinutes: 30 | 60;
@@ -490,6 +563,7 @@ function RowFragment({
   onTap: (day: number, slot: number) => void;
   onLongPressStart: (day: number, row: number) => void;
   onLongPressCancel: () => void;
+  touchDrag: { day: number; startRow: number; endRow: number } | null;
 }) {
   const hourLabel = hourLabels.find((h) => h.row === row);
   const isHalfHour = slotMinutes === 30 && row % 2 === 1;
@@ -505,10 +579,17 @@ function RowFragment({
         const partnerBusy = cell.partnerEventIds.length > 0;
         const isBusyCell = ownerBusy || partnerBusy;
         const isReadonly = !ownerBusy && partnerBusy;
+        const inTouchDrag =
+          touchDrag !== null &&
+          touchDrag.day === day &&
+          row >= Math.min(touchDrag.startRow, touchDrag.endRow) &&
+          row <= Math.max(touchDrag.startRow, touchDrag.endRow);
 
         return (
           <button
             key={day}
+            data-day={day}
+            data-slot={row}
             onClick={() => onTap(day, row)}
             onTouchStart={() => onLongPressStart(day, row)}
             onTouchMove={onLongPressCancel}
@@ -526,6 +607,12 @@ function RowFragment({
             }}
             aria-label={isBusyCell ? "Bận" : "Trống"}
           >
+            {inTouchDrag && (
+              <span
+                className="absolute inset-0 pointer-events-none"
+                style={{ backgroundColor: "rgba(196,102,122,0.30)" }}
+              />
+            )}
             {/* Partner fills paint first (background, blue), owner fills paint on top (pink). */}
             {cell.partnerRanges.map((r, i) => (
               <span

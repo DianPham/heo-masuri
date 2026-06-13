@@ -21,12 +21,15 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { EventDetailSheet, type EventDetailValues } from "./EventDetailSheet";
 import { DateSchedulerSheet } from "@/components/dates/DateSchedulerSheet";
 
+export type WeekStar = { day: number; emoji: string; label: string; id: string };
+
 type Props = {
   monday: string;
   events: VisibleEvent[];
   viewerId: string;
   slotMinutes: 30 | 60;
   onChange: () => void;
+  stars?: WeekStar[];
 };
 
 const WEEKDAY_VI_LONG = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
@@ -49,7 +52,7 @@ type CellState = {
   partnerRanges: Array<{ top: number; height: number }>;
 };
 
-export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChange }: Props) {
+export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChange, stars = [] }: Props) {
   const slotsPerDay = 1440 / slotMinutes;
   const totalSlots = slotsPerDay;
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -660,29 +663,45 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
         }}
       >
         <div />
-        {dayHeaders.map((dh, i) => (
-          <div
-            key={i}
-            className="text-center py-2 border-l"
-            style={{
-              borderColor: "rgba(255,201,213,0.25)",
-              backgroundColor: dh.isToday ? "rgba(255,201,213,0.18)" : "transparent",
-            }}
-          >
-            <p className="text-xs font-semibold text-ink-soft">{dh.label}</p>
-            <p
-              className="text-base font-bold mt-0.5"
-              style={{ color: dh.isToday ? "#C4667A" : "#333" }}
+        {dayHeaders.map((dh, i) => {
+          const dayStars = stars.filter((s) => s.day === i);
+          return (
+            <div
+              key={i}
+              className="text-center py-2 border-l"
+              style={{
+                borderColor: "rgba(255,201,213,0.25)",
+                backgroundColor: dh.isToday ? "rgba(255,201,213,0.18)" : "transparent",
+              }}
             >
-              {dh.date}/{dh.month}
-            </p>
-            {dh.isToday && (
-              <p className="text-[10px] uppercase tracking-wide font-bold mt-0.5" style={{ color: "#C4667A" }}>
-                Hôm nay
+              <p className="text-xs font-semibold text-ink-soft">{dh.label}</p>
+              <p
+                className="text-base font-bold mt-0.5"
+                style={{ color: dh.isToday ? "#C4667A" : "#333" }}
+              >
+                {dh.date}/{dh.month}
               </p>
-            )}
-          </div>
-        ))}
+              <div className="flex items-center justify-center gap-1 mt-0.5 min-h-[14px]">
+                {dh.isToday && (
+                  <span className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#C4667A" }}>
+                    Hôm nay
+                  </span>
+                )}
+                {dayStars.length > 0 && (
+                  <a
+                    href="/calendar/important-dates"
+                    title={dayStars.map((s) => s.label).join("\n")}
+                    className="flex items-center gap-0.5 hover:opacity-80"
+                  >
+                    {dayStars.map((s) => (
+                      <span key={s.id} className="text-sm leading-none" aria-label={s.label}>{s.emoji}</span>
+                    ))}
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Scrollable grid */}
@@ -874,7 +893,7 @@ function DesktopRow({
             onMouseDown={(e) => onCellMouseDown(day, row, e)}
             onMouseEnter={() => onCellMouseEnter(day, row)}
             onContextMenu={(e) => onCellContextMenu(day, row, e)}
-            className="border-r border-b relative overflow-hidden hover:bg-rose-50/40 transition-colors"
+            className="group border-r border-b relative overflow-hidden hover:bg-rose-50/40 transition-colors"
             style={{
               borderColor: "rgba(255,201,213,0.25)",
               backgroundColor: "transparent",
@@ -901,18 +920,31 @@ function DesktopRow({
               />
             ))}
             {partnerSharedStartsByCell.has(`${day}-${row}`) && (
-              <span
-                className="absolute top-0.5 right-0.5 pointer-events-none text-[9px] leading-none font-semibold rounded-full px-1 py-0.5"
-                style={{
-                  color: "#3a6da0",
-                  backgroundColor: "rgba(255,255,255,0.85)",
-                  zIndex: 2,
-                }}
-                aria-label="Đối phương đã chia sẻ chi tiết"
-                title="Đối phương đã chia sẻ chi tiết — chuột phải để xem"
-              >
-                ⓘ
-              </span>
+              <>
+                <span
+                  className="absolute top-0.5 right-0.5 pointer-events-none text-[9px] leading-none font-semibold rounded-full px-1 py-0.5 transition-opacity group-hover:opacity-0"
+                  style={{
+                    color: "#3a6da0",
+                    backgroundColor: "rgba(255,255,255,0.85)",
+                    zIndex: 2,
+                  }}
+                  aria-label="Đối phương đã chia sẻ chi tiết"
+                >
+                  ⓘ
+                </span>
+                {/* Hover-only hint — replaces the ⓘ on hover with a clearer call to action */}
+                <span
+                  className="absolute top-0.5 right-0.5 left-0.5 pointer-events-none text-[9px] leading-tight font-semibold rounded px-1 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-center"
+                  style={{
+                    color: "#3a6da0",
+                    backgroundColor: "rgba(255,255,255,0.95)",
+                    border: "1px solid rgba(120,175,220,0.5)",
+                    zIndex: 3,
+                  }}
+                >
+                  Chuột phải để xem
+                </span>
+              </>
             )}
             {cell.ownerRanges.map((r, i) => (
               <span

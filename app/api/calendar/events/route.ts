@@ -72,6 +72,11 @@ export async function POST(req: NextRequest) {
     ? (body.source as Source)
     : "manual";
 
+  const insertTitle = typeof body.title === "string" ? body.title.slice(0, 200) : null;
+  const insertNote = typeof body.note === "string" ? body.note.slice(0, 1000) : null;
+  const insertEmoji = typeof body.emoji === "string" ? body.emoji.slice(0, 16) : null;
+  const insertShare = body.share_details === false ? false : true;
+
   const supabase = createTypedServerClient();
   const { data, error } = await supabase
     .from("calendar_events")
@@ -79,10 +84,12 @@ export async function POST(req: NextRequest) {
       owner: viewerId,
       start_at: body.start_at,
       end_at: body.end_at,
-      title: typeof body.title === "string" ? body.title.slice(0, 200) : null,
-      note: typeof body.note === "string" ? body.note.slice(0, 1000) : null,
-      emoji: typeof body.emoji === "string" ? body.emoji.slice(0, 16) : null,
-      share_details: body.share_details === true,
+      title: insertTitle,
+      note: insertNote,
+      emoji: insertEmoji,
+      // share_details default flipped to true (see migration 019).
+      // Explicit false still wins so users who turn it off keep privacy.
+      share_details: insertShare,
       source,
     })
     .select("*")
@@ -93,5 +100,64 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ event: transformForViewer(data, viewerId) });
+  // Auto-merge adjacent fragments owned by the viewer that share identical
+  // title/note/emoji/source. Lets a "click to split then drag to refill"
+  // sequence reconcile into a single event instead of leaving 2–3 fragments.
+  const merged = await maybeMergeAdjacent(supabase, data, viewerId);
+
+  return NextResponse.json({ event: transformForViewer(merged, viewerId) });
+}
+
+async function maybeMergeAdjacent(
+  supabase: ReturnType<typeof createTypedServerClient>,
+  inserted: CalendarEventRow,
+  viewerId: string
+): Promise<CalendarEventRow> {
+  // Candidates: same owner, identical content, end_at == inserted.start_at OR
+  // start_at == inserted.end_at. We treat title/note/emoji NULL as matching NULL.
+  const { data: neighbours } = await supabase
+    .from("calendar_events")
+    .select("*")
+    .eq("owner", viewerId)
+    .eq("source", inserted.source)
+    .or(`end_at.eq.${inserted.start_at},start_at.eq.${inserted.end_at}`);
+
+  const sameContent = (e: CalendarEventRow) =>
+    e.id !== inserted.id &&
+    (e.title ?? null) === (inserted.title ?? null) &&
+    (e.note ?? null) === (inserted.note ?? null) &&
+    (e.emoji ?? null) === (inserted.emoji ?? null) &&
+    e.share_details === inserted.share_details;
+
+  const matches = (neighbours ?? []).filter(sameContent);
+  if (matches.length === 0) return inserted;
+
+  // Expand the inserted row to swallow the matches; delete them after.
+  let start = new Date(inserted.start_at).getTime();
+  let end = new Date(inserted.end_at).getTime();
+  for (const m of matches) {
+    start = Math.min(start, new Date(m.start_at).getTime());
+    end = Math.max(end, new Date(m.end_at).getTime());
+  }
+
+  const { data: updated, error: updErr } = await supabase
+    .from("calendar_events")
+    .update({
+      start_at: new Date(start).toISOString(),
+      end_at: new Date(end).toISOString(),
+    })
+    .eq("id", inserted.id)
+    .select("*")
+    .single();
+  if (updErr || !updated) {
+    console.error("[calendar/events merge-update]", updErr);
+    return inserted;
+  }
+
+  await supabase
+    .from("calendar_events")
+    .delete()
+    .in("id", matches.map((m) => m.id));
+
+  return updated;
 }

@@ -17,7 +17,7 @@ export function PlanIndex({ initial }: { initial: ScheduledDate[] }) {
     <div>
       <button
         onClick={() => setScheduling(true)}
-        className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white"
+        className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
         style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)" }}
       >
         + Lên kế hoạch mới

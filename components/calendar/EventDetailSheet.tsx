@@ -70,7 +70,7 @@ export function EventDetailSheet({ initial, onSave, onDelete, onClose }: Props) 
   const [title, setTitle] = useState(editMode ? (initial.title ?? "") : "");
   const [note, setNote] = useState(editMode ? (initial.note ?? "") : "");
   const [emoji, setEmoji] = useState(editMode ? (initial.emoji ?? "") : "");
-  const [shareDetails, setShareDetails] = useState(editMode ? initial.share_details : false);
+  const [shareDetails, setShareDetails] = useState(editMode ? initial.share_details : true);
   const [saving, setSaving] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -198,7 +198,7 @@ export function EventDetailSheet({ initial, onSave, onDelete, onClose }: Props) 
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white transition-opacity"
+            className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white transition-all active:scale-95 hover:opacity-90"
             style={{
               backgroundColor: "#C4667A",
               opacity: saving ? 0.5 : 1,

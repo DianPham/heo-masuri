@@ -223,7 +223,7 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
         style={{ backgroundColor: "rgba(255,249,245,0.94)", backdropFilter: "blur(8px)" }}
       >
         <div className="flex items-center gap-2 mb-3 lg:max-w-screen-2xl lg:mx-auto">
-          <button onClick={goPrev} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100" aria-label="Tuần trước">
+          <button onClick={goPrev} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100 active:scale-95 transition-transform" aria-label="Tuần trước">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M11 14 L5 9 L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -233,12 +233,12 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
               {weekLabel}
             </h1>
             {!isCurrentWeek && (
-              <button onClick={goToday} className="text-xs text-purple-500 underline underline-offset-2">
+              <button onClick={goToday} className="text-xs text-purple-500 underline underline-offset-2 active:scale-95 transition-transform">
                 Về tuần này
               </button>
             )}
           </div>
-          <button onClick={goNext} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100" aria-label="Tuần sau">
+          <button onClick={goNext} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100 active:scale-95 transition-transform" aria-label="Tuần sau">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M7 4 L13 9 L7 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -246,7 +246,7 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
           {isDesktop && (
             <button
               onClick={openNewEventSheet}
-              className="hidden lg:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="hidden lg:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
               style={{
                 backgroundColor: "#C4667A",
                 boxShadow: "0 4px 12px rgba(196,102,122,0.3)",
@@ -275,34 +275,6 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
             Ý tưởng hẹn ↗
           </a>
         </div>
-
-        {/* Stars strip — important_date occurrences in the displayed week (§6.8). */}
-        {initialStars.length > 0 && (
-          <div
-            className="grid mb-2 px-1"
-            style={{ gridTemplateColumns: `repeat(7, 1fr)`, gap: 4 }}
-          >
-            {Array.from({ length: 7 }, (_, day) => {
-              const today = initialStars.filter((s) => s.day === day);
-              if (today.length === 0) return <div key={day} />;
-              return (
-                <a
-                  key={day}
-                  href="/calendar/important-dates"
-                  className="flex flex-col items-center text-center hover:opacity-80"
-                  title={today.map((s) => s.label).join("\n")}
-                >
-                  <span className="text-base leading-none">{today.map((s) => s.emoji).join("")}</span>
-                  <span className="text-[9px] text-ink-soft mt-0.5 truncate w-full">
-                    {today.length === 1
-                      ? today[0].label
-                      : `${today[0].label} +${today.length - 1}`}
-                  </span>
-                </a>
-              );
-            })}
-          </div>
-        )}
 
         {/* Granularity selector */}
         <div className="flex rounded-2xl overflow-hidden text-xs font-medium" style={{ border: "1px solid rgba(255,201,213,0.5)" }}>
@@ -346,6 +318,7 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
             viewerId={viewerId}
             slotMinutes={granularity === "halfhour" ? 30 : 60}
             onChange={() => reload(monday)}
+            stars={initialStars}
           />
         ) : granularity === "block" ? (
           <WeekBlockView
@@ -353,6 +326,7 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
             events={events}
             viewerId={viewerId}
             onChange={() => reload(monday)}
+            stars={initialStars}
           />
         ) : (
           <WeekHourView
@@ -361,6 +335,7 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
             viewerId={viewerId}
             slotMinutes={granularity === "halfhour" ? 30 : 60}
             onChange={() => reload(monday)}
+            stars={initialStars}
           />
         )}
       </div>

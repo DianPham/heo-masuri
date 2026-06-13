@@ -25,18 +25,21 @@ const BLOCKS = [
 type BlockKey = (typeof BLOCKS)[number]["key"];
 const WEEKDAY_VI = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
+type WeekStar = { day: number; emoji: string; label: string; id: string };
+
 type Props = {
   monday: string;
   events: VisibleEvent[];
   viewerId: string;
   onChange: () => void;
+  stars?: WeekStar[];
 };
 
 function dayIndex(iso: string, mondayVnMs: number): number {
   return Math.floor((new Date(iso).getTime() - mondayVnMs) / 86_400_000);
 }
 
-export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
+export function WeekBlockView({ monday, events, viewerId, onChange, stars = [] }: Props) {
   const mondayVnMs = useMemo(
     () =>
       Date.UTC(
@@ -343,11 +346,22 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
               </p>
               {isToday && (
                 <span
-                  className="ml-auto text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full text-white"
+                  className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full text-white"
                   style={{ backgroundColor: "#C4667A" }}
                 >
                   Hôm nay
                 </span>
+              )}
+              {stars.filter((s) => s.day === d).length > 0 && (
+                <a
+                  href="/calendar/important-dates"
+                  className="flex items-center gap-0.5 hover:opacity-80 ml-auto"
+                  title={stars.filter((s) => s.day === d).map((s) => s.label).join("\n")}
+                >
+                  {stars.filter((s) => s.day === d).map((s) => (
+                    <span key={s.id} className="text-base leading-none" aria-label={s.label}>{s.emoji}</span>
+                  ))}
+                </a>
               )}
             </div>
             <div className="grid grid-cols-2 gap-2">

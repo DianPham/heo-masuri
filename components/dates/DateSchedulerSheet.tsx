@@ -216,14 +216,14 @@ export function DateSchedulerSheet({
           <button
             onClick={submit}
             disabled={busy || loadingDefaults}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform"
             style={{ backgroundColor: "#C4667A", opacity: busy || loadingDefaults ? 0.5 : 1 }}
           >
             {busy ? "Đang tạo…" : "Tạo & lên outline"}
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-sm text-ink-soft"
+            className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform"
             style={{ border: "1px solid rgba(220,220,220,0.6)" }}
           >
             Hủy

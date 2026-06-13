@@ -86,7 +86,7 @@ export function WardrobeOwn({ initial }: { initial: VisibleWardrobeItem[] }) {
   return (
     <div>
       <label
-        className="block w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white text-center cursor-pointer"
+        className="block w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white text-center cursor-pointer active:scale-[0.98] transition-transform"
         style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)", opacity: uploading ? 0.5 : 1 }}
       >
         {uploading ? "Đang tải…" : "+ Thêm trang phục"}
@@ -196,12 +196,12 @@ function EditCard({
       <div className="flex gap-2">
         <button
           onClick={() => onSave(label.trim(), tagsStr.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean))}
-          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform"
           style={{ backgroundColor: "#C4667A" }}
         >
           Lưu
         </button>
-        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
+        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
           Hủy
         </button>
       </div>

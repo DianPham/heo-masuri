@@ -116,12 +116,12 @@ function SuggestSheet({
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white"
+            className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white active:scale-95 transition-transform"
             style={{ backgroundColor: "#C4667A", opacity: saving ? 0.5 : 1 }}
           >
             {saving ? "Đang gửi…" : "Gửi gợi ý"}
           </button>
-          <button onClick={() => !saving && onClose()} className="px-5 py-3 rounded-2xl text-sm text-ink-soft" style={{ border: "1px solid rgba(255,201,213,0.5)" }}>
+          <button onClick={() => !saving && onClose()} className="px-5 py-3 rounded-2xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(255,201,213,0.5)" }}>
             Hủy
           </button>
         </div>

@@ -82,7 +82,7 @@ export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
       ) : (
         <button
           onClick={() => setEditing("new")}
-          className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white"
+          className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
           style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)" }}
         >
           + Thêm ngày quan trọng
@@ -171,7 +171,7 @@ function Row({ d, occ, onClick }: { d: ImportantDate; occ: string; onClick: () =
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-left hover:bg-rose-50 transition-colors"
+      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white text-left hover:bg-rose-50 transition-all active:scale-[0.98]"
       style={{ border: "1px solid rgba(255,201,213,0.4)" }}
     >
       <span className="text-2xl" aria-hidden>{d.emoji ?? "⭐"}</span>
@@ -299,12 +299,12 @@ function DateForm({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform"
           style={{ backgroundColor: "#C4667A", opacity: saving ? 0.5 : 1 }}
         >
           {saving ? "Đang lưu…" : "Lưu"}
         </button>
-        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
+        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
           Hủy
         </button>
       </div>
