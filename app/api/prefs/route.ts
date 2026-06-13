@@ -35,6 +35,9 @@ export async function PUT(req: NextRequest) {
   const allowed = [
     "missing_enabled", "thinking_enabled", "hug_kiss_enabled",
     "angry_enabled", "quiet_start", "quiet_end",
+    // Phase 2 (blueprint §4.4 / §8.3)
+    "surprise_enabled", "gmgn_enabled", "date_planning_enabled",
+    "outfit_enabled", "important_date_enabled",
   ];
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const key of allowed) {

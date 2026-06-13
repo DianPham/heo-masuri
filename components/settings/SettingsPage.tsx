@@ -17,6 +17,12 @@ interface Prefs {
   thinking_enabled: boolean;
   hug_kiss_enabled: boolean;
   angry_enabled: boolean;
+  // Phase 2 additions (migration 010)
+  surprise_enabled?: boolean;
+  gmgn_enabled?: boolean;
+  date_planning_enabled?: boolean;
+  outfit_enabled?: boolean;
+  important_date_enabled?: boolean;
   quiet_start: string | null;
   quiet_end: string | null;
 }
@@ -365,6 +371,48 @@ export function SettingsPage({ who }: SettingsPageProps) {
                   )}
                 </Row>
               )}
+
+              {/* Phase 2 prefs (blueprint §8.3) */}
+              <Row label={t("surpriseDrops")} sublabel={t("surpriseDropsSub")}>
+                {prefsLoading ? <ToggleSkeleton /> : (
+                  <Toggle
+                    checked={prefs?.surprise_enabled ?? true}
+                    onChange={(v) => updatePref({ surprise_enabled: v })}
+                  />
+                )}
+              </Row>
+              <Row label={t("gmgn")} sublabel={t("gmgnSub")}>
+                {prefsLoading ? <ToggleSkeleton /> : (
+                  <Toggle
+                    checked={prefs?.gmgn_enabled ?? true}
+                    onChange={(v) => updatePref({ gmgn_enabled: v })}
+                  />
+                )}
+              </Row>
+              <Row label={t("datePlanning")} sublabel={t("datePlanningSub")}>
+                {prefsLoading ? <ToggleSkeleton /> : (
+                  <Toggle
+                    checked={prefs?.date_planning_enabled ?? true}
+                    onChange={(v) => updatePref({ date_planning_enabled: v })}
+                  />
+                )}
+              </Row>
+              <Row label={t("outfitSuggestions")} sublabel={t("outfitSuggestionsSub")}>
+                {prefsLoading ? <ToggleSkeleton /> : (
+                  <Toggle
+                    checked={prefs?.outfit_enabled ?? true}
+                    onChange={(v) => updatePref({ outfit_enabled: v })}
+                  />
+                )}
+              </Row>
+              <Row label={t("importantDates")} sublabel={t("importantDatesSub")}>
+                {prefsLoading ? <ToggleSkeleton /> : (
+                  <Toggle
+                    checked={prefs?.important_date_enabled ?? true}
+                    onChange={(v) => updatePref({ important_date_enabled: v })}
+                  />
+                )}
+              </Row>
 
               {/* Quiet hours */}
               <div className="px-6 py-5">
