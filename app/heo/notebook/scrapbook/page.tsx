@@ -152,7 +152,7 @@ export default async function ScrapbookPage() {
       </div>
 
       {/* ── Polaroid grid ─────────────────────────────────── */}
-      <div className="px-3">
+      <div className="px-3 max-w-5xl mx-auto">
         {groups.map(({ label, pages: groupPages }) => (
           <div key={label}>
             {label && (
@@ -163,8 +163,8 @@ export default async function ScrapbookPage() {
                 {label}
               </p>
             )}
-            {/* Two-column masonry-style grid */}
-            <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+            {/* Two-column on mobile, denser on desktop */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6">
               {groupPages.map((page, idx) => {
                 const { rot, stickerPair, tapeColor } = polaroidMeta(page.id, idx);
                 const bg = TOPIC_COLORS[page.topic] ?? "#FFE4EA";

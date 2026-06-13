@@ -149,6 +149,26 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
   const goForward = useCallback(() => goTo(current + 1, 1), [current, goTo]);
   const goBack = useCallback(() => goTo(current - 1, -1), [current, goTo]);
 
+  // Desktop keyboard nav (§8.1): ←/→ navigate, Space advances, Esc exits.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goBack();
+      } else if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault();
+        goForward();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setShowExitConfirm(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goBack, goForward]);
+
   // ── Pointer handlers (swipe-down detection only) ─────────────
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     pointerStart.current = { x: e.clientX, y: e.clientY };
@@ -266,8 +286,11 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
   return (
     <>
       {/* ── Full-screen overlay (above bottom nav) ────────────── */}
+      {/* At lg+ keep a phone-sized centered column (~420px) so the story doesn't
+         stretch absurdly wide. The outer dim layer is also rendered there. */}
+      <div className="hidden lg:block fixed inset-0 z-40" style={{ backgroundColor: "rgba(58,33,41,0.18)" }} />
       <div
-        className="fixed inset-0 z-50 overflow-hidden select-none"
+        className="fixed inset-0 z-50 overflow-hidden select-none lg:inset-y-6 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:w-[420px] lg:rounded-3xl lg:shadow-[0_10px_50px_rgba(0,0,0,0.25)] lg:border lg:border-rose-200/60"
         style={PAPER_BG}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
