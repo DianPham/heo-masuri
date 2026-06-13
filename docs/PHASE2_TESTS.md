@@ -522,4 +522,27 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 
 ---
 
+## CP12 — Phase 2D: long-press alternatives + notification audit + perf
+
+### §8.2 Long-press alternatives (audit, no new code)
+
+Every long-press affordance in the codebase already has a desktop alternative
+from prior CPs:
+
+- [x] Vocab card menu → right-click works: `onContextMenu` on WordCard at [app/heo/notebook/vocab/page.tsx:274](app/heo/notebook/vocab/page.tsx:274) calls the same `onLongPress` handler.
+- [x] Ask Masuri word trigger → right-click works: `handleContextMenu` in [components/notebook/TappableText.tsx:111](components/notebook/TappableText.tsx:111).
+- [x] Calendar cell detail → right-click context menu (CP4 round-2). Mobile keeps long-press; desktop never had one.
+- [x] Wardrobe items don't use long-press at all — single tap opens edit on both mobile and desktop. No alt needed.
+
+No `<TouchActionMenu>` umbrella component was needed; the per-component `onContextMenu` approach already covers every surface the blueprint lists.
+
+### §8.3 Notification pref UI
+
+- [ ] Open `/heo/settings` and `/masuri/settings` → Notifications section now has 5 new rows: Bất ngờ ngẫu nhiên, Chào sáng / chúc ngủ, Lên kế hoạch hẹn, Gợi ý outfit, Ngày quan trọng (manual UI check)
+- [ ] Toggle each row off, refresh → state persists (writes through PUT /api/prefs with the extended allowlist)
+- [ ] Trigger the corresponding push from a test scenario (e.g. send a scheduled date) → push respects the off state (sendPushIfAllowed already gates on these keys, unchanged)
+- [ ] Quiet hours still apply to all of them — no change to the gating logic
+
+---
+
 ## CP4+ — to be added as each phase lands
