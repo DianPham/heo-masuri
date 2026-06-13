@@ -36,13 +36,11 @@ export default async function WardrobePage() {
     relay<{ suggestions: OutfitSuggestion[] }>("/api/wardrobe/suggestions?status=pending", { suggestions: [] }),
   ]);
 
-  // Hydrate suggestion items by fetching partner items in one call
-  const { items: partnerItems } = await relay<{ items: VisibleWardrobeItem[] }>(
-    `/api/wardrobe/items?owner=${partner}`,
-    { items: [] }
-  );
+  // Pending suggestions show items that belong to the VIEWER — they're being
+  // suggested for the viewer to wear. So hydrate from the viewer's own list.
+  // (We still fetch partner items elsewhere when needed, but not here.)
   const itemMap: Record<string, VisibleWardrobeItem> = {};
-  for (const it of partnerItems) itemMap[it.id] = it;
+  for (const it of items) itemMap[it.id] = it;
   const suggestionsWithItems = suggestions.map((s) => ({ ...s, item: itemMap[s.wardrobe_item] }));
 
   return (

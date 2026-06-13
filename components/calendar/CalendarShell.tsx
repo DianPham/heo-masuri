@@ -183,7 +183,9 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
         return;
       }
-      if ((e.metaKey || e.ctrlKey) && (e.key === "n" || e.key === "N")) {
+      // Cmd/Ctrl + E for "new event" — Cmd+N is OS-reserved (open new window)
+      // and the browser eats it before preventDefault runs.
+      if ((e.metaKey || e.ctrlKey) && (e.key === "e" || e.key === "E")) {
         e.preventDefault();
         openNewEventSheet();
         return;
@@ -239,7 +241,7 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
                 backgroundColor: "#C4667A",
                 boxShadow: "0 4px 12px rgba(196,102,122,0.3)",
               }}
-              title="Sự kiện mới (⌘N)"
+              title="Sự kiện mới (⌘E)"
             >
               <span aria-hidden>+</span>
               <span>Sự kiện mới</span>
@@ -282,7 +284,9 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
                 >
                   <span className="text-base leading-none">{today.map((s) => s.emoji).join("")}</span>
                   <span className="text-[9px] text-ink-soft mt-0.5 truncate w-full">
-                    {today[0].label}
+                    {today.length === 1
+                      ? today[0].label
+                      : `${today[0].label} +${today.length - 1}`}
                   </span>
                 </a>
               );

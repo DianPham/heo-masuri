@@ -515,11 +515,14 @@ function RowFragment({
             onTouchEnd={onLongPressCancel}
             onTouchCancel={onLongPressCancel}
             onContextMenu={(e) => e.preventDefault()}
-            className="border-r border-b transition-colors active:opacity-70 relative overflow-hidden"
+            className="border-r border-b transition-colors active:opacity-70 relative overflow-hidden select-none"
             style={{
               borderColor: "rgba(255,201,213,0.25)",
               backgroundColor: "transparent",
               cursor: isReadonly ? "default" : "pointer",
+              WebkitUserSelect: "none",
+              WebkitTouchCallout: "none",
+              userSelect: "none",
             }}
             aria-label={isBusyCell ? "Bận" : "Trống"}
           >

@@ -207,10 +207,13 @@ function DateForm({
   const [saving, setSaving] = useState(false);
 
   function handleKindChange(k: ImportantDate["kind"]) {
+    const prevDefault = defaultEmojiFor(kind);
     setKind(k);
-    // Auto-defaults per blueprint §6.7
+    // Auto-defaults per blueprint §6.7. Overwrite the emoji either when blank
+    // OR when it still matches the previous kind's default — that way the user
+    // can switch kinds and not be stuck with a stale heart on a birthday.
     setRecurrence(defaultRecurrenceFor(k));
-    if (!emoji.trim()) setEmoji(defaultEmojiFor(k));
+    if (!emoji.trim() || emoji.trim() === prevDefault) setEmoji(defaultEmojiFor(k));
   }
 
   async function handleSave() {

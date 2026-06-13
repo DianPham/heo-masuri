@@ -201,11 +201,18 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     return () => window.removeEventListener("mouseup", onUp);
   }, [drag, mondayVnMs, slotMinutes]);
 
-  const onCellMouseDown = useCallback((day: number, row: number, e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    setDrag({ day, startRow: row, endRow: row });
-    didDragRef.current = false;
-  }, []);
+  const onCellMouseDown = useCallback(
+    (day: number, row: number, e: React.MouseEvent) => {
+      if (e.button !== 0) return;
+      // If the cell already has an own event, let the click fall through to
+      // handleCellTap (toggle off) — don't start a drag that would overlap.
+      const cell = grid[day]?.[row];
+      if (cell && cell.ownerEventIds.length > 0) return;
+      setDrag({ day, startRow: row, endRow: row });
+      didDragRef.current = false;
+    },
+    [grid]
+  );
 
   const onCellMouseEnter = useCallback((day: number, row: number) => {
     setDrag((prev) => {
@@ -262,8 +269,8 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
           prev.map((ev) => {
             if (ev.id !== r.eventId) return ev;
             const startMs = new Date(ev.start_at).getTime();
-            // Min duration = 1 slot
-            if (newEndMs <= startMs + slotMinutes * 60_000) return ev;
+            // Min duration = 1 slot (strictly less prevents shrinking below).
+            if (newEndMs < startMs + slotMinutes * 60_000) return ev;
             return { ...ev, end_at: new Date(newEndMs).toISOString() };
           })
         );
@@ -528,7 +535,15 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
           const res = await fetch("/api/calendar/events", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ start_at: tmp.start_at, end_at: tmp.end_at, source: event.source }),
+            body: JSON.stringify({
+              start_at: tmp.start_at,
+              end_at: tmp.end_at,
+              source: event.source,
+              title: event.title,
+              note: event.note,
+              emoji: event.emoji,
+              share_details: event.share_details,
+            }),
           });
           if (res.ok) {
             const data = await res.json();

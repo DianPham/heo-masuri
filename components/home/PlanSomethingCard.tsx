@@ -23,7 +23,7 @@ export default async function PlanSomethingCard() {
   return (
     <Link
       href="/dates/plan"
-      className="w-full max-w-xs flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm text-left hover:bg-rose-50 transition-colors"
+      className="w-full max-w-xs flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm text-left hover:bg-rose-50 transition-all duration-150 active:scale-[0.98]"
       style={{ border: "1px dashed rgba(196,102,122,0.5)", boxShadow: "0 4px 12px rgba(196,102,122,0.08)" }}
     >
       <span className="text-2xl" aria-hidden>💕</span>

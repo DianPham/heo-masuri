@@ -379,11 +379,14 @@ export function WeekBlockView({ monday, events, viewerId, onChange }: Props) {
                     onTouchEnd={cancelLongPress}
                     onTouchCancel={cancelLongPress}
                     onContextMenu={(e) => e.preventDefault()}
-                    className="rounded-xl px-3 py-3 text-left transition-colors active:opacity-70"
+                    className="rounded-xl px-3 py-3 text-left transition-colors active:opacity-70 select-none"
                     style={{
                       backgroundColor: bg,
                       border: "1px solid rgba(220,220,220,0.4)",
                       cursor: !ownerBusy && partnerBusy ? "default" : "pointer",
+                      WebkitUserSelect: "none",
+                      WebkitTouchCallout: "none",
+                      userSelect: "none",
                     }}
                   >
                     <p className="text-xs font-semibold text-ink">{b.label}</p>

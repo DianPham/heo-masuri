@@ -52,6 +52,26 @@ export function DateSchedulerSheet({
   const router = useRouter();
   const [start, setStart] = useState<string>(defaultStart ? isoToLocal(defaultStart) : "");
   const [end, setEnd] = useState<string>(defaultEnd ? isoToLocal(defaultEnd) : "");
+
+  // Preserve the duration when the user edits the start: shift end by the same
+  // delta so they don't end up with end < start. Default duration: 2h.
+  function changeStart(next: string) {
+    const prevStartMs = start ? new Date(start).getTime() : NaN;
+    const prevEndMs = end ? new Date(end).getTime() : NaN;
+    const duration =
+      Number.isFinite(prevStartMs) && Number.isFinite(prevEndMs) && prevEndMs > prevStartMs
+        ? prevEndMs - prevStartMs
+        : 2 * 3_600_000;
+    setStart(next);
+    const nextStartMs = new Date(next).getTime();
+    if (Number.isFinite(nextStartMs)) {
+      const nextEnd = new Date(nextStartMs + duration);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      setEnd(
+        `${nextEnd.getFullYear()}-${pad(nextEnd.getMonth() + 1)}-${pad(nextEnd.getDate())}T${pad(nextEnd.getHours())}:${pad(nextEnd.getMinutes())}`
+      );
+    }
+  }
   const [title, setTitle] = useState(defaultTitle ?? "");
   const [dressCode, setDressCode] = useState("");
   const [dressEmoji, setDressEmoji] = useState("");
@@ -140,7 +160,7 @@ export function DateSchedulerSheet({
             <input
               type="datetime-local"
               value={start}
-              onChange={(e) => setStart(e.target.value)}
+              onChange={(e) => changeStart(e.target.value)}
               disabled={loadingDefaults}
               className="w-full text-sm rounded-xl px-3 py-2 outline-none"
               style={{ border: "1px solid rgba(220,220,220,0.6)" }}

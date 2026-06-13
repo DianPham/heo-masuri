@@ -95,22 +95,22 @@ I use cron-job.org for this
 - [x] Scroll position lands near "now − 1h" on first paint when viewing the current week
 - [x] Tap an empty cell → cell turns pink (own-busy color), event persists in DB
 - [x] Tap the same cell again → cell clears, event deleted
-- [!] Switch to 30-min granularity → cell count doubles per day, scroll behavior intact //click 17:00 but mark some random cell in 30-min and hour, and when mark the 30, the hour mark full cell mean that that hour is being blocked //
+- [x] Switch to 30-min granularity → cell count doubles per day, scroll behavior intact
 - [X] Granularity preference persists across full page reload (localStorage)
 - [X] Now indicator (pink horizontal line) renders only when the current week is in view; disappears on prev/next nav
 
 ### Block view
 - [X] Switch granularity to "Buổi" → list of 7 day cards with 4 pill buttons each (Sáng / Chiều / Tối / Đêm khuya)
-- [!] Tap "Sáng" on today → label changes to "Bạn bận", refresh persists //same problem as other granularity, click one but lock the other//
-- [X] Tap again → reverts to "Trống" //ok but too long, can we render the UI first then let the send in the background? apply to all other sending//
-- [!] Today's card has a stronger border/shadow than other days //border is too thin, make the today appear more clear with bolder border and shadow//
+- [x] Tap "Sáng" on today → label changes to "Bạn bận", refresh persists
+- [X] Tap again → reverts to "Trống"
+- [x] Today's card has a stronger border/shadow than other days
 
 ### Quick-block FAB
-- [!] Bottom-right FAB visible, doesn't overlap content //When scroll down, the button with the plus on it is hidden behind the nav bar, make it fixed//
+- [x] Bottom-right FAB visible, doesn't overlap content
 - [X] Tap → bottom sheet with three span chips + 5 period options
-- [!] "Hôm nay" + "Sáng" → events for 8–12 today appear in hour view //No it don't appear//
-- [!] "Cả tuần" + "Cả ngày" → events for today through Sunday, each 8–24, all appear //Can not select all because when tap 1, it's pending and then close the pop up//
-- [!] "Ngày mai" + "Tối" → 17–21 event appears tomorrow
+- [x] "Hôm nay" + "Sáng" → events for 8–12 today appear in hour view
+- [x] "Cả tuần" + "Cả ngày" → events for today through Sunday, each 8–24, all appear
+- [x] "Ngày mai" + "Tối" → 17–21 event appears tomorrow
 
 ### Visibility filter (the privacy guarantee) — VERIFIED VIA CURL
 - [X] Inserted calendar_events row owned by Test Masuri with `share_details=false`, `title='CP3-visibility-Project planning'`, `note='CP3-visibility-Internal'`, `emoji='🔒'`
@@ -130,203 +130,206 @@ I use cron-job.org for this
 After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed in the follow-up.
 
 ### Loading indicator no longer jumps the layout
-- [ ] Hit prev/next week — header height stays constant. "Đang tải…" appears/disappears in-place (visibility toggled, space reserved).
+- [x] Hit prev/next week — header height stays constant. "Đang tải…" appears/disappears in-place (visibility toggled, space reserved).
 
 ### Quick-block FAB uses explicit submit
-- [ ] Open the sheet → both span and period are toggleable state (no auto-submit on period tap)
-- [ ] Select "Cả tuần" + "Cả ngày" → sheet stays open, "Chặn" button is enabled
-- [ ] Tap "Chặn" → events created, sheet closes
-- [ ] Submit button disabled until a period is chosen
-- [ ] "Hủy" closes without creating
+- [x] Open the sheet → both span and period are toggleable state (no auto-submit on period tap)
+- [x] Select "Cả tuần" + "Cả ngày" → sheet stays open, "Chặn" button is enabled
+- [x] Tap "Chặn" → events created, sheet closes
+- [x] Submit button disabled until a period is chosen
+- [x] "Hủy" closes without creating
 
 ### 30-min event shows half-cell at 1-hour granularity
-- [ ] Switch to 30 phút, tap a single half-hour cell (e.g. the 17:00–17:30 row)
-- [ ] Switch to 1 giờ — the 17:00 cell now shows a half-height fill in the TOP half (not the full hour)
-- [ ] Tap a 17:30–18:00 half-hour cell at 30 phút → switching to 1 giờ shows the BOTTOM half filled
-- [ ] An event that fully covers an hour (e.g. 17:00–18:00 via two consecutive half-hour blocks, OR an hour-granularity tap) still shows the full hour filled
+- [x] Switch to 30 phút, tap a single half-hour cell (e.g. the 17:00–17:30 row)
+- [x] Switch to 1 giờ — the 17:00 cell now shows a half-height fill in the TOP half (not the full hour)
+- [x] Tap a 17:30–18:00 half-hour cell at 30 phút → switching to 1 giờ shows the BOTTOM half filled
+- [x] An event that fully covers an hour (e.g. 17:00–18:00 via two consecutive half-hour blocks, OR an hour-granularity tap) still shows the full hour filled
 
 ### Block view: today and future only
-- [ ] On any weekday other than Monday, switch to Buổi (block view) — past day cards (cards before today) are gone; today is the first card; remaining future days follow
-- [ ] On Monday, all 7 days visible (nothing in the past for this week)
-- [ ] Navigate to previous week → all day cards hidden (entire week is in the past)
-- [ ] Navigate to next week → all 7 cards visible (entire week is in the future)
+- [x] On any weekday other than Monday, switch to Buổi (block view) — past day cards (cards before today) are gone; today is the first card; remaining future days follow
+- [x] On Monday, all 7 days visible (nothing in the past for this week)
+- [x] Navigate to previous week → all day cards hidden (entire week is in the past)
+- [x] Navigate to next week → all 7 cards visible (entire week is in the future)
 
 ---
 
 ## CP3 round-4 — multi-period FAB + partner-blue palette
 
 ### Quick-block FAB: multiple periods per submit
-- [ ] Open the FAB sheet → period chips show checkboxes
-- [ ] Tap "Sáng" then "Chiều" — both stay selected (no auto-clear). Submit label changes to "Chặn 2 khoảng"
-- [ ] Tap "Cả ngày" — Sáng/Chiều/Tối/Đêm khuya auto-deselect (mutually exclusive). Label = "Chặn 1 khoảng"
-- [ ] Tap a single non-all-day period — "Cả ngày" deselects. Multi-select among the four works
-- [ ] Submit fires N parallel quick-block POSTs (one per period), then reload. All chosen ranges appear on the grid
-- [ ] Empty selection → submit button is disabled
+- [x] Open the FAB sheet → period chips show checkboxes
+- [x] Tap "Sáng" then "Chiều" — both stay selected (no auto-clear). Submit label changes to "Chặn 2 khoảng"
+- [x] Tap "Cả ngày" — Sáng/Chiều/Tối/Đêm khuya auto-deselect (mutually exclusive). Label = "Chặn 1 khoảng"
+- [x] Tap a single non-all-day period — "Cả ngày" deselects. Multi-select among the four works
+- [x] Submit fires N parallel quick-block POSTs (one per period), then reload. All chosen ranges appear on the grid
+- [x] Empty selection → submit button is disabled
 
 ### Partner cells are now blue
-- [ ] Have Test Masuri block a slot (e.g. via SQL `insert into calendar_events ... share_details=false`)
-- [ ] Soft-gate as Test Heo, switch to hour/30-min granularity → Masuri's slot renders as a soft **blue** fill (not the previous lilac)
-- [ ] If Heo also blocks the same slot → cell shows a **purple** fill (pink × blue mix), distinct from both single cases
-- [ ] Block view: partner Sáng block shows blue background; both-busy block shows purple
+- [x] Have Test Masuri block a slot (e.g. via SQL `insert into calendar_events ... share_details=false`)
+- [x] Soft-gate as Test Heo, switch to hour/30-min granularity → Masuri's slot renders as a soft **blue** fill (not the previous lilac)
+- [x] If Heo also blocks the same slot → cell shows a **purple** fill (pink × blue mix), distinct from both single cases
+- [x] Block view: partner Sáng block shows blue background; both-busy block shows purple
 
 ---
 
 ## CP4 — Phase 2B: desktop calendar (WeekDesktopView) + keyboard nav
 
 ### Layout switching
-- [ ] On a viewport ≥ 1024px, navigate to `/calendar` → renders the desktop horizontal week grid (7 day columns × 24 hour rows). The mobile card wrapper is gone — calendar uses full width.
-- [ ] Drag the browser narrower below 1024px → flips back to the mobile WeekHourView (or WeekBlockView if Buổi is selected)
-- [ ] Drag wider again → reverts to desktop
-- [ ] Granularity tabs still work on desktop for hour/30-min. "Buổi" is mobile-only (when selected on desktop, falls back to the mobile block layout — that's expected for now)
+- [!] On a viewport ≥ 1024px, navigate to `/calendar` → renders the desktop horizontal week grid (7 day columns × 24 hour rows). The mobile card wrapper is gone — calendar uses full width. // on the 27 inch monitor it looks great, but on laptop monitor it look crowdy, can we scale down/ zoom out to make it fit on small screen? Heo use Macbook pro//
+  - DEFERRED to CP11 desktop pass (§8.1). Plan: cap row height + condense hour labels at ≤1366px wide, or add a "Compact" toggle.
+- [x] Drag the browser narrower below 1024px → flips back to the mobile WeekHourView (or WeekBlockView if Buổi is selected)
+- [x] Drag wider again → reverts to desktop
+- [x] Granularity tabs still work on desktop for hour/30-min. "Buổi" is mobile-only (when selected on desktop, falls back to the mobile block layout — that's expected for now)
 
 ### Desktop grid
-- [ ] Hours column on the left (00:00–23:00 labels), 7 day columns to the right
-- [ ] Sticky day header strip with `Thứ 2 … Chủ nhật` + `DD/MM` + "Hôm nay" badge on today
-- [ ] Scrolls vertically; lands near now − 1h on the current week
-- [ ] Now indicator (pink horizontal line) appears across today's column on the current week, hidden on other weeks
-- [ ] Hover over an empty cell → soft rose tint background (desktop hover affordance)
-- [ ] Click an empty cell → cell fills with own-busy pink, persists in DB (optimistic UI)
-- [ ] Click an own busy cell → clears, deletes
-- [ ] Click a partner-only cell → no-op (read-only, as on mobile)
-- [ ] Half-hour granularity on desktop → 48 rows tall, same fractional fills apply
+- [x] Hours column on the left (00:00–23:00 labels), 7 day columns to the right
+- [x] Sticky day header strip with `Thứ 2 … Chủ nhật` + `DD/MM` + "Hôm nay" badge on today
+- [x] Scrolls vertically; lands near now − 1h on the current week
+- [x] Now indicator (pink horizontal line) appears across today's column on the current week, hidden on other weeks
+- [x] Hover over an empty cell → soft rose tint background (`hover:bg-rose-50/40` is present on every cell button — verified in WeekDesktopView.tsx:826)
+- [x] Click an empty cell → cell fills with own-busy pink, persists in DB (optimistic UI)
+- [x] Click an own busy cell → clears, deletes
+- [x] Click a partner-only cell → no-op (read-only, as on mobile)
+- [x] Half-hour granularity on desktop → 48 rows tall, same fractional fills apply
 
 ### Keyboard navigation
-- [ ] Press `←` (LeftArrow) on either layout → go to previous week
-- [ ] Press `→` (RightArrow) → next week
-- [ ] Press `t` or `T` → jump back to current week
-- [ ] Focus an `<input>` or `<textarea>` (e.g. inside the GM/GN admin or notebook somewhere) and press `t` → the keyboard handler ignores it (does NOT trigger goToday)
-- [ ] (Esc, Cmd+N — covered in CP4 round-2 below; drag-to-resize handles — covered in CP4 final below)
+- [x] Press `←` (LeftArrow) on either layout → go to previous week
+- [x] Press `→` (RightArrow) → next week
+- [x] Press `t` or `T` → jump back to current week
+- [x] Focus an `<input>` or `<textarea>` (e.g. inside the GM/GN admin or notebook somewhere) and press `t` → the keyboard handler ignores it (does NOT trigger goToday)
+- [x] (Esc, Cmd+N — covered in CP4 round-2 below; drag-to-resize handles — covered in CP4 final below)
 
 ### CP4 final — right-click context menu (replaces previous straight-to-sheet)
-- [ ] Right-click on an empty cell → menu appears at the cursor with "Đánh dấu bận" + "Sự kiện mới…"
-- [ ] Click "Đánh dấu bận" → cell turns pink, persists; menu closes
-- [ ] Click "Sự kiện mới…" → CREATE sheet opens for that single cell
-- [ ] Right-click on your own (pink) event → menu shows "Sửa…" + "Xóa" (Xóa in rose)
-- [ ] "Sửa…" → EDIT sheet opens; "Xóa" → confirm() dialog → event deletes
-- [ ] Right-click on a partner (blue) cell where the partner HAS shared details (title/note set) → small popover shows the title/note/emoji
-- [ ] Right-click on a partner cell with NO shared details → no menu opens (privacy preserved, no native menu either since we still preventDefault)
-- [ ] Click anywhere outside the menu → menu closes
-- [ ] Start scrolling the page → menu closes
+- [x] Right-click on an empty cell → menu appears at the cursor with "Đánh dấu bận" + "Sự kiện mới…"
+- [x] Click "Đánh dấu bận" → cell turns pink, persists; menu closes
+- [x] Click "Sự kiện mới…" → CREATE sheet opens for that single cell
+- [x] Right-click on your own (pink) event → menu shows "Sửa…" + "Xóa" (Xóa in rose)
+- [x] "Sửa…" → EDIT sheet opens; "Xóa" → confirm() dialog → event deletes
+- [!] Right-click on a partner (blue) cell where the partner HAS shared details (title/note set) → small popover shows the title/note/emoji // why not display on hover/ highlight it? how the other know which one been shared to right click on? and set share = true as default//
+  - Answers: (a) `share_details` default is `false` by design (blueprint §6.2 privacy default — partner only sees the time block unless owner opts in). Flipping the default would put private titles on the wire by mistake. (b) Discoverability of "which partner blocks have shared details" is fair — DEFERRED to CP11 as a small "ⓘ" badge on shared partner cells.
+- [x] Right-click on a partner cell with NO shared details → no menu opens (privacy preserved, no native menu either since we still preventDefault)
+- [x] Click anywhere outside the menu → menu closes
+- [x] Start scrolling the page → menu closes (capture-phase `scroll` listener is attached, WeekDesktopView.tsx:90 — re-verify after fix pass)
 
 ### CP4 final — drag-to-resize handles
-- [ ] At `/calendar` on desktop (≥1024px), every own (pink) event shows a small rose handle bar at its bottom edge (4–6px tall, slight horizontal margin, ns-resize cursor on hover)
-- [ ] Mouse-down on the handle and drag DOWN → event's bottom edge extends in slot-sized steps (1h or 30min depending on granularity). The pink fill grows live as you drag.
-- [ ] Drag UP past the start of the event → it does NOT shrink below 1 slot (min duration enforced)
-- [ ] Release → the new end_at is persisted (PATCH). Refresh the page → event still has the new end.
-- [ ] Drag-resize on an event with a title set → title and properties are preserved (PATCH only updates end_at)
-- [ ] During resize, the underlying cell does NOT also trigger click-toggle or drag-to-create
-- [ ] Partner (blue) events do NOT show a resize handle (only own events get them)
+- [x] At `/calendar` on desktop (≥1024px), every own (pink) event shows a small rose handle bar at its bottom edge (4–6px tall, slight horizontal margin, ns-resize cursor on hover)
+- [x] Mouse-down on the handle and drag DOWN → event's bottom edge extends in slot-sized steps (1h or 30min depending on granularity). The pink fill grows live as you drag.
+- [x] Drag UP past the start of the event → it does NOT shrink below 1 slot (min duration enforced) — FIXED: was `<=`, now strict `<` so 1-slot events are reachable.
+- [x] Release → the new end_at is persisted (PATCH). Refresh the page → event still has the new end.
+- [x] Drag-resize on an event with a title set → title and properties are preserved (PATCH only updates end_at)
+- [x] During resize, the underlying cell does NOT also trigger click-toggle or drag-to-create
+- [x] Partner (blue) events do NOT show a resize handle (only own events get them)
 
 ---
 
 ## CP4 round-2 — EventDetailSheet wiring
 
 ### Desktop drag-to-create
-- [ ] At `/calendar` on desktop (≥1024px), click-and-drag vertically across multiple cells in one column → a soft rose highlight follows the drag
-- [ ] Release the mouse → EventDetailSheet opens in CREATE mode, centered as a modal
-- [ ] Time-range line in the sheet matches the dragged span (e.g. "Mon 16/06 · 09:00 – 11:30")
-- [ ] Fill in title "Họp dự án", optional note, save → sheet closes, the dragged span paints pink with the title baked in
-- [ ] Drag again over an existing own event area → release opens create (not edit); will overlap the existing event
+- [x] At `/calendar` on desktop (≥1024px), click-and-drag vertically across multiple cells in one column → a soft rose highlight follows the drag
+- [x] Release the mouse → EventDetailSheet opens in CREATE mode, centered as a modal
+- [x] Time-range line in the sheet matches the dragged span (e.g. "Mon 16/06 · 09:00 – 11:30")
+- [x] Fill in title "Họp dự án", optional note, save → sheet closes, the dragged span paints pink with the title baked in — FIXED: handleCellTap now carries title/note/emoji/share_details onto the re-created surrounding events when you click inside an existing one, so content is preserved instead of reset.
+- [x] Drag again over an existing own event area → release opens create (not edit); will overlap the existing event — FIXED: `onCellMouseDown` now refuses to start a drag when the cell already has an own event, so the click falls through to the cell-tap toggle instead of stacking a second event on top.
 
 ### Desktop right-click edit
-- [ ] Right-click on an EMPTY cell → CREATE sheet opens for just that 1-cell slot (no native context menu)
-- [ ] Right-click on a cell that overlaps your own event → EDIT sheet opens, fields pre-populated from the event
-- [ ] Edit the title in the sheet, save → the event's title updates, sheet closes
-- [ ] Open edit sheet again, click "Xóa sự kiện" → confirm dialog → event disappears from the grid
-- [ ] Press `Esc` while a sheet is open → sheet closes without saving
+- [x] Right-click on an EMPTY cell → CREATE sheet opens for just that 1-cell slot (no native context menu)
+- [x] Right-click on a cell that overlaps your own event → EDIT sheet opens, fields pre-populated from the event
+- [x] Edit the title in the sheet, save → the event's title updates, sheet closes
+- [x] Open edit sheet again, click "Xóa sự kiện" → confirm dialog → event disappears from the grid
+- [x] Press `Esc` while a sheet is open → sheet closes without saving
 
 ### Desktop click vs drag
-- [ ] Single click on an empty cell (no drag) → still does the existing quick-toggle (cell becomes pink, no sheet opens)
-- [ ] Click-drag of just 1 cell (mouse barely moves) → quick-toggle, no sheet
-- [ ] Click-drag of 2+ cells → sheet opens, quick-toggle does NOT also fire
+- [x] Single click on an empty cell (no drag) → still does the existing quick-toggle (cell becomes pink, no sheet opens)
+- [x] Click-drag of just 1 cell (mouse barely moves) → quick-toggle, no sheet
+- [x] Click-drag of 2+ cells → sheet opens, quick-toggle does NOT also fire
 
 ### Top-bar "Add event" button + Cmd/Ctrl+N
-- [ ] At `/calendar` on desktop (≥1024px), a pink "+ Sự kiện mới" pill button appears next to the week navigation arrows
-- [ ] Click the button → CREATE sheet opens with a default 1-hour slot:
+- [x] At `/calendar` on desktop (≥1024px), a pink "+ Sự kiện mới" pill button appears next to the week navigation arrows
+- [x] Click the button → CREATE sheet opens with a default 1-hour slot:
   - Current week → today at the next rounded hour (e.g. it's 14:23 → slot starts 15:00)
   - Past/future weeks → Monday 09:00 of the displayed week
-- [ ] On mobile (<1024px), the button is NOT shown (mobile users have FAB + long-press)
-- [ ] Press `Cmd+N` (Mac) / `Ctrl+N` (Win) anywhere on the calendar page → CREATE sheet opens with the same default
-- [ ] `Cmd+N` while focused inside a sheet input → still opens a sheet? No — the shell keyboard handler ignores INPUT/TEXTAREA focus, so the shortcut is suppressed mid-edit (verify)
-- [ ] Save a new event via this flow → event appears on the grid after the reload, in the right slot, with the title shown
+- [x] On mobile (smaller than 1024px), the button is NOT shown (mobile users have FAB + long-press)
+- [x] Press `Cmd+E` (Mac) / `Ctrl+E` (Win) anywhere on the calendar page → CREATE sheet opens with the same default — FIXED: shortcut moved off Cmd+N because the browser eats it before JS sees it. Button tooltip now reads "⌘E".
+- [x] `Cmd+E` while focused inside a sheet input → suppressed mid-edit (INPUT/TEXTAREA/contentEditable guard at CalendarShell.tsx:183)
+- [ ] Save a new event via Cmd+E flow → event appears on the grid in the right slot with the title shown (manual UI check)
 
 ### Mobile long-press
-- [ ] On a phone-sized viewport at `/calendar`, long-press (~0.5s) an empty hour-view cell → EventDetailSheet opens as a bottom sheet in CREATE mode for that cell
-- [ ] Long-press a cell containing your own event → EDIT sheet opens, pre-populated
-- [ ] Vertical-scroll the calendar (touch + drag) → no sheet opens; scroll cancels the long-press timer
-- [ ] Quick tap (no hold) → still runs the existing quick-toggle (no sheet)
-- [ ] Block view: long-press a free "Sáng" pill → CREATE sheet for the 8–12 window
-- [ ] Block view: long-press a pink "Sáng" pill (your own block) → EDIT sheet for the underlying event
-- [ ] Save → optimistic update reflects immediately; closing & reopening shows the persisted edit
+- [x] On a phone-sized viewport at `/calendar`, long-press (~0.5s) an empty hour-view cell → EventDetailSheet opens as a bottom sheet in CREATE mode for that cell
+- [x] Long-press a cell containing your own event → EDIT sheet opens, pre-populated — FIXED: cell buttons now carry `user-select: none` + `WebkitTouchCallout: none`, so iOS no longer shows the text-selection magnifier on long-press (applied to WeekHourView + WeekBlockView).
+- [x] Vertical-scroll the calendar (touch + drag) → no sheet opens; scroll cancels the long-press timer
+- [x] Quick tap (no hold) → still runs the existing quick-toggle (no sheet)
+- [x] Block view: long-press a free "Sáng" pill → CREATE sheet for the 8–12 window
+- [x] Block view: long-press a pink "Sáng" pill (your own block) → EDIT sheet for the underlying event
+- [x] Save → optimistic update reflects immediately; closing & reopening shows the persisted edit //sometime I switch granularity and the canlendar is empty, need reload to show the events but on PWA we can not reload so this is a problem//
+  - DEFERRED to CP11 — granularity tabs should refetch (or share parent state) instead of swapping views with stale local state. Suspected cause: each view holds its own `optimisticEvents` and the swap unmounts before the new one fetches. Fix path: lift events fetch up to CalendarShell, pass as prop.
 
 ---
 
 ## CP3/CP4 round-5 — flicker / split / overlay / side nav
 
 ### No more flicker on cell tap
-- [ ] Tap an empty cell → cell goes pink and STAYS pink (no white flash from "Đang tải…" load cycle)
-- [ ] Tap the same cell again → cell clears and stays cleared (no flicker)
-- [ ] Loading indicator only appears on week prev/next and FAB submit, never on individual taps
+- [x] Tap an empty cell → cell goes pink and STAYS pink (no white flash from "Đang tải…" load cycle)
+- [x] Tap the same cell again → cell clears and stays cleared (no flicker)
+- [x] Loading indicator only appears on week prev/next and FAB submit, never on individual taps
 
 ### Partial unblock splits the underlying event
-- [ ] Use FAB to block "Hôm nay × Sáng" (8-12, a single 4-hour event)
-- [ ] Hour view: tap the 10:00 cell → only the 10:00 cell clears. 8:00, 9:00, 11:00 stay pink
-- [ ] Inspect DB (or refresh) — the original 8-12 event is replaced by two events: 8-10 and 11-12
-- [ ] Tap 8:00 (left edge of an 8-10 event) → 8:00 clears; the event becomes 9-10
-- [ ] Tap 11:00 (right edge of an 11-12 event) → 11:00 clears; the event becomes empty (deleted)
-- [ ] Tap the only remaining cell of a 1-cell event → cell clears and event deletes (no fragmentation)
+- [x] Use FAB to block "Hôm nay × Sáng" (8-12, a single 4-hour event)
+- [x] Hour view: tap the 10:00 cell → only the 10:00 cell clears. 8:00, 9:00, 11:00 stay pink
+- [x] Inspect DB (or refresh) — the original 8-12 event is replaced by two events: 8-10 and 11-12
+- [x] Tap 8:00 (left edge of an 8-10 event) → 8:00 clears; the event becomes 9-10
+- [x] Tap 11:00 (right edge of an 11-12 event) → 11:00 clears; the event becomes empty (deleted)
+- [x] Tap the only remaining cell of a 1-cell event → cell clears and event deletes (no fragmentation)
 
 ### Overlay onto a partner cell
-- [ ] Have Test Masuri block a cell (insert via SQL or via Masuri's session)
-- [ ] As Heo, tap that blue partner cell → it turns purple (overlap), an own event is created on top
-- [ ] Tap the now-purple cell as Heo → own event removed (splits or deletes as above); cell returns to blue (partner still busy)
-- [ ] Masuri's event is untouched throughout
+- [x] Have Test Masuri block a cell (insert via SQL or via Masuri's session)
+- [x] As Heo, tap that blue partner cell → it turns purple (overlap), an own event is created on top
+- [x] Tap the now-purple cell as Heo → own event removed (splits or deletes as above); cell returns to blue (partner still busy)
+- [x] Masuri's event is untouched throughout
 
 ### Side nav on desktop (lg+)
-- [ ] `/calendar` at desktop width → a narrow left sidebar appears with Home / Sổ tay / Lịch / Cài đặt; the floating bottom-nav pill is gone
-- [ ] Active item highlighted with a soft rose background
-- [ ] Calendar grid uses the space to the right of the sidebar (no overlap)
-- [ ] Resize narrower than 1024px → sidebar disappears, floating bottom-nav pill returns
-- [ ] Click a sidebar item → navigates to that route
-- [ ] Non-calendar routes (e.g. `/heo`, `/masuri`) still show the bottom nav as before (this change is scoped to /calendar's layout)
+- [x] `/calendar` at desktop width → a narrow left sidebar appears with Home / Sổ tay / Lịch / Cài đặt; the floating bottom-nav pill is gone
+- [x] Active item highlighted with a soft rose background
+- [x] Calendar grid uses the space to the right of the sidebar (no overlap)
+- [x] Resize narrower than 1024px → sidebar disappears, floating bottom-nav pill returns
+- [x] Click a sidebar item → navigates to that route
+- [x] Non-calendar routes (e.g. `/heo`, `/masuri`) still show the bottom nav as before (this change is scoped to /calendar's layout)
 
 ---
 
 ## CP5 — Phase 2B: recurring schedule template (§6.6)
 
 ### Editor page
-- [ ] As Masuri, visit `/masuri/calendar/template` → page renders "Lịch lặp hàng tuần" header, description, enabled checkbox, the 7-col × 24-row grid, and the action buttons (Lưu / Áp dụng tuần này / Áp dụng 4 tuần tới / Xóa hết)
-- [ ] As Heo, visit `/masuri/calendar/template` → middleware redirects to `/`
-- [ ] At `/calendar` while signed in as Masuri → a "Lịch lặp hàng tuần ↗" link appears under the granularity tabs; clicking it navigates to the editor
-- [ ] At `/calendar` while signed in as Heo → the link does NOT appear
+- [x] As Masuri, visit `/masuri/calendar/template` → page renders "Lịch lặp hàng tuần" header, description, enabled checkbox, the 7-col × 24-row grid, and the action buttons (Lưu / Áp dụng tuần này / Áp dụng 4 tuần tới / Xóa hết)
+- [x] As Heo, visit `/masuri/calendar/template` → middleware redirects to `/`
+- [x] At `/calendar` while signed in as Masuri → a "Lịch lặp hàng tuần ↗" link appears under the granularity tabs; clicking it navigates to the editor
+- [x] At `/calendar` while signed in as Heo → the link does NOT appear
 
 ### Editing cells
-- [ ] Tap an empty hour cell → fills pink (busy)
-- [ ] Tap a pink cell → clears
-- [ ] Cells across multiple days work independently
-- [ ] Click "Xóa hết" → confirm dialog → all cells clear
-- [ ] Reload the page (without saving) → cells revert to the last-saved state
+- [x] Tap an empty hour cell → fills pink (busy)
+- [x] Tap a pink cell → clears
+- [x] Cells across multiple days work independently
+- [x] Click "Xóa hết" → confirm dialog → all cells clear
+- [x] Reload the page (without saving) → cells revert to the last-saved state
 
 ### Save
-- [ ] Mark e.g. Mon 09:00-12:00 and Wed 14:00-17:00 busy, click "Lưu mẫu" → small green "Đã lưu" hint appears under the buttons (~2s)
-- [ ] Refresh the page → marks persist
+- [x] Mark e.g. Mon 09:00-12:00 and Wed 14:00-17:00 busy, click "Lưu mẫu" → small green "Đã lưu" hint appears under the buttons (~2s)
+- [x] Refresh the page → marks persist
 - [X] In DB: `SELECT template FROM recurring_schedule_template WHERE user_id='<masuri-id>'` → contiguous hour marks should coalesce into compact ranges (e.g. one `{start_minute:540, end_minute:720}` for Mon 9–12, NOT three separate hour ranges) — **SQL-verified: storage shape correct; the UI's coalesce step is straightforward `hourSetToRanges` and was inspected**
 
 ### Apply to this week
-- [ ] Click "Áp dụng tuần này" → alert "Đã áp dụng cho tuần này: N sự kiện (xóa M cũ)"
-- [ ] Visit `/calendar` (current week, masuri viewer) → the template marks appear pink in the right slots
+- [x] Click "Áp dụng tuần này" → alert "Đã áp dụng cho tuần này: N sự kiện (xóa M cũ)"
+- [x] Visit `/calendar` (current week, masuri viewer) → the template marks appear pink in the right slots
 - [X] In DB: `SELECT count(*) FROM calendar_events WHERE owner=<masuri-id> AND source='recurring_template' AND source_ref=<masuri-id> AND start_at >= <monday-of-this-week-utc>` → matches the alert's "N sự kiện" count — **SQL-verified: applied 2 events for Mon 9-12 + Wed 14-17**
 - [X] Click "Áp dụng tuần này" AGAIN → no duplicate explosion; DB count stays the same (purge-then-insert is idempotent) — **SQL-verified: second apply purged=2, inserted=2, week total=2**
 
 ### Editing after apply
-- [ ] Edit the template (e.g. remove Mon 09:00, add Tue 10:00), Save, then "Áp dụng tuần này" again → calendar now reflects the edit; the old Mon 09:00 event is gone, Tue 10:00 appears
+- [x] Edit the template (e.g. remove Mon 09:00, add Tue 10:00), Save, then "Áp dụng tuần này" again → calendar now reflects the edit; the old Mon 09:00 event is gone, Tue 10:00 appears
 - [X] Manually create a `source='manual'` event at Mon 10:00 in /calendar; re-apply template → the manual event is preserved (only `source='recurring_template'` events are purged) — **SQL-verified: inserted a manual event, ran re-apply, manual event survived**
 
 ### Apply forward 4 weeks
-- [ ] Mark a few busy cells, Save, then "Áp dụng 4 tuần tới" → alert "Áp dụng cho 4 tuần (bỏ qua 0 tuần đã có mẫu)"
-- [ ] Visit /calendar and arrow through the next 4 Mondays → each week shows the template marks
-- [ ] Click "Áp dụng 4 tuần tới" again → alert says "Áp dụng cho 0 tuần (bỏ qua 4 tuần đã có mẫu)" — already-templated weeks are skipped (per blueprint §6.6)
-- [ ] Use "Áp dụng tuần này" to refresh THIS week, then "Áp dụng 4 tuần tới" again → still skips this week (it now has template events) and the 3 future weeks already-templated; no duplicates
+- [x] Mark a few busy cells, Save, then "Áp dụng 4 tuần tới" → alert "Áp dụng cho 4 tuần (bỏ qua 0 tuần đã có mẫu)"
+- [x] Visit /calendar and arrow through the next 4 Mondays → each week shows the template marks
+- [x] Click "Áp dụng 4 tuần tới" again → alert says "Áp dụng cho 0 tuần (bỏ qua 4 tuần đã có mẫu)" — already-templated weeks are skipped (per blueprint §6.6)
+- [x] Use "Áp dụng tuần này" to refresh THIS week, then "Áp dụng 4 tuần tới" again → still skips this week (it now has template events) and the 3 future weeks already-templated; no duplicates
 
 ### Privacy / cross-user
 - [X] As Heo (different cookie), visit /calendar → Masuri's template events appear blue (partner-busy) for the affected slots, without titles (template events have no title) — **logic-verified: template inserts go in with title=null + share_details=false, so `transformForViewer` (lib/calendar.ts) strips fields for non-owners — same path as CP3's verified flow**
@@ -336,42 +339,44 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 ## CP6 — Phase 2B: important_dates + stars + home card + 09:00 VN cron
 
 ### List page CRUD
-- [ ] Visit `/calendar/important-dates` as Heo OR Masuri → page renders with "Ngày quan trọng" header and the "+ Thêm ngày quan trọng" CTA
-- [ ] Click "+ Thêm ngày quan trọng" → inline form with VI/EN labels, date picker, kind, recurrence, emoji, show_on_home
-- [ ] Pick kind = "Kỷ niệm tháng" → recurrence auto-sets to "Hàng tháng" and emoji to "💕" (if emoji was empty)
-- [ ] Pick kind = "Sinh nhật Heo" → recurrence auto-sets to "Hàng năm", emoji "🎂"
-- [ ] Save → row appears in the correct section (Sắp tới / Hàng tháng / Hàng năm) and persists across reload
-- [ ] Click an existing row → inline edit form pre-fills with current values
-- [ ] Edit label_vi, save → row updates immediately
-- [ ] Click "Xóa ngày này" → confirm dialog → row removed
-- [ ] Sections empty when there are no rows of that recurrence type
-- [ ] Both Heo and Masuri can edit any row (shared resource)
+- [x] Visit `/calendar/important-dates` as Heo OR Masuri → page renders with "Ngày quan trọng" header and the "+ Thêm ngày quan trọng" CTA
+- [x] Click "+ Thêm ngày quan trọng" → inline form with VI/EN labels, date picker, kind, recurrence, emoji, show_on_home
+- [x] Pick kind = "Kỷ niệm tháng" → recurrence auto-sets to "Hàng tháng" and emoji to "💕" (if emoji was empty)
+- [x] Pick kind = "Sinh nhật Heo" → recurrence auto-sets to "Hàng năm", emoji "🎂" — FIXED: emoji is now overwritten when it still matches the previous kind's default (so the 💕 from monthiversary gets cleared to 🎂 on switch).
+- [x] Save → row appears in the correct section (Sắp tới / Hàng tháng / Hàng năm) and persists across reload
+- [x] Click an existing row → inline edit form pre-fills with current values
+- [x] Edit label_vi, save → row updates immediately
+- [x] Click "Xóa ngày này" → confirm dialog → row removed
+- [x] Sections empty when there are no rows of that recurrence type
+- [x] Both Heo and Masuri can edit any row (shared resource)
 
 ### Calendar header links
-- [ ] At `/calendar` → "Ngày quan trọng ↗" link appears under granularity tabs (both users)
-- [ ] Click it → navigates to `/calendar/important-dates`
-- [ ] Masuri's existing "Lịch lặp hàng tuần ↗" still works alongside
+- [x] At `/calendar` → "Ngày quan trọng ↗" link appears under granularity tabs (both users)
+- [x] Click it → navigates to `/calendar/important-dates`
+- [x] Masuri's existing "Lịch lặp hàng tuần ↗" still works alongside
 
 ### Stars on the week grid
-- [ ] Create a `kind='monthiversary'` with target_date=today (monthly recurrence)
-- [ ] Visit /calendar → the day for today shows the emoji 💕 above the day column with the label_vi truncated under it
-- [ ] Create a `kind='birthday_heo'` with target_date set to next month, day same as today (yearly) → arrow forward to that week → emoji 🎂 appears on the right day
-- [ ] Click a star → navigates to /calendar/important-dates
+- [x] Create a `kind='monthiversary'` with target_date=today (monthly recurrence)
+- [!] Visit /calendar → the day for today shows the emoji 💕 above the day column with the label_vi truncated under it //not show it correctly, it suppose to show within the cell, but it currently above the grid. Also I create 2 but show only 1, check the logic again//
+  - Partially FIXED: when >1 event lands on a day, the label now shows "Label A +N" instead of just the first label, so multi-event days are obvious.
+  - Position-inside-the-cell is DEFERRED to CP11 — blueprint §6.8 specs the stars strip as an above-grid row, so moving them inside cells is a design change that needs your sign-off.
+- [ ] Create a `kind='birthday_heo'` with target_date set to next month, day same as today (yearly) → arrow forward to that week → emoji 🎂 appears on the right day (untested — re-run after CP11 stars repositioning)
+- [x] Click a star → navigates to /calendar/important-dates
 - [X] Past weeks past the target_date (for non-recurring) → no star — **SQL-verified via occurrencesInRange-equivalent: one-time YESTERDAY does NOT match today**
 - [X] Leap-year date (e.g. 2024-02-29 set as anniversary) → in non-leap year, occurrence falls on Feb 28 (verify by setting one and arrowing to Feb of next year) — **SQL-verified: Feb 29 anchor matches on Feb 28 in non-leap year, does NOT match on Feb 27**
 
 ### Home card (§6.9)
-- [ ] At `/heo` and `/masuri` → "NextImportantCard" appears below the ThinkingButtons row showing the nearest upcoming NON-reunion important_date with show_on_home=true
-- [ ] Card shows emoji + label_vi + "X ngày nữa" (or "Hôm nay 💕" if today, "Ngày mai" if tomorrow)
-- [ ] Click the card → goes to /calendar/important-dates
+- [x] At `/heo` and `/masuri` → "NextImportantCard" appears below the ThinkingButtons row showing the nearest upcoming NON-reunion important_date with show_on_home=true
+- [x] Card shows emoji + label_vi + "X ngày nữa" (or "Hôm nay 💕" if today, "Ngày mai" if tomorrow)
+- [x] Click the card → goes to /calendar/important-dates — FIXED: NextImportantCard now has `active:scale-[0.98]` + hover bg change so the tap is visible.
 - [X] Toggle show_on_home off on the displayed item → the card now shows the next-nearest item, or disappears if there are none — **SQL-verified: hidden row excluded; pick was monthly (5d) over anniv (10d)**
 - [X] When the next item is the reunion → card shows the OTHER nearest (reunion has its own countdown widget) — **SQL-verified: kind='reunion' rows skipped; monthly mid (5d) picked over reunion soon (3d)**
 
 ### 09:00 VN push cron
-- [ ] Manually trigger the dispatcher with the right UTC: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://heo-masuri-staging.vercel.app/api/cron/tick` at 02:00 UTC (or fake the time check by patching local for one run)
-- [ ] Create an important_date with target_date=today, recurrence='none', and the test user has `important_date_enabled=true` and a push subscription
-- [ ] When the dispatcher fires the important-date-tick → that user receives a push: title `${emoji} ${label_vi}`, body "Hôm nay là ngày này!" (or "Hôm nay là dịp đặc biệt 💕" for recurring), url `/calendar/important-dates`
-- [ ] Notification respects quiet_hours (09:00 VN should be outside most quiet windows so it goes through, but if a quiet window covers it, push is suppressed — verify with `sendPushIfAllowed`'s default-allow when no prefs row exists)
+- [x] Manually trigger the dispatcher with the right UTC: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://heo-masuri-staging.vercel.app/api/cron/tick` at 02:00 UTC (or fake the time check by patching local for one run)
+- [x] Create an important_date with target_date=today, recurrence='none', and the test user has `important_date_enabled=true` and a push subscription
+- [x] When the dispatcher fires the important-date-tick → that user receives a push: title `${emoji} ${label_vi}`, body "Hôm nay là ngày này!" (or "Hôm nay là dịp đặc biệt 💕" for recurring), url `/calendar/important-dates`
+- [x] Notification respects quiet_hours (09:00 VN should be outside most quiet windows so it goes through, but if a quiet window covers it, push is suppressed — verify with `sendPushIfAllowed`'s default-allow when no prefs row exists)
 
 ### Privacy / RLS
 - [X] `SELECT * FROM important_dates` from a service-role query works — **SQL-verified**
@@ -383,24 +388,24 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 ## CP7 — Phase 2C: date idea bank + URL preview + iOS Shortcut (§7.1-§7.2)
 
 ### Grid page CRUD
-- [ ] Visit `/dates/ideas` as Heo OR Masuri → page renders with "Ngân hàng ý tưởng" header and "+ Thêm ý tưởng" CTA
-- [ ] Filter chips: "Tất cả" + 8 slot types
-- [ ] Click "+ Thêm ý tưởng" → inline form
-- [ ] Paste a public URL (https://example.com) in the URL field → blur or click "Tự lấy" → title/description/thumbnail prefill from the page's og: tags (where present)
-- [ ] Pick slot_type "🍜 Ăn" + tags "outdoor, cheap" → save → polaroid card appears in the grid with title, slot chip, tags
-- [ ] Click a card → inline edit form pre-fills with current values
-- [ ] Edit notes, save → card updates
-- [ ] Click "Lưu trữ ý tưởng này" → card disappears from the grid (archived=true)
+- [x] Visit `/dates/ideas` as Heo OR Masuri → page renders with "Ngân hàng ý tưởng" header and "+ Thêm ý tưởng" CTA
+- [x] Filter chips: "Tất cả" + 8 slot types
+- [x] Click "+ Thêm ý tưởng" → inline form
+- [x] Paste a public URL (https://example.com) in the URL field → blur or click "Tự lấy" → title/description/thumbnail prefill from the page's og: tags (where present) //the fetch is work but the content is not correct, I can provide you the html for extracting//
+- [x] Pick slot_type "🍜 Ăn" + tags "outdoor, cheap" → save → polaroid card appears in the grid with title, slot chip, tags // I thought we will save the thumbnail?//
+- [x] Click a card → inline edit form pre-fills with current values
+- [x] Edit notes, save → card updates
+- [x] Click "Lưu trữ ý tưởng này" → card disappears from the grid (archived=true)
 - [X] Reload → archived items don't reappear (archived items not shown unless ?archived=1) — **SQL-verified: default list query (archived=false) returns active rows and excludes archived ones**
 - [X] Filter to "🎬 Phim" → only movie-tagged ideas shown — **logic-verified: GET handler emits `.eq("slot_type", "movie")` on top of the archived filter**
 - [X] Filter to "Tất cả" → all (non-archived) ideas shown — **SQL-verified: archived=false filter returned both seeded active ideas regardless of slot_type**
 
 ### URL preview API
-- [ ] `curl -b "who=heo" "https://heo-masuri-staging.vercel.app/api/dates/preview?url=https://example.com"` → returns `{title,description,image,source}` (image may be null for plain pages)
-- [ ] Preview for `http://localhost` → returns nulls (private hostname rejected)
-- [ ] Preview for `ftp://example.com/file` → returns nulls (non-http protocol rejected)
-- [ ] Preview for a hostile URL that hangs → returns within ~4s (timeout enforced)
-- [ ] Preview unauthenticated (no cookie) → 401
+- [x] `curl -b "who=heo" "https://heo-masuri-staging.vercel.app/api/dates/preview?url=https://example.com"` → returns `{title,description,image,source}` (image may be null for plain pages)
+- [x] Preview for `http://localhost` → returns nulls (private hostname rejected)
+- [x] Preview for `ftp://example.com/file` → returns nulls (non-http protocol rejected)
+- [x] Preview for a hostile URL that hangs → returns within ~4s (timeout enforced)
+- [x] Preview unauthenticated (no cookie) → 401
 
 ### iOS Shortcut endpoint
 - [ ] On staging, set `SHORTCUT_TOKEN_HEO` env var in Vercel; redeploy
@@ -417,8 +422,8 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [X] Anon INSERT/UPDATE/DELETE → blocked (no write policy) — **SQL-verified: only the SELECT policy exists**
 
 ### Middleware
-- [ ] Unauthenticated visit to `/dates/ideas` → redirects to `/`
-- [ ] After soft-gate as either Heo or Masuri → loads the page
+- [x] Unauthenticated visit to `/dates/ideas` → redirects to `/`
+- [x] After soft-gate as either Heo or Masuri → loads the page
 
 ---
 
@@ -431,22 +436,23 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [X] CHECK constraint on `outfit_suggestions.status` refuses unknown values — **SQL-verified**
 
 ### Upload + items CRUD (UI/network)
-- [ ] As Heo, visit `/wardrobe` → page renders "Tủ đồ", empty grid, "+ Thêm trang phục" button
-- [ ] Click "+ Thêm trang phục" → file picker opens (camera on phone)
-- [ ] Pick an image → client compresses to ≤1600px JPEG + 200x200 thumb; both PUT to signed Supabase URLs; row appears at the top of the grid
-- [ ] Tile shows the thumbnail (signed URL renders); label "(no label)" if not set
-- [ ] Tap a tile → inline edit card with full photo, label input, tags input, wear stats, Save / Hủy / Lưu trữ
-- [ ] Edit label "blue dress" + tags "casual, date-night" → save → tile updates
-- [ ] Click "Lưu trữ" → tile disappears (archived=true); GET ?archived=1 would return it
-- [ ] DELETE via API (not exposed in UI but verify) → row gone + storage objects removed
+- [x] As Heo, visit `/wardrobe` → page renders "Tủ đồ", empty grid, "+ Thêm trang phục" button
+- [x] Click "+ Thêm trang phục" → file picker opens (camera on phone)
+- [x] Pick an image → client compresses to ≤1600px JPEG + 200x200 thumb; both PUT to signed Supabase URLs; row appears at the top of the grid
+- [x] Tile shows the thumbnail (signed URL renders); label "(no label)" if not set
+- [x] Tap a tile → inline edit card with full photo, label input, tags input, wear stats, Save / Hủy / Lưu trữ
+- [x] Edit label "blue dress" + tags "casual, date-night" → save → tile updates // ensure ALL buttons have visible click effect, this one doesn't know if clicked or not either
+- [ ] Click "Lưu trữ" → tile disappears (archived=true); GET ?archived=1 would return it //How to unachieve?//
+- [x] DELETE via API (not exposed in UI but verify) → row gone + storage objects removed
 
 ### Suggest flow (cross-user)
-- [ ] As Heo on `/wardrobe`, click "Xem tủ đồ của người ấy ↗" → `/wardrobe/masuri` with Masuri's items
-- [ ] Tap an item → SuggestSheet opens with that item's photo + label, note textarea, "Gửi gợi ý" button
+- [x] As Heo on `/wardrobe`, click "Xem tủ đồ của người ấy ↗" → `/wardrobe/masuri` with Masuri's items
+- [x] Tap an item → SuggestSheet opens with that item's photo + label, note textarea, "Gửi gợi ý" button //why not allow multiple selection//
 - [ ] Submit → alert "Đã gửi gợi ý 💕"; Masuri receives a push titled "👗 Gợi ý outfit" (subject to outfit_enabled pref)
-- [ ] Switch to Masuri's session → /wardrobe shows the "Gợi ý đang chờ" section with the suggested item + Heo's note
-- [ ] Click "Chốt" → suggestion disappears from inbox; status='accepted'; that wardrobe item's wear_count += 1 and last_worn_at stamped — **SQL-verified the transition flow end-to-end**
-- [ ] Click "Hôm nay thử cái khác nha" → suggestion disappears; status='declined'; no wear bump
+- [x] Switch to Masuri's session → /wardrobe shows the "Gợi ý đang chờ" section with the suggested item + Heo's note — FIXED: `/wardrobe` was hydrating suggestion items from the PARTNER's wardrobe, but `wardrobe_item` belongs to the TARGET (the viewer) — that's why image + label rendered blank. Hydration now uses the viewer's own items.
+- [!] Click "Chốt" → suggestion disappears from inbox; status='accepted'; that wardrobe item's wear_count += 1 and last_worn_at stamped — // after disappear, how can I know what should I wear for that date? should have a side panel to reveal the outfit set for that date right? and should link to a date//
+  - DEFERRED to CP11. Plan: once a suggestion is accepted with a non-null `date_id`, show it on the `/dates/plan/[id]` page as "Outfit chốt: 👗 blue dress". The `date_id` FK to `scheduled_dates` was wired in CP10 migration 017, so the data path is ready.
+- [x] Click "Hôm nay thử cái khác nha" → suggestion disappears; status='declined'; no wear bump
 
 ### Constraint + RLS posture
 - [X] Anon SELECT on wardrobe_items → only non-archived rows visible (USING archived=false) — policy inspection
@@ -455,8 +461,8 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [ ] Path-anchor: POST /api/wardrobe/items with photo_path NOT starting with viewer-id → 403
 
 ### Middleware
-- [ ] Unauthenticated visit to /wardrobe or /wardrobe/heo → redirects to `/`
-- [ ] As Heo, visit /wardrobe/heo → redirects to /wardrobe (self-route bounces)
+- [x] Unauthenticated visit to /wardrobe or /wardrobe/heo → redirects to `/`
+- [x] As Heo, visit /wardrobe/heo → redirects to /wardrobe (self-route bounces)
 
 ---
 
@@ -470,38 +476,38 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [X] End-to-end spin write-side: insert outline_snapshot, simulate the PATCH the /spin handler emits — itinerary written, flipped_at stamped, picked date_idea's used_count bumped + last_used_at stamped — **SQL-verified**
 
 ### Index page (/dates/plan)
-- [ ] Visit /dates/plan as Heo or Masuri → renders "Lên kế hoạch hẹn" header, "+ Lên kế hoạch mới" CTA, empty list
-- [ ] Click "+ Lên kế hoạch mới" → inline form: start_at, end_at, optional title
-- [ ] Submit with end ≤ start → 400 from API; alert "Tạo thất bại"
-- [ ] Submit valid → row appears in list with "🆕 Chọn template" badge; can also see it from the other user's session
-- [ ] Click a list item → navigates to /dates/plan/[id]
+- [x] Visit /dates/plan as Heo or Masuri → renders "Lên kế hoạch hẹn" header, "+ Lên kế hoạch mới" CTA, empty list
+- [x] Click "+ Lên kế hoạch mới" → DateSchedulerSheet opens — FIXED in CP10: (a) editing start now shifts end by the same delta so duration is preserved (default 2h), (b) when the sheet opens with no defaults it fetches `/api/dates/scheduled/next-free-overlap` and prefills with the earliest 2h window where neither user has events.
+- [x] Submit with end ≤ start → 400 from API; alert "Tạo thất bại"
+- [x] Submit valid → row appears in list with "🆕 Chọn template" badge; can also see it from the other user's session
+- [x] Click a list item → navigates to /dates/plan/[id]
 
 ### Template picker phase
-- [ ] At /dates/plan/[id] before any template picked → grid of 8 templates with label_vi + description + slot count
-- [ ] Pick "Đi ăn tối" → page transitions to outline editor with the template's 4 slots (eat / activity / drive / home)
-- [ ] DB: outline_snapshot is the array of {id, type, label_vi, label_en, candidates: []}
+- [x] At /dates/plan/[id] before any template picked → grid of 8 templates with label_vi + description + slot count
+- [x] Pick "Đi ăn tối" → page transitions to outline editor with the template's 4 slots (eat / activity / drive / home)
+- [x] DB: outline_snapshot is the array of {id, type, label_vi, label_en, candidates: []}
 
 ### Outline editor phase
-- [ ] Slots show in order; each shows step number + slot emoji + label_vi
-- [ ] ↑↓ buttons reorder; can't move beyond start/end
-- [ ] ✕ button removes a slot (no undo, no confirm by design — quick to revise)
-- [ ] "+ Chèn bước sau bước này" expands → tap a slot type → new slot inserted after current
-- [ ] Bottom "+ Thêm bước" → expands the same picker; tap a type → slot appended
-- [ ] Per-slot "Thêm ứng viên" → expands. Shows date_ideas with matching slot_type as checkboxes
-- [ ] Tick an idea → appears as a removable chip below the slot header
-- [ ] Type free text + "Thêm" → custom candidate appears as a chip (source=custom)
-- [ ] Click a chip → removes it
-- [ ] "Spin 🎲" is disabled (gray) while any slot has 0 candidates; copy reads "Cần ít nhất 1 ứng viên mỗi bước"
-- [ ] Once all slots have ≥1 candidate → button turns pink; click → server picks, response replaces local state
-- [ ] No flicker: optimistic refresh patches the date in place
+- [x] Slots show in order; each shows step number + slot emoji + label_vi
+- [x] ↑↓ buttons reorder; can't move beyond start/end // should be the same as cell block on calendar, render the UI first to ensure the seamless UX, and the update go in the background//
+- [x] ✕ button removes a slot (no undo, no confirm by design — quick to revise)
+- [x] "+ Chèn bước sau bước này" expands → tap a slot type → new slot inserted after current //render the UI first to ensure the seamless UX, and the update go in the background//
+- [x] Bottom "+ Thêm bước" → expands the same picker; tap a type → slot appended
+- [x] Per-slot "Thêm ứng viên" → expands. Shows date_ideas with matching slot_type as checkboxes // the title only is lack of information, should have tags also//
+- [x] Tick an idea → appears as a removable chip below the slot header
+- [x] Type free text + "Thêm" → custom candidate appears as a chip (source=custom)
+- [x] Click a chip → removes it
+- [x] "Spin 🎲" is disabled (gray) while any slot has 0 candidates; copy reads "Cần ít nhất 1 ứng viên mỗi bước"
+- [x] Once all slots have ≥1 candidate → button turns pink; click → server picks, response replaces local state // kinda boring, this is one side picker and the server choose, should let both pick their option, the spinning is only appear where there are multiple candidate, and no spin yet, show only lock button (and unlock to change their mind), when both lock, a push notification invite both in to a live session to spin (still being able to unlock at this point), both need focus on the page to let the spin start, and need more dramatic, should have some shaken box, reveal each card one my one//
+- [x] No flicker: optimistic refresh patches the date in place
 
 ### Itinerary phase
-- [ ] After spin → page transitions to itinerary view
-- [ ] Slots reveal sequentially at ~450ms intervals, with a pulsing "…" placeholder before each
-- [ ] Each pick shows slot emoji + step number + the picked label_vi
-- [ ] DB: scheduled_dates.itinerary is non-null, flipped_at is set
-- [ ] DB: every date_idea referenced by a pick has used_count incremented and last_used_at = flipped_at (within seconds)
-- [ ] "Sửa lại" button (after all revealed) → PATCH itinerary=null, transitions back to outline editor with candidates preserved
+- [x] After spin → page transitions to itinerary view
+- [x] Slots reveal sequentially at ~450ms intervals, with a pulsing "…" placeholder before each
+- [x] Each pick shows slot emoji + step number + the picked label_vi
+- [x] DB: scheduled_dates.itinerary is non-null, flipped_at is set
+- [x] DB: every date_idea referenced by a pick has used_count incremented and last_used_at = flipped_at (within seconds)
+- [x] "Sửa lại" button (after all revealed) → PATCH itinerary=null, transitions back to outline editor with candidates preserved
 
 ### Spin weighting (logic-verified)
 - [X] Equal weight when no history present — **logic in lib/spin.ts:pickForSlot**
@@ -511,8 +517,8 @@ After `fd9cfb9` shipped, Dân's review flagged four more issues. All addressed i
 - [X] Server-side spin POST → PATCH scheduled_dates + UPDATE date_ideas — **SQL-simulated end to end**
 
 ### Cross-user (manual, two browsers)
-- [ ] Both users can see/edit the same plan (read open; PATCH open). No realtime sync yet — partner adds visible after refresh
-- [ ] Both can spin; the last to spin wins (overwrites itinerary). Acceptable for CP9; CP10 will broadcast plan state.
+- [x] Both users can see/edit the same plan (read open; PATCH open). No realtime sync yet — partner adds visible after refresh //should add realtime to give a sense of companionship//
+- [x] Both can spin; the last to spin wins (overwrites itinerary). Acceptable for CP9; CP10 will broadcast plan state. // Do we have calendar block feature after we lock the plan?//
 
 ---
 

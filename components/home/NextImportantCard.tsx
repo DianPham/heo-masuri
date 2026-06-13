@@ -43,7 +43,7 @@ export default async function NextImportantCard() {
   return (
     <Link
       href="/calendar/important-dates"
-      className="w-full max-w-xs flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm text-left"
+      className="w-full max-w-xs flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm text-left transition-all duration-150 hover:bg-rose-50 active:scale-[0.98]"
       style={{ border: "1px solid rgba(255,201,213,0.5)", boxShadow: "0 4px 12px rgba(196,102,122,0.08)" }}
     >
       <span className="text-2xl" aria-hidden>{next.row.emoji ?? "⭐"}</span>
