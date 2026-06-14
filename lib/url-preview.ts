@@ -175,40 +175,45 @@ async function readBodyCapped(res: Response): Promise<string | null> {
  * short-link form gets resolved server-side by TikTok inside the oembed call.
  */
 async function fetchTikTokPreview(url: URL): Promise<Preview> {
-  // Expand short links (vt./vm./vs.tiktok.com) before hitting oEmbed.
+  // Expand short links (vt./vm./vs.tiktok.com) to the canonical /video/ or
+  // /photo/ path.
   const canonical = isTikTokShortLink(url.hostname)
     ? await resolveTikTokShortLink(url)
     : url;
-  // ALWAYS strip query params before talking to oEmbed. TikTok preserves a
-  // `?_r=1&_t=ZS-...` tracking string when the user shares a link, and oEmbed
-  // returns 400 the moment it sees them. The short-link resolver strips them,
-  // but a long URL pasted directly arrives with them intact — strip again here.
+  // TikTok preserves a tracking query string (`?_r=1&_t=ZS-...`) on shared
+  // links — oEmbed responds 400 the moment it sees them.
   canonical.search = "";
   const canonicalStr = canonical.toString();
 
-  // Tier 1: TikTok's own oEmbed endpoint.
-  const oembed = await tryTikTokOembed(canonicalStr);
-  if (oembed) return { ...oembed, canonical_url: canonicalStr };
-
-  // Tier 2: noembed.com — a free public oEmbed aggregator that proxies
-  // TikTok requests through its own infrastructure. Often succeeds when
-  // TikTok rate-limits our Vercel edge IP directly.
-  const noembed = await tryNoembed(canonicalStr);
-  if (noembed) return { ...noembed, canonical_url: canonicalStr };
-
-  // Tier 3: TikTok's own page → __UNIVERSAL_DATA_FOR_REHYDRATION__ JSON.
+  // Tier 1 — mobile-UA scrape → <script id="api-data"> JSON. Verified to work
+  // for BOTH /video/ and /photo/ URLs and returns clean caption + cover.
+  // See .test-tiktok*.mjs for the probe that found this.
   const fromState = await fetchTikTokViaPageState(canonical);
   if (fromState) return { ...fromState, canonical_url: canonicalStr };
 
-  // Tier 4: og:* scrape, with homepage detection so we don't save a
-  // "TikTok - Make Your Day" placeholder.
+  // Tier 2 — TikTok's own oEmbed. Only handles /video/ URLs (returns 400 for
+  // /photo/), so skip when the path is clearly a photo.
+  const isPhotoPath = /\/photo\//i.test(canonical.pathname);
+  if (!isPhotoPath) {
+    const oembed = await tryTikTokOembed(canonicalStr);
+    if (oembed) return { ...oembed, canonical_url: canonicalStr };
+  }
+
+  // Tier 3 — noembed.com aggregator. Same /video/-only limit but worth a try.
+  if (!isPhotoPath) {
+    const noembed = await tryNoembed(canonicalStr);
+    if (noembed) return { ...noembed, canonical_url: canonicalStr };
+  }
+
+  // Tier 4 — og:* scrape with desktop UA. Last resort; usually returns the
+  // "TikTok - Make Your Day" homepage stub, which we detect + null out so the
+  // client can do its own browser-side retry on /video/ URLs.
   const scraped = await fetchGenericPreview(canonical);
   const isHomepageHit =
     scraped.title &&
     /^TikTok\b/i.test(scraped.title.trim()) &&
     !scraped.image;
   if (isHomepageHit) {
-    // Hand the canonical URL back so the client can retry from the browser.
     return { ...NULL, source: "tiktok.com", canonical_url: canonicalStr };
   }
   return { ...scraped, source: "tiktok.com", canonical_url: canonicalStr };
@@ -285,12 +290,20 @@ async function tryNoembed(canonicalUrl: string): Promise<Preview | null> {
 }
 
 /**
- * Extract video metadata from TikTok's page state JSON. TikTok injects a
- * <script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application/json">
- * with the full video object when the page loads — same data the React app
- * hydrates from. Reading this directly avoids the og:* tag inconsistency.
+ * Extract video/photo metadata from TikTok's page state JSON.
  *
- * Mobile UA + Accept-Language give us a more og:-friendly response too.
+ * Verified locally (see .test-tiktok*.mjs): with a mobile iOS UA, TikTok
+ * inlines a <script id="api-data"> tag containing
+ *   { videoDetail: { itemInfo: { itemStruct: {...} } } }
+ * for both /video/ and /photo/ URLs. The item has author.uniqueId, desc,
+ * video.cover (yes — populated even for photo posts), and for photo
+ * carousels also imagePost.cover.imageURL.urlList[0].
+ *
+ * The desktop UA path is gated to "TikTok - Make Your Day" with no data
+ * scopes; only the mobile UA reliably serves the item JSON to us.
+ *
+ * Falls back to the legacy __UNIVERSAL_DATA_FOR_REHYDRATION__ scopes for
+ * older page versions (none seen recently but cheap to keep).
  */
 async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
   const MOBILE_UA =
@@ -310,50 +323,36 @@ async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
   const html = await readBodyCapped(res);
   if (!html) return null;
 
-  // The script tag is always: id="__UNIVERSAL_DATA_FOR_REHYDRATION__".
-  const stateMatch = /<script[^>]+id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/i.exec(
+  // Primary: <script id="api-data"> with videoDetail.itemInfo.itemStruct.
+  const apiMatch = /<script[^>]+id=["']api-data["'][^>]*>([\s\S]*?)<\/script>/i.exec(html);
+  if (apiMatch && apiMatch[1]) {
+    try {
+      const data = JSON.parse(apiMatch[1]);
+      const item = data?.videoDetail?.itemInfo?.itemStruct;
+      const fromItem = extractFromItem(item);
+      if (fromItem) return fromItem;
+    } catch { /* fall through */ }
+  }
+
+  // Legacy A: __UNIVERSAL_DATA_FOR_REHYDRATION__ with __DEFAULT_SCOPE__ shapes.
+  const universalMatch = /<script[^>]+id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/i.exec(
     html
   );
-  if (stateMatch && stateMatch[1]) {
+  if (universalMatch && universalMatch[1]) {
     try {
-      const data = JSON.parse(stateMatch[1]);
+      const data = JSON.parse(universalMatch[1]);
       const scope = data?.__DEFAULT_SCOPE__ ?? {};
-      // Video posts live under webapp.video-detail; photo posts (carousels)
-      // hydrate from webapp.photo-detail or webapp.image-detail depending on
-      // page version. Try them all.
       const item =
         scope["webapp.video-detail"]?.itemInfo?.itemStruct ??
         scope["webapp.photo-detail"]?.itemInfo?.itemStruct ??
         scope["webapp.image-detail"]?.itemInfo?.itemStruct ??
         null;
-      if (item) {
-        const author = item.author?.uniqueId || item.author?.nickname || null;
-        const caption = typeof item.desc === "string" ? item.desc.trim() : null;
-        // Photo posts put their first image under imagePost.images[0].imageURL.
-        const cover =
-          item.video?.cover ||
-          item.video?.originCover ||
-          item.video?.dynamicCover ||
-          item.imagePost?.images?.[0]?.imageURL?.urlList?.[0] ||
-          item.imagePost?.cover?.imageURL?.urlList?.[0] ||
-          null;
-        const title =
-          caption && author
-            ? `@${author} · ${caption}`
-            : caption || (author ? `@${author}` : null);
-        if (title || cover) {
-          return {
-            title,
-            description: author ? `@${author}` : null,
-            image: cover,
-            source: "tiktok.com",
-          };
-        }
-      }
+      const fromItem = extractFromItem(item);
+      if (fromItem) return fromItem;
     } catch { /* fall through */ }
   }
 
-  // Older pages use SIGI_STATE — same idea, different shape.
+  // Legacy B: SIGI_STATE.ItemModule[firstId].
   const sigiMatch = /<script[^>]+id="SIGI_STATE"[^>]*>([\s\S]*?)<\/script>/i.exec(html);
   if (sigiMatch && sigiMatch[1]) {
     try {
@@ -362,28 +361,55 @@ async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
       if (itemMap && typeof itemMap === "object") {
         const firstId = Object.keys(itemMap)[0];
         const item = firstId ? itemMap[firstId] : null;
-        if (item) {
-          const author = item.author || null;
-          const caption = typeof item.desc === "string" ? item.desc.trim() : null;
-          const cover = item.video?.cover || item.video?.originCover || null;
-          const title =
-            caption && author
-              ? `@${author} · ${caption}`
-              : caption || (author ? `@${author}` : null);
-          if (title || cover) {
-            return {
-              title,
-              description: author ? `@${author}` : null,
-              image: cover,
-              source: "tiktok.com",
-            };
-          }
+        // SIGI shape stores author as a bare string; normalize.
+        if (item && typeof item.author === "string") {
+          item.author = { uniqueId: item.author };
         }
+        const fromItem = extractFromItem(item);
+        if (fromItem) return fromItem;
       }
     } catch { /* ignore */ }
   }
 
   return null;
+}
+
+/** Common shape extractor — itemStruct has the same field names across all
+ *  three page-state blocks. */
+function extractFromItem(item: unknown): Preview | null {
+  if (!item || typeof item !== "object") return null;
+  const it = item as {
+    author?: { uniqueId?: string; nickname?: string } | string;
+    desc?: string;
+    video?: { cover?: string; originCover?: string; dynamicCover?: string };
+    imagePost?: {
+      cover?: { imageURL?: { urlList?: string[] } };
+      images?: { imageURL?: { urlList?: string[] } }[];
+    };
+  };
+  const author =
+    typeof it.author === "string"
+      ? it.author
+      : it.author?.uniqueId || it.author?.nickname || null;
+  const caption = typeof it.desc === "string" ? it.desc.trim() : null;
+  const cover =
+    it.video?.cover ||
+    it.video?.originCover ||
+    it.video?.dynamicCover ||
+    it.imagePost?.cover?.imageURL?.urlList?.[0] ||
+    it.imagePost?.images?.[0]?.imageURL?.urlList?.[0] ||
+    null;
+  const title =
+    caption && author
+      ? `@${author} · ${caption}`
+      : caption || (author ? `@${author}` : null);
+  if (!title && !cover) return null;
+  return {
+    title,
+    description: author ? `@${author}` : null,
+    image: cover,
+    source: "tiktok.com",
+  };
 }
 
 /**
