@@ -7,7 +7,7 @@
  * Each card shows thumbnail (or pink placeholder), title, slot-type chip, tags.
  * Click → inline edit. Top "+ Add" button opens an inline add form.
  */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 export type DateIdea = {
   id: string;
@@ -169,7 +169,11 @@ export function DateIdeasGrid({ initial }: { initial: DateIdea[] }) {
                 />
               </div>
             ) : (
-              <IdeaCard key={i.id} idea={i} onClick={() => setEditingId(i.id)} />
+              <IdeaCard
+                key={i.id}
+                idea={i}
+                onEdit={() => setEditingId(i.id)}
+              />
             )
           )}
         </div>
@@ -195,12 +199,65 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-function IdeaCard({ idea, onClick }: { idea: DateIdea; onClick: () => void }) {
+function IdeaCard({ idea, onEdit }: { idea: DateIdea; onEdit: () => void }) {
+  // Interaction model:
+  //   - tap / click → opens idea.url in a new tab (or falls through to edit
+  //     if no URL is saved)
+  //   - right-click (desktop) → opens the edit form
+  //   - long-press (mobile, ~500ms) → opens the edit form
+  // Long-press cancels on touchmove (so vertical scrolls don't trigger).
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressedRef = useRef(false);
+
+  function startLongPress() {
+    longPressedRef.current = false;
+    pressTimer.current = setTimeout(() => {
+      longPressedRef.current = true;
+      if (navigator.vibrate) navigator.vibrate(30);
+      onEdit();
+    }, 500);
+  }
+  function cancelLongPress() {
+    if (pressTimer.current !== null) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  }
+  function handleClick(e: React.MouseEvent) {
+    // Suppress the synthetic click that fires after a successful long-press.
+    if (longPressedRef.current) {
+      longPressedRef.current = false;
+      e.preventDefault();
+      return;
+    }
+    if (idea.url) {
+      window.open(idea.url, "_blank", "noopener,noreferrer");
+    } else {
+      onEdit();
+    }
+  }
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    onEdit();
+  }
+
   return (
     <button
-      onClick={onClick}
-      className="text-left rounded-2xl overflow-hidden bg-white hover:shadow-lg transition-shadow flex flex-col"
-      style={{ border: "1px solid rgba(255,201,213,0.4)", boxShadow: "0 4px 12px rgba(196,102,122,0.06)" }}
+      onClick={handleClick}
+      onContextMenu={handleContextMenu}
+      onTouchStart={startLongPress}
+      onTouchMove={cancelLongPress}
+      onTouchEnd={cancelLongPress}
+      onTouchCancel={cancelLongPress}
+      title={idea.url ? "Mở · chuột phải để chỉnh sửa" : "Chỉnh sửa"}
+      className="text-left rounded-2xl overflow-hidden bg-white hover:shadow-lg transition-shadow flex flex-col active:scale-[0.98]"
+      style={{
+        border: "1px solid rgba(255,201,213,0.4)",
+        boxShadow: "0 4px 12px rgba(196,102,122,0.06)",
+        WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
+        userSelect: "none",
+      }}
     >
       <div
         className="aspect-square w-full flex items-center justify-center bg-rose-50"
@@ -210,7 +267,7 @@ function IdeaCard({ idea, onClick }: { idea: DateIdea; onClick: () => void }) {
       </div>
       <div className="p-2.5 flex-1">
         <p className="text-sm font-semibold text-ink line-clamp-2">
-          {idea.title || idea.url || idea.notes || "(no title)"}
+          {idea.title || idea.url || idea.notes || "Ý tưởng chưa đặt tên"}
         </p>
         {idea.slot_type && (
           <p className="text-[10px] text-rose-500 mt-1">{SLOT_LABEL_VI[idea.slot_type]}</p>

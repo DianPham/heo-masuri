@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { fetchUrlPreview } from "@/lib/url-preview";
+import { aiCleanPreview } from "@/lib/ai-clean";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,15 @@ export async function POST(req: NextRequest) {
   // Fetch preview opportunistically — fallback to no metadata if it fails.
   const preview = await fetchUrlPreview(url);
 
+  // Run AI cleanup too — the Shortcut path doesn't show a form, so the AI
+  // output is the only chance to land a clean title / slot guess / tags
+  // before the row is saved. Silently no-ops without DEEPSEEK_API_KEY.
+  const ai = await aiCleanPreview({
+    url: preview.canonical_url ?? url,
+    raw_title: preview.title,
+    raw_description: preview.description,
+  });
+
   const supabase = createServerClient();
   // Resolve Heo's user id.
   const { data: heo } = await supabase
@@ -52,11 +62,12 @@ export async function POST(req: NextRequest) {
     .insert({
       added_by: heo.id,
       url,
-      title: preview.title,
-      description: preview.description,
+      title: ai?.title ?? preview.title,
+      description: ai?.description ?? preview.description,
       thumbnail_url: preview.image,
+      slot_type: ai?.slot_type ?? null,
       notes,
-      tags: [],
+      tags: ai?.tags ?? [],
     })
     .select("id")
     .single();
