@@ -249,13 +249,17 @@ function IdeaForm({
     if (!cleanedInput) return;
     setPreviewing(true);
     try {
-      const res = await fetch(`/api/dates/preview?url=${encodeURIComponent(cleanedInput)}`);
+      // ai=1 routes the result through DeepSeek for a clean VI title /
+      // description / slot guess / tags before returning. Cheaper than a
+      // second round-trip and the server already has the raw caption in hand.
+      const res = await fetch(
+        `/api/dates/preview?ai=1&url=${encodeURIComponent(cleanedInput)}`
+      );
       if (!res.ok) return;
       let data = await res.json();
 
-      // If server returned nulls for TikTok, retry from the browser. TikTok
-      // gates its endpoints by IP — Vercel's edge gets blocked, the user's
-      // browser doesn't. TikTok's oEmbed allows CORS so this just works.
+      // If server returned nulls for TikTok, retry the oEmbed call from the
+      // browser. TikTok gates server IPs but lets browsers through.
       if (
         !data.title &&
         !data.image &&
@@ -266,11 +270,19 @@ function IdeaForm({
         if (retry) data = { ...data, ...retry };
       }
 
+      const ai = data.ai ?? null;
       setValues((prev) => ({
         ...prev,
-        title: prev.title || data.title || "",
-        description: prev.description || data.description || "",
+        // AI title wins over raw title when present; user can still overwrite.
+        title: prev.title || ai?.title || data.title || "",
+        description: prev.description || ai?.description || data.description || "",
         thumbnail_url: prev.thumbnail_url || data.image || "",
+        slot_type: prev.slot_type || (ai?.slot_type ?? "") || prev.slot_type,
+        tags:
+          prev.tags ||
+          (Array.isArray(ai?.tags) && ai.tags.length > 0
+            ? ai.tags.join(", ")
+            : ""),
       }));
     } finally {
       setPreviewing(false);

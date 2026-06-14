@@ -180,34 +180,40 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
   const canonical = isTikTokShortLink(url.hostname)
     ? await resolveTikTokShortLink(url)
     : url;
-  // TikTok preserves a tracking query string (`?_r=1&_t=ZS-...`) on shared
-  // links — oEmbed responds 400 the moment it sees them.
   canonical.search = "";
   const canonicalStr = canonical.toString();
+  const isPhotoPath = /\/photo\//i.test(canonical.pathname);
 
-  // Tier 1 — mobile-UA scrape → <script id="api-data"> JSON. Verified to work
-  // for BOTH /video/ and /photo/ URLs and returns clean caption + cover.
-  // See .test-tiktok*.mjs for the probe that found this.
+  // Photo posts: try microlink first. The mobile-UA scrape works locally but
+  // fails from Vercel's datacenter IP (TikTok rate-limits photo paths
+  // aggressively). microlink.io has its own infra and reliably returns the
+  // caption + cover image for /photo/ URLs.
+  if (isPhotoPath) {
+    const ml = await tryMicrolink(canonicalStr);
+    if (ml) return { ...ml, canonical_url: canonicalStr };
+  }
+
+  // Tier — mobile-UA scrape → <script id="api-data"> JSON. Works for /video/
+  // and /photo/ when not IP-blocked. Cheap when it works.
   const fromState = await fetchTikTokViaPageState(canonical);
   if (fromState) return { ...fromState, canonical_url: canonicalStr };
 
-  // Tier 2 — TikTok's own oEmbed. Only handles /video/ URLs (returns 400 for
-  // /photo/), so skip when the path is clearly a photo.
-  const isPhotoPath = /\/photo\//i.test(canonical.pathname);
+  // Video-only paths from here. oEmbed + noembed both 400 on /photo/.
   if (!isPhotoPath) {
     const oembed = await tryTikTokOembed(canonicalStr);
     if (oembed) return { ...oembed, canonical_url: canonicalStr };
-  }
-
-  // Tier 3 — noembed.com aggregator. Same /video/-only limit but worth a try.
-  if (!isPhotoPath) {
     const noembed = await tryNoembed(canonicalStr);
     if (noembed) return { ...noembed, canonical_url: canonicalStr };
   }
 
-  // Tier 4 — og:* scrape with desktop UA. Last resort; usually returns the
-  // "TikTok - Make Your Day" homepage stub, which we detect + null out so the
-  // client can do its own browser-side retry on /video/ URLs.
+  // Final fallback for photos (after page-state failed) and videos (after
+  // every TikTok-specific path failed): try microlink as a generic last resort.
+  if (!isPhotoPath) {
+    const ml = await tryMicrolink(canonicalStr);
+    if (ml) return { ...ml, canonical_url: canonicalStr };
+  }
+
+  // og:* scrape — usually the "TikTok - Make Your Day" stub.
   const scraped = await fetchGenericPreview(canonical);
   const isHomepageHit =
     scraped.title &&
@@ -217,6 +223,54 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
     return { ...NULL, source: "tiktok.com", canonical_url: canonicalStr };
   }
   return { ...scraped, source: "tiktok.com", canonical_url: canonicalStr };
+}
+
+/**
+ * microlink.io — free public metadata extractor. Verified locally (~6s) to
+ * return clean JSON for TikTok /photo/ URLs where our own scrape fails from
+ * Vercel's IP. Returns { author, title, description, image: { url } }.
+ *
+ * Free tier rate limits are ~50/day per IP, plenty for our usage.
+ */
+async function tryMicrolink(canonicalUrl: string): Promise<Preview | null> {
+  const u = `https://api.microlink.io/?url=${encodeURIComponent(canonicalUrl)}`;
+  const res = await fetchWithTimeout(u, {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    redirect: "follow",
+  });
+  if (!res || !res.ok) return null;
+  type MicrolinkRes = {
+    status?: string;
+    data?: {
+      author?: string;
+      title?: string;
+      description?: string;
+      image?: { url?: string } | string;
+    };
+  };
+  try {
+    const body = (await res.json()) as MicrolinkRes;
+    if (body.status !== "success" || !body.data) return null;
+    const d = body.data;
+    const caption = d.description?.trim() || null;
+    const author = d.author?.trim() || null;
+    const image =
+      typeof d.image === "string" ? d.image : d.image?.url ?? null;
+    const title =
+      caption && author
+        ? `@${author.replace(/^@/, "")} · ${caption}`
+        : caption || d.title || author || null;
+    if (!title && !image) return null;
+    return {
+      title,
+      description: author ? `@${author.replace(/^@/, "")}` : null,
+      image,
+      source: "tiktok.com",
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** TikTok oEmbed — clean fast path when it works. */
