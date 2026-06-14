@@ -86,8 +86,8 @@ export function WardrobeOwn({ initial }: { initial: VisibleWardrobeItem[] }) {
   return (
     <div>
       <label
-        className="block w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white text-center cursor-pointer active:scale-[0.98] transition-transform"
-        style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)", opacity: uploading ? 0.5 : 1 }}
+        className="btn-primary w-full py-3 mb-5 cursor-pointer"
+        style={{ opacity: uploading ? 0.5 : 1 }}
       >
         {uploading ? "Đang tải lên…" : "+ Thêm đồ"}
         <input
@@ -104,7 +104,17 @@ export function WardrobeOwn({ initial }: { initial: VisibleWardrobeItem[] }) {
       </label>
 
       {items.length === 0 ? (
-        <p className="text-center text-sm text-ink-soft py-8">Tủ trống — thêm vài món để người ấy chọn cho nha 💕</p>
+        <div
+          className="text-center py-10 px-6 rounded-2xl"
+          style={{ border: "1px dashed var(--color-hairline-strong)" }}
+        >
+          <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+            Tủ còn trống.
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--color-ink-mute)" }}>
+            Thêm vài món để người ấy chọn cho.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {items.map((it) =>
@@ -132,17 +142,26 @@ export function ItemTile({ item, onClick }: { item: VisibleWardrobeItem; onClick
   return (
     <button
       onClick={onClick}
-      className="text-left rounded-2xl overflow-hidden bg-white"
-      style={{ border: "1px solid rgba(255,201,213,0.4)", boxShadow: "0 4px 12px rgba(196,102,122,0.06)" }}
+      className="surface-card text-left overflow-hidden transition-all active:scale-[0.98] hover:translate-y-[-2px]"
+      style={{ boxShadow: "var(--shadow-sm)" }}
     >
       <div
-        className="aspect-square w-full bg-rose-50"
-        style={{ backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="aspect-square w-full"
+        style={{
+          background: "rgba(58,33,41,0.04)",
+          backgroundImage: `url(${src})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       />
-      <div className="p-2">
-        <p className="text-sm font-semibold text-ink truncate">{item.label || "(no label)"}</p>
+      <div className="p-3">
+        <p className="text-[13.5px] font-semibold tracking-tight truncate" style={{ color: "var(--color-ink)" }}>
+          {item.label || "Chưa đặt tên"}
+        </p>
         {item.tags.length > 0 && (
-          <p className="text-[10px] text-ink-soft truncate">{item.tags.map((t) => `#${t}`).join(" ")}</p>
+          <p className="text-[10.5px] mt-0.5 truncate" style={{ color: "var(--color-ink-mute)" }}>
+            {item.tags.map((t) => `#${t}`).join(" ")}
+          </p>
         )}
       </div>
     </button>
@@ -164,48 +183,54 @@ function EditCard({
   const [tagsStr, setTagsStr] = useState(item.tags.join(", "));
   const src = item.photo_signed_url ?? item.thumbnail_signed_url ?? "";
   return (
-    <div className="rounded-2xl bg-white p-4 space-y-3" style={{ border: "1px solid rgba(255,201,213,0.6)" }}>
-      <div className="flex gap-3">
+    <div className="surface-card p-5 space-y-3.5" style={{ boxShadow: "var(--shadow-sm)" }}>
+      <div className="flex gap-4">
         <div
-          className="w-24 h-24 rounded-xl flex-shrink-0 bg-rose-50"
-          style={{ backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          className="w-24 h-24 rounded-xl flex-shrink-0"
+          style={{
+            background: "rgba(58,33,41,0.04)",
+            backgroundImage: `url(${src})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         />
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2.5">
           <input
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Tên gọi (váy đỏ, áo trắng…)"
-            className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base"
           />
           <input
             type="text"
             value={tagsStr}
             onChange={(e) => setTagsStr(e.target.value)}
-            placeholder="thẻ, cách nhau dấu phẩy"
-            className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            placeholder="thẻ, cách nhau bằng phẩy"
+            className="input-base"
           />
         </div>
       </div>
-      <p className="text-xs text-ink-soft">
+      <p className="text-[11.5px]" style={{ color: "var(--color-ink-mute)" }}>
         {item.wear_count > 0 ? `Đã mặc ${item.wear_count} lần` : "Chưa mặc lần nào"}
         {item.last_worn_at && ` · gần nhất ${item.last_worn_at.slice(0, 10)}`}
       </p>
       <div className="flex gap-2">
         <button
           onClick={() => onSave(label.trim(), tagsStr.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean))}
-          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform"
-          style={{ backgroundColor: "#C4667A" }}
+          className="btn-primary flex-1"
         >
           Lưu
         </button>
-        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
+        <button onClick={onCancel} className="btn-ghost">
           Hủy
         </button>
       </div>
-      <button onClick={onArchive} className="w-full text-xs text-rose-500 underline underline-offset-2 active:scale-95 transition-transform">
+      <button
+        onClick={onArchive}
+        className="w-full text-[11.5px] py-1"
+        style={{ color: "var(--color-ink-mute)" }}
+      >
         Cất món này đi
       </button>
     </div>

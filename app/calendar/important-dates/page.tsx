@@ -34,18 +34,13 @@ async function fetchDates(): Promise<ImportantDate[]> {
 export default async function ImportantDatesPage() {
   const dates = await fetchDates();
   return (
-    <div className="px-5 pb-10 pt-6">
-      <Link href="/calendar" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+    <div className="px-5 pb-16 pt-8 max-w-2xl mx-auto">
+      <Link href="/calendar" className="back-link mb-4">
         ← Lịch
       </Link>
-      <h1
-        className="text-2xl font-bold text-ink mb-1"
-        style={{ fontFamily: "var(--font-handwritten)" }}
-      >
-        Ngày đặc biệt
-      </h1>
-      <p className="text-xs text-ink-soft mb-5">
-        Đoàn tụ, kỷ niệm, sinh nhật — sẽ được nhắc lúc 9h sáng vào ngày đó 💕
+      <h1 className="page-title mb-1.5">Ngày đặc biệt</h1>
+      <p className="page-subtitle mb-6 max-w-md">
+        Đoàn tụ, kỷ niệm, sinh nhật — sẽ được nhắc lúc 9 giờ sáng vào hôm đó.
       </p>
       <ImportantDatesList initial={dates} />
     </div>

@@ -26,33 +26,44 @@ export function PendingSuggestions({ initial }: { initial: SuggestionWithItem[] 
 
   return (
     <section className="mb-6">
-      <h2 className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">Gợi ý từ người ấy 💕</h2>
-      <ul className="space-y-3">
+      <h2 className="section-eyebrow mb-2.5">Gợi ý từ người ấy</h2>
+      <ul className="space-y-2.5">
         {list.map((s) => {
           const src = s.item?.thumbnail_signed_url ?? s.item?.photo_signed_url ?? "";
           return (
-            <li key={s.id} className="rounded-2xl bg-white p-3 flex gap-3" style={{ border: "1px solid rgba(255,201,213,0.4)" }}>
+            <li key={s.id} className="surface-card p-4 flex gap-3.5" style={{ boxShadow: "var(--shadow-sm)" }}>
               <div
-                className="w-16 h-16 rounded-xl flex-shrink-0 bg-rose-50"
-                style={{ backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                className="w-16 h-16 rounded-xl flex-shrink-0"
+                style={{
+                  background: "rgba(58,33,41,0.04)",
+                  backgroundImage: `url(${src})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-ink truncate">{s.item?.label || "Đồ chưa đặt tên"}</p>
-                {s.note && <p className="text-xs text-ink-soft mt-0.5 line-clamp-2">{s.note}</p>}
-                <div className="flex gap-2 mt-2">
+                <p className="text-[14px] font-semibold tracking-tight truncate" style={{ color: "var(--color-ink)" }}>
+                  {s.item?.label || "Đồ chưa đặt tên"}
+                </p>
+                {s.note && (
+                  <p className="text-[12px] mt-0.5 line-clamp-2" style={{ color: "var(--color-ink-soft)" }}>
+                    {s.note}
+                  </p>
+                )}
+                <div className="flex gap-2 mt-2.5">
                   <button
                     onClick={() => respond(s.id, "accepted")}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white"
-                    style={{ backgroundColor: "#C4667A" }}
+                    className="btn-primary"
+                    style={{ padding: "0.4375rem 0.875rem", fontSize: "0.75rem" }}
                   >
                     Chốt
                   </button>
                   <button
                     onClick={() => respond(s.id, "declined")}
-                    className="px-3 py-1.5 rounded-xl text-xs text-ink-soft"
-                    style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+                    className="btn-ghost"
+                    style={{ padding: "0.4375rem 0.875rem", fontSize: "0.75rem" }}
                   >
-                    Hôm nay thử cái khác nha
+                    Thử cái khác
                   </button>
                 </div>
               </div>

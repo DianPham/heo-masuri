@@ -15,36 +15,63 @@ export function PlanIndex({ initial }: { initial: ScheduledDate[] }) {
 
   return (
     <div>
-      <button
-        onClick={() => setScheduling(true)}
-        className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
-        style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)" }}
-      >
+      <button onClick={() => setScheduling(true)} className="btn-primary w-full mb-5 py-3">
         + Lên kế hoạch hẹn
       </button>
 
       {list.length === 0 ? (
-        <p className="text-center text-sm text-ink-soft py-10">Chưa có hẹn nào sắp tới — bắt đầu một buổi nha 💕</p>
+        <div
+          className="surface-card text-center py-10 px-6"
+          style={{ background: "transparent", borderStyle: "dashed", borderColor: "var(--color-hairline-strong)" }}
+        >
+          <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+            Chưa có hẹn nào sắp tới.
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--color-ink-mute)" }}>
+            Bắt đầu một buổi để cùng lên kế hoạch.
+          </p>
+        </div>
       ) : (
         <ul className="space-y-2">
-          {list.map((p) => (
-            <li key={p.id}>
-              <Link href={`/dates/plan/${p.id}`}
-                className="block rounded-2xl bg-white p-3 hover:bg-rose-50 transition-colors"
-                style={{ border: "1px solid rgba(255,201,213,0.4)" }}>
-                <p className="text-sm font-semibold text-ink">
-                  {p.title || "Buổi hẹn không tên"}
-                  {p.dress_code_emoji ? <span className="ml-1">{p.dress_code_emoji}</span> : null}
-                </p>
-                <p className="text-xs text-ink-soft mt-0.5">
-                  {new Date(p.start_at).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })}
-                </p>
-                <p className="text-[10px] text-rose-500 mt-1">
-                  {p.itinerary ? "✅ Đã chốt" : p.outline_snapshot ? "📝 Đang lên kế hoạch" : "🆕 Chọn khung mẫu"}
-                </p>
-              </Link>
-            </li>
-          ))}
+          {list.map((p) => {
+            const status = p.itinerary ? "done" : p.outline_snapshot ? "drafting" : "new";
+            const statusLabel =
+              status === "done" ? "Đã chốt" : status === "drafting" ? "Đang lên kế hoạch" : "Chọn khung mẫu";
+            return (
+              <li key={p.id}>
+                <Link
+                  href={`/dates/plan/${p.id}`}
+                  className="surface-card flex items-center gap-4 p-4 hover:translate-y-[-1px] transition-transform"
+                  style={{ boxShadow: "var(--shadow-sm)" }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14.5px] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+                      {p.title || "Buổi hẹn chưa đặt tên"}
+                      {p.dress_code_emoji ? <span className="ml-1.5">{p.dress_code_emoji}</span> : null}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--color-ink-soft)" }}>
+                      {new Date(p.start_at).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })}
+                    </p>
+                  </div>
+                  <span
+                    className="chip flex-shrink-0"
+                    style={
+                      status === "done"
+                        ? { background: "rgba(156, 175, 136, 0.14)", color: "#5C7A4A" }
+                        : status === "drafting"
+                        ? { background: "var(--color-accent-tint)", color: "var(--color-accent)" }
+                        : undefined
+                    }
+                  >
+                    {statusLabel}
+                  </span>
+                  <span aria-hidden style={{ color: "var(--color-ink-mute)" }}>
+                    ›
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
 

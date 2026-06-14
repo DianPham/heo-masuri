@@ -44,17 +44,19 @@ export default async function WardrobePage() {
   const suggestionsWithItems = suggestions.map((s) => ({ ...s, item: itemMap[s.wardrobe_item] }));
 
   return (
-    <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
+    <div className="min-h-dvh px-5 pb-16 pt-10" style={{ backgroundColor: "var(--color-cream)" }}>
       <div className="max-w-3xl mx-auto">
-        <Link href="/dates" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+        <Link href="/dates" className="back-link mb-4">
           ← Hẹn hò
         </Link>
-        <h1 className="text-2xl font-bold text-ink mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
-          Tủ đồ
-        </h1>
-        <p className="text-xs text-ink-soft mb-2">Đồ của bạn — nhấn vào để chỉnh ✏️</p>
-        <Link href={`/wardrobe/${partner}`} className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-4 active:scale-95 transition-all">
-          Xem tủ đồ của người ấy ↗
+        <h1 className="page-title mb-1.5">Tủ đồ</h1>
+        <p className="page-subtitle mb-2">Đồ của bạn — nhấn vào để chỉnh sửa.</p>
+        <Link
+          href={`/wardrobe/${partner}`}
+          className="inline-flex items-center gap-1 text-[12.5px] mb-6 transition-colors"
+          style={{ color: "var(--color-accent)" }}
+        >
+          Xem tủ đồ của người ấy →
         </Link>
 
         <PendingSuggestions initial={suggestionsWithItems} />

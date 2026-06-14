@@ -142,62 +142,64 @@ export function DateSchedulerSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+      style={{ background: "rgba(20, 10, 14, 0.45)", backdropFilter: "blur(2px)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-5 space-y-3"
-        style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}
+        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl bg-white p-6 space-y-4"
+        style={{ boxShadow: "var(--shadow-lg)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-ink" style={{ fontFamily: "var(--font-handwritten)" }}>
-          Hẹn nhau lúc nào? 💕
-        </h2>
+        <div>
+          <p className="section-eyebrow mb-1.5">Lên kế hoạch hẹn</p>
+          <h2
+            className="font-medium tracking-tight"
+            style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--color-ink)", lineHeight: 1.15 }}
+          >
+            Hẹn nhau lúc nào?
+          </h2>
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Bắt đầu từ">
+          <Field label="Bắt đầu">
             <input
               type="datetime-local"
               value={start}
               onChange={(e) => changeStart(e.target.value)}
               disabled={loadingDefaults}
-              className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-              style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+              className="input-base"
             />
           </Field>
-          <Field label="Đến">
+          <Field label="Kết thúc">
             <input
               type="datetime-local"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
               disabled={loadingDefaults}
-              className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-              style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+              className="input-base"
             />
           </Field>
         </div>
 
-        <Field label="Tên buổi hẹn (nếu muốn)">
+        <Field label="Tên buổi hẹn">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Hẹn cuối tuần"
-            className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base"
           />
         </Field>
 
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Field label="Dress code (nếu muốn)">
+        <div className="grid grid-cols-[1fr_auto] gap-3">
+          <Field label="Dress code">
             <input
               type="text"
               value={dressCode}
               onChange={(e) => setDressCode(e.target.value)}
               placeholder="Đỏ rượu, casual…"
-              className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-              style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+              className="input-base"
             />
           </Field>
           <Field label="Emoji">
@@ -206,8 +208,8 @@ export function DateSchedulerSheet({
               value={dressEmoji}
               onChange={(e) => setDressEmoji(e.target.value.slice(0, 16))}
               placeholder="👗"
-              className="w-14 text-base rounded-xl px-2 py-2 outline-none text-center"
-              style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+              className="input-base text-center"
+              style={{ width: 56, padding: "0.5625rem 0.5rem" }}
             />
           </Field>
         </div>
@@ -216,16 +218,11 @@ export function DateSchedulerSheet({
           <button
             onClick={submit}
             disabled={busy || loadingDefaults}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform"
-            style={{ backgroundColor: "#C4667A", opacity: busy || loadingDefaults ? 0.5 : 1 }}
+            className="btn-primary flex-1"
           >
             {busy ? "Đang tạo…" : "Tạo & lên kế hoạch"}
           </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
-          >
+          <button onClick={onClose} className="btn-ghost">
             Hủy
           </button>
         </div>
@@ -237,7 +234,7 @@ export function DateSchedulerSheet({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">{label}</label>
+      <label className="field-label">{label}</label>
       {children}
     </div>
   );

@@ -32,19 +32,14 @@ async function fetchIdeas(): Promise<DateIdea[]> {
 export default async function IdeasPage() {
   const ideas = await fetchIdeas();
   return (
-    <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
+    <div className="min-h-dvh px-5 pb-16 pt-10" style={{ backgroundColor: "var(--color-cream)" }}>
       <div className="max-w-3xl mx-auto">
-        <Link href="/dates" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+        <Link href="/dates" className="back-link mb-4">
           ← Hẹn hò
         </Link>
-        <h1
-          className="text-2xl font-bold text-ink mb-1"
-          style={{ fontFamily: "var(--font-handwritten)" }}
-        >
-          Ngân hàng ý tưởng
-        </h1>
-        <p className="text-xs text-ink-soft mb-5">
-          Thả vào những ý tưởng hẹn hò để dùng sau. Dán link TikTok / IG để tự lấy ảnh + tiêu đề.
+        <h1 className="page-title mb-1.5">Kho ý tưởng</h1>
+        <p className="page-subtitle mb-6 max-w-md">
+          Lưu link TikTok hay IG để dùng sau — tự lấy ảnh và tiêu đề.
         </p>
         <DateIdeasGrid initial={ideas} />
       </div>

@@ -98,12 +98,12 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
       <button
         onClick={() => setOpen(true)}
         aria-label="Chặn nhanh"
-        className="fixed right-5 w-14 h-14 rounded-full text-white text-2xl flex items-center justify-center"
+        className="fixed right-5 w-14 h-14 rounded-full text-white text-2xl flex items-center justify-center transition-all active:scale-95 hover:translate-y-[-1px]"
         style={{
           bottom: "calc(6rem + env(safe-area-inset-bottom))",
           zIndex: 40,
-          backgroundColor: "#C4667A",
-          boxShadow: "0 4px 18px rgba(196,102,122,0.45)",
+          background: "var(--color-accent)",
+          boxShadow: "0 8px 24px -4px rgba(177,73,99,0.42), 0 2px 4px rgba(58,33,41,0.08)",
         }}
       >
         +
@@ -112,26 +112,33 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
       {open && (
         <>
           <div
-            className="fixed inset-0 bg-black/30"
-            style={{ zIndex: 45 }}
+            className="fixed inset-0"
+            style={{ zIndex: 45, background: "rgba(20,10,14,0.45)", backdropFilter: "blur(2px)" }}
             onClick={closeSheet}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 rounded-t-3xl px-5 pt-5 max-w-md mx-auto"
+            className="fixed bottom-0 left-0 right-0 rounded-t-3xl px-6 pt-5 max-w-md mx-auto"
             style={{
               zIndex: 50,
-              backgroundColor: "white",
-              boxShadow: "0 -8px 30px rgba(0,0,0,0.15)",
-              paddingBottom: "calc(2rem + env(safe-area-inset-bottom))",
+              background: "#ffffff",
+              boxShadow: "var(--shadow-lg)",
+              paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))",
             }}
           >
-            <div className="w-12 h-1.5 rounded-full bg-rose-100 mx-auto mb-4" />
-            <h2 className="text-base font-bold text-ink mb-3">Chặn nhanh</h2>
+            <div
+              className="w-10 h-1 rounded-full mx-auto mb-4"
+              style={{ background: "rgba(58,33,41,0.12)" }}
+            />
+            <p className="section-eyebrow mb-1.5">Chặn nhanh</p>
+            <h2
+              className="font-medium tracking-tight mb-4"
+              style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--color-ink)" }}
+            >
+              Khoá vài khung giờ
+            </h2>
 
-            <p className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">
-              Khi nào
-            </p>
-            <div className="flex gap-2 mb-4">
+            <p className="field-label">Khi nào</p>
+            <div className="flex gap-1.5 mb-4">
               {SPANS.map((s) => {
                 const selected = span === s.key;
                 return (
@@ -139,12 +146,7 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
                     key={s.key}
                     onClick={() => setSpan(s.key)}
                     disabled={submitting}
-                    className="flex-1 py-2 rounded-xl text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: selected ? "rgba(255,201,213,0.7)" : "rgba(245,245,245,0.8)",
-                      color: selected ? "#C4667A" : "#666",
-                      border: selected ? "1px solid rgba(196,102,122,0.4)" : "1px solid transparent",
-                    }}
+                    className={`chip flex-1 justify-center py-2 ${selected ? "chip-active" : ""}`}
                   >
                     {s.label}
                   </button>
@@ -152,10 +154,10 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
               })}
             </div>
 
-            <p className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">
-              Khoảng nào <span className="opacity-70 normal-case font-normal">(chọn nhiều được)</span>
+            <p className="field-label">
+              Khoảng nào <span className="opacity-70 normal-case font-normal">· chọn nhiều được</span>
             </p>
-            <div className="space-y-2 mb-5">
+            <div className="space-y-1.5 mb-5">
               {PERIODS.map((p) => {
                 const selected = periods.has(p.key);
                 return (
@@ -163,36 +165,38 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
                     key={p.key}
                     onClick={() => togglePeriod(p.key)}
                     disabled={submitting}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all"
                     style={{
-                      backgroundColor: selected ? "rgba(255,201,213,0.65)" : "rgba(250,250,250,0.9)",
+                      background: selected ? "var(--color-accent-tint)" : "transparent",
                       border: selected
-                        ? "1px solid rgba(196,102,122,0.4)"
-                        : "1px solid rgba(220,220,220,0.5)",
+                        ? "1px solid var(--color-accent-soft)"
+                        : "1px solid var(--color-hairline)",
                     }}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2.5">
                       <span
-                        className="inline-block w-4 h-4 rounded border flex items-center justify-center"
+                        className="inline-block w-4 h-4 rounded flex items-center justify-center transition-colors"
                         style={{
-                          borderColor: selected ? "#C4667A" : "rgba(200,200,200,0.8)",
-                          backgroundColor: selected ? "#C4667A" : "white",
+                          background: selected ? "var(--color-accent)" : "#ffffff",
+                          border: selected ? "1px solid var(--color-accent)" : "1px solid var(--color-hairline-strong)",
                         }}
                       >
                         {selected && (
                           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                            <path d="M2 5 L4 7 L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M2 5 L4 7 L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
                       </span>
                       <span
-                        className="text-sm font-semibold"
-                        style={{ color: selected ? "#C4667A" : "#333" }}
+                        className="text-[13.5px] font-medium"
+                        style={{ color: selected ? "var(--color-accent)" : "var(--color-ink)" }}
                       >
                         {p.label}
                       </span>
                     </span>
-                    <span className="text-xs text-ink-soft">{p.hint}</span>
+                    <span className="text-[11.5px]" style={{ color: "var(--color-ink-mute)" }}>
+                      {p.hint}
+                    </span>
                   </button>
                 );
               })}
@@ -201,12 +205,7 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
             <button
               onClick={submit}
               disabled={periods.size === 0 || submitting}
-              className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition-opacity"
-              style={{
-                backgroundColor: "#C4667A",
-                opacity: periods.size === 0 || submitting ? 0.4 : 1,
-                boxShadow: "0 4px 12px rgba(196,102,122,0.3)",
-              }}
+              className="btn-primary w-full py-3"
             >
               {submitting
                 ? "Đang lưu…"
@@ -217,7 +216,8 @@ export function QuickBlockFAB({ onCreated }: { onCreated: () => void }) {
             <button
               onClick={closeSheet}
               disabled={submitting}
-              className="w-full text-center text-sm text-ink-soft mt-2 py-2 disabled:opacity-50"
+              className="w-full text-center text-[12px] mt-2 py-2 disabled:opacity-50"
+              style={{ color: "var(--color-ink-mute)" }}
             >
               Hủy
             </button>

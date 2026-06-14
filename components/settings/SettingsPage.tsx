@@ -39,12 +39,13 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2 px-1 pb-2.5">
-      <Icon size={13} className={danger ? "text-rose-400" : "text-rose-300"} />
+      <Icon
+        size={12}
+        style={{ color: danger ? "var(--color-accent)" : "var(--color-ink-mute)" }}
+      />
       <span
-        className={[
-          "font-accent text-sm",
-          danger ? "text-rose-400" : "text-ink-soft/70",
-        ].join(" ")}
+        className="section-eyebrow"
+        style={danger ? { color: "var(--color-accent)" } : undefined}
       >
         {label}
       </span>
@@ -52,20 +53,20 @@ function SectionHeader({
   );
 }
 
-// ── Row group — glass card style matching rest of app ────────
+// ── Row group — refined surface card with ink-tone divider ──
 function RowGroup({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="rounded-2xl overflow-hidden divide-y divide-rose-200/50"
+      className="rounded-2xl overflow-hidden"
       style={{
-        background: "rgba(255,255,255,0.55)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        border: "2px solid rgba(248,168,188,0.25)",
-        boxShadow: "0 2px 16px -6px rgba(168,50,79,0.10)",
+        background: "#ffffff",
+        border: "1px solid var(--color-hairline)",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
-      {children}
+      <div className="divide-y" style={{ borderColor: "var(--color-hairline)" }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -83,22 +84,18 @@ function Row({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between px-8 py-6 gap-4">
+    <div className="flex items-center justify-between gap-4 px-5 py-4">
       <div className="flex-1 min-w-0">
         <p
-          className={[
-            "font-body text-[15px] font-normal leading-snug",
-            danger ? "text-rose-500" : "text-ink",
-          ].join(" ")}
+          className="text-[14.5px] font-medium leading-snug"
+          style={{ color: danger ? "var(--color-accent)" : "var(--color-ink)" }}
         >
           {label}
         </p>
         {sublabel && (
           <p
-            className={[
-              "font-accent text-sm mt-0.5 leading-snug",
-              danger ? "text-rose-400/70" : "text-ink-soft/70",
-            ].join(" ")}
+            className="text-[12px] mt-0.5 leading-snug"
+            style={{ color: "var(--color-ink-mute)" }}
           >
             {sublabel}
           </p>
@@ -124,20 +121,19 @@ function TappableRow({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between px-8 py-6 gap-4 text-left
-                 hover:bg-rose-500/5 active:bg-rose-500/8 transition-colors duration-150"
+      className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-[rgba(58,33,41,0.025)]"
     >
       <div className="flex-1 min-w-0">
-        <p className="font-body text-[15px] font-normal text-ink leading-snug">
+        <p className="text-[14.5px] font-medium leading-snug" style={{ color: "var(--color-ink)" }}>
           {label}
         </p>
         {sublabel && (
-          <p className="font-accent text-sm text-ink-soft/70 mt-0.5 leading-snug">
+          <p className="text-[12px] mt-0.5 leading-snug" style={{ color: "var(--color-ink-mute)" }}>
             {sublabel}
           </p>
         )}
       </div>
-      {children ?? <ChevronRight size={15} className="text-ink/25 shrink-0" />}
+      {children ?? <ChevronRight size={14} style={{ color: "var(--color-ink-mute)" }} className="shrink-0" />}
     </button>
   );
 }
@@ -158,27 +154,34 @@ function Toggle({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
-      className={[
-        "relative inline-flex w-12 h-7 rounded-full transition-colors duration-200 shrink-0",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-1",
-        checked ? "bg-rose-400" : "bg-rose-200/80",
-        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
-      ].join(" ")}
+      className="relative inline-flex w-[42px] h-[26px] rounded-full transition-colors duration-200 shrink-0 focus-visible:outline-none"
+      style={{
+        background: checked ? "var(--color-accent)" : "rgba(58,33,41,0.18)",
+        opacity: disabled ? 0.5 : 1,
+        cursor: disabled ? "not-allowed" : "pointer",
+        boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.04)",
+      }}
     >
       <motion.span
         layout
         transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        className={[
-          "absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm",
-          checked ? "left-6" : "left-1",
-        ].join(" ")}
+        className="absolute top-[3px] w-5 h-5 bg-white rounded-full"
+        style={{
+          left: checked ? 19 : 3,
+          boxShadow: "0 1px 2px rgba(0,0,0,0.18)",
+        }}
       />
     </button>
   );
 }
 
 function ToggleSkeleton() {
-  return <div className="w-12 h-7 rounded-full bg-rose-200/50 animate-pulse shrink-0" />;
+  return (
+    <div
+      className="w-[42px] h-[26px] rounded-full animate-pulse shrink-0"
+      style={{ background: "rgba(58,33,41,0.08)" }}
+    />
+  );
 }
 
 // ── Main ─────────────────────────────────────────────────────
@@ -273,10 +276,7 @@ export function SettingsPage({ who }: SettingsPageProps) {
   }
 
   return (
-    <div
-      className="min-h-screen pb-24"
-      style={{ background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)" }}
-    >
+    <div className="min-h-screen pb-24" style={{ background: "var(--color-cream)" }}>
       <div className="max-w-[420px] lg:max-w-[640px] mx-auto">
 
         {/* ── Header ── */}
@@ -286,42 +286,39 @@ export function SettingsPage({ who }: SettingsPageProps) {
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="px-6 pt-12 pb-8 relative"
         >
-          {/* Small pig avatar in header */}
-          <div className="flex items-start justify-between mb-1">
-            <p className="font-accent text-sm text-rose-300/80">
-              {t("account")}
-            </p>
+          <div className="flex items-start justify-between mb-2">
+            <p className="section-eyebrow">{t("account")}</p>
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
               style={{
-                background: "linear-gradient(145deg, #FFE4EA, #FFF5F7)",
-                boxShadow: "var(--shadow-lift)",
+                background: "#ffffff",
+                border: "1px solid var(--color-hairline)",
+                boxShadow: "var(--shadow-sm)",
               }}
             >
-              <Pig pose="neutral" size={28} animate={false} />
+              <Pig pose="neutral" size={24} animate={false} />
             </div>
           </div>
 
           <div className="flex items-end justify-between">
             <h1
-              className="font-display text-[40px] leading-[1.05] text-ink italic tracking-[-0.01em]"
-              style={{ fontVariationSettings: "'opsz' 72" }}
+              className="font-display text-[36px] leading-[1.05] tracking-[-0.02em]"
+              style={{ color: "var(--color-ink)", fontWeight: 500 }}
             >
               {locale === "vi" ? "Cài đặt" : "Settings"}
             </h1>
 
-            {/* Saved badge */}
             <AnimatePresence>
               {saved && (
                 <motion.div
                   key="saved"
-                  initial={{ opacity: 0, scale: 0.85, y: 4 }}
+                  initial={{ opacity: 0, scale: 0.9, y: 4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.85 }}
-                  className="flex items-center gap-1.5 font-accent text-sm px-3 py-1.5 rounded-full mb-1"
-                  style={{ color: "#9CAF88", backgroundColor: "rgba(156,175,136,0.15)" }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-full mb-1.5 font-medium"
+                  style={{ color: "#5C7A4A", background: "rgba(156,175,136,0.16)" }}
                 >
-                  <Check size={12} />
+                  <Check size={11} />
                   {t("saved")}
                 </motion.div>
               )}
@@ -415,38 +412,30 @@ export function SettingsPage({ who }: SettingsPageProps) {
               </Row>
 
               {/* Quiet hours */}
-              <div className="px-6 py-5">
-                <p className="font-body text-[15px] text-ink leading-snug mb-2.5">
+              <div className="px-5 py-4">
+                <p className="text-[14.5px] font-medium leading-snug mb-2.5" style={{ color: "var(--color-ink)" }}>
                   {t("quietHours")}
                 </p>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="font-accent text-sm text-ink-soft/70">{t("quietFrom")}</span>
+                <div className="flex items-center gap-2 flex-wrap text-[12px]" style={{ color: "var(--color-ink-mute)" }}>
+                  <span>{t("quietFrom")}</span>
                   <input
                     key={`qs-${prefs?.quiet_start}`}
                     type="time"
                     defaultValue={prefs?.quiet_start ?? "23:00"}
                     onBlur={(e) => updatePref({ quiet_start: e.target.value })}
                     disabled={prefsLoading}
-                    className={[
-                      "font-body text-sm text-ink rounded-xl px-3 py-1.5 border-0 outline-none",
-                      "focus:ring-2 focus:ring-rose-400/40 transition-all",
-                      prefsLoading ? "opacity-50" : "",
-                    ].join(" ")}
-                    style={{ background: "rgba(248,168,188,0.18)" }}
+                    className="input-base"
+                    style={{ width: "auto", padding: "0.375rem 0.625rem", fontSize: "0.8125rem" }}
                   />
-                  <span className="font-accent text-sm text-ink-soft/70">{t("quietTo")}</span>
+                  <span>{t("quietTo")}</span>
                   <input
                     key={`qe-${prefs?.quiet_end}`}
                     type="time"
                     defaultValue={prefs?.quiet_end ?? "07:00"}
                     onBlur={(e) => updatePref({ quiet_end: e.target.value })}
                     disabled={prefsLoading}
-                    className={[
-                      "font-body text-sm text-ink rounded-xl px-3 py-1.5 border-0 outline-none",
-                      "focus:ring-2 focus:ring-rose-400/40 transition-all",
-                      prefsLoading ? "opacity-50" : "",
-                    ].join(" ")}
-                    style={{ background: "rgba(248,168,188,0.18)" }}
+                    className="input-base"
+                    style={{ width: "auto", padding: "0.375rem 0.625rem", fontSize: "0.8125rem" }}
                   />
                 </div>
               </div>
@@ -532,23 +521,24 @@ export function SettingsPage({ who }: SettingsPageProps) {
               className="fixed inset-x-0 bottom-0 z-50 px-5 pb-10 pt-2"
             >
               <div
-                className="max-w-[420px] mx-auto rounded-3xl p-6"
+                className="max-w-[420px] mx-auto rounded-2xl p-6"
                 style={{
-                  background: "linear-gradient(160deg, #FFF9F5 0%, #FFF5F7 100%)",
-                  boxShadow: "0 -4px 40px rgba(58,33,41,0.15)",
+                  background: "#ffffff",
+                  border: "1px solid var(--color-hairline)",
+                  boxShadow: "var(--shadow-lg)",
                 }}
               >
                 <div className="flex flex-col items-center text-center gap-4">
-                  <Pig pose="sad" size={80} animate={false} />
+                  <Pig pose="sad" size={72} animate={false} />
 
                   <div className="space-y-1">
                     <h2
-                      className="font-display text-xl text-ink italic"
-                      style={{ fontVariationSettings: "'opsz' 40" }}
+                      className="font-display text-[22px] tracking-tight"
+                      style={{ color: "var(--color-ink)", fontWeight: 500 }}
                     >
                       {t("deleteAll")}
                     </h2>
-                    <p className="font-accent text-base text-ink-soft">
+                    <p className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
                       {t("deleteConfirmPrompt")}
                     </p>
                   </div>
@@ -561,31 +551,28 @@ export function SettingsPage({ who }: SettingsPageProps) {
                     autoCapitalize="characters"
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full font-body text-sm text-ink rounded-2xl
-                               px-4 py-3.5 border-2 border-rose-200/60 outline-none
-                               focus:border-rose-300 transition-colors text-center tracking-wider"
-                    style={{ background: "rgba(255,255,255,0.7)" }}
+                    className="input-base text-center tracking-wider"
+                    style={{ padding: "0.75rem 1rem" }}
                   />
 
-                  <div className="flex gap-3 w-full">
+                  <div className="flex gap-2.5 w-full">
                     <button
                       onClick={() => { setShowDeleteModal(false); setDeleteInput(""); }}
-                      className="flex-1 font-accent text-base text-ink-soft py-3.5
-                                 rounded-2xl border-2 border-rose-200/60 hover:bg-rose-100 transition-colors"
+                      className="btn-ghost flex-1 py-3"
                     >
                       {t("deleteCancel")}
                     </button>
                     <button
                       onClick={handleWipe}
                       disabled={deleteInput !== confirmWord || deleting}
-                      className={[
-                        "flex-1 font-accent text-base py-3.5 rounded-2xl transition-colors",
-                        deleteInput === confirmWord && !deleting
-                          ? "bg-rose-500 text-white hover:bg-rose-600"
-                          : "bg-rose-200/40 text-rose-300 cursor-not-allowed",
-                      ].join(" ")}
+                      className="btn-primary flex-1 py-3"
+                      style={
+                        deleteInput !== confirmWord || deleting
+                          ? { background: "rgba(58,33,41,0.12)", color: "var(--color-ink-mute)" }
+                          : undefined
+                      }
                     >
-                      {deleting ? "..." : t("deleteConfirmButton")}
+                      {deleting ? "…" : t("deleteConfirmButton")}
                     </button>
                   </div>
                 </div>

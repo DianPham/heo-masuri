@@ -128,16 +128,12 @@ export default async function DatesHubPage() {
   const counts = await fetchCounts(who);
 
   return (
-    <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
+    <div className="min-h-dvh px-5 pb-16 pt-10" style={{ backgroundColor: "var(--color-cream)" }}>
       <div className="max-w-3xl mx-auto">
-        <h1
-          className="text-3xl font-bold text-ink mb-1"
-          style={{ fontFamily: "var(--font-handwritten)" }}
-        >
-          Hẹn hò 💕
-        </h1>
-        <p className="text-sm text-ink-soft mb-6">
-          Kế hoạch, ý tưởng, outfit, ngày đặc biệt của hai đứa.
+        <p className="section-eyebrow mb-2">Hẹn hò</p>
+        <h1 className="page-title-lg mb-2">Chúng mình hôm nay</h1>
+        <p className="page-subtitle mb-8 max-w-md">
+          Kế hoạch, ý tưởng, tủ đồ và những ngày đặc biệt — tất cả ở đây.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -147,7 +143,7 @@ export default async function DatesHubPage() {
             label="Lên kế hoạch hẹn"
             sub={
               counts.upcomingDates === 0
-                ? "Chưa có hẹn nào sắp tới — bắt đầu nha"
+                ? "Chưa có hẹn sắp tới — bắt đầu một buổi"
                 : counts.nextDateAt
                 ? `Sắp hẹn: ${formatDateShort(counts.nextDateAt)}`
                 : `${counts.upcomingDates} kế hoạch đang lên`
@@ -173,8 +169,8 @@ export default async function DatesHubPage() {
               counts.pendingSuggestions > 0
                 ? `${counts.pendingSuggestions} gợi ý chờ bạn chốt`
                 : counts.wardrobeOwn === 0
-                ? "Thêm đồ vào tủ để người ấy chọn cho"
-                : `Tủ bạn ${counts.wardrobeOwn} món · tủ người ấy ${counts.wardrobePartner}`
+                ? "Thêm đồ để người ấy chọn cho bạn"
+                : `Tủ bạn ${counts.wardrobeOwn} món · người ấy ${counts.wardrobePartner}`
             }
             badge={counts.pendingSuggestions > 0 ? counts.pendingSuggestions : null}
           />
@@ -186,19 +182,16 @@ export default async function DatesHubPage() {
               counts.nextImportantDays == null
                 ? "Sinh nhật, kỷ niệm — thêm để được nhắc"
                 : counts.nextImportantDays === 0
-                ? `Hôm nay là ${counts.nextImportantLabel} 💕`
+                ? `Hôm nay là ${counts.nextImportantLabel}`
                 : counts.nextImportantDays === 1
-                ? `Ngày mai: ${counts.nextImportantLabel}`
-                : `Còn ${counts.nextImportantDays} ngày nữa: ${counts.nextImportantLabel}`
+                ? `Ngày mai · ${counts.nextImportantLabel}`
+                : `Còn ${counts.nextImportantDays} ngày · ${counts.nextImportantLabel}`
             }
           />
         </div>
 
-        <div className="mt-8 flex justify-center">
-          <Link
-            href={who ? `/${who}` : "/"}
-            className="text-xs text-ink-soft hover:text-ink active:scale-95 transition-all"
-          >
+        <div className="mt-10 flex justify-center">
+          <Link href={who ? `/${who}` : "/"} className="back-link">
             ← Về trang chính
           </Link>
         </div>
@@ -225,30 +218,56 @@ function HubCard({
   return (
     <Link
       href={href}
-      className="relative flex items-start gap-3 p-4 rounded-2xl bg-white hover:bg-rose-50 active:scale-[0.98] transition-all"
+      className="group relative flex items-center gap-4 p-5 rounded-2xl transition-all active:scale-[0.99]"
       style={{
+        background: "#ffffff",
         border: primary
-          ? "1.5px solid rgba(196,102,122,0.5)"
-          : "1px solid rgba(255,201,213,0.4)",
-        boxShadow: primary
-          ? "0 4px 16px rgba(196,102,122,0.18)"
-          : "0 2px 10px rgba(196,102,122,0.06)",
+          ? "1px solid var(--color-accent-soft)"
+          : "1px solid var(--color-hairline)",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
-      <span className="text-3xl leading-none flex-shrink-0" aria-hidden>{icon}</span>
+      {primary && (
+        <span
+          aria-hidden
+          className="absolute left-0 top-5 bottom-5 w-[3px] rounded-r-full"
+          style={{ background: "var(--color-accent)" }}
+        />
+      )}
+      <span
+        className="text-2xl leading-none flex-shrink-0 grid place-items-center w-11 h-11 rounded-xl"
+        style={{ background: primary ? "var(--color-accent-tint)" : "rgba(58,33,41,0.035)" }}
+        aria-hidden
+      >
+        {icon}
+      </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-ink truncate">{label}</p>
-        <p className="text-xs text-ink-soft mt-0.5 leading-snug">{sub}</p>
+        <p
+          className="text-[15px] font-semibold tracking-tight truncate"
+          style={{ color: "var(--color-ink)" }}
+        >
+          {label}
+        </p>
+        <p className="text-[12.5px] mt-0.5 leading-snug" style={{ color: "var(--color-ink-soft)" }}>
+          {sub}
+        </p>
       </div>
       {badge != null && badge > 0 && (
         <span
-          className="absolute top-2 right-2 min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold text-white flex items-center justify-center"
-          style={{ backgroundColor: "#C4667A" }}
+          className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full text-[10px] font-semibold text-white flex items-center justify-center"
+          style={{ background: "var(--color-accent)" }}
           aria-label={`${badge} item${badge === 1 ? "" : "s"}`}
         >
           {badge > 9 ? "9+" : badge}
         </span>
       )}
+      <span
+        aria-hidden
+        className="flex-shrink-0 text-lg transition-transform group-hover:translate-x-0.5"
+        style={{ color: "var(--color-ink-mute)" }}
+      >
+        ›
+      </span>
     </Link>
   );
 }

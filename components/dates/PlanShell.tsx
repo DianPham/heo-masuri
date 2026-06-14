@@ -180,19 +180,27 @@ function TemplatePicker({
   }
   return (
     <div>
-      <h2 className="text-sm font-semibold text-ink-soft mb-3">Bắt đầu từ khung mẫu nào nha?</h2>
+      <p className="section-eyebrow mb-3">Bắt đầu từ khung mẫu nào</p>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {templates.map((t) => (
           <button
             key={t.id}
             onClick={() => pick(t)}
             disabled={saving}
-            className="text-left p-4 rounded-2xl bg-white hover:shadow-lg transition-shadow"
-            style={{ border: "1px solid rgba(255,201,213,0.4)", boxShadow: "0 4px 12px rgba(196,102,122,0.06)" }}
+            className="surface-card text-left p-4 transition-all hover:translate-y-[-1px] active:scale-[0.98]"
+            style={{ boxShadow: "var(--shadow-sm)" }}
           >
-            <p className="text-sm font-bold text-ink">{t.label_vi}</p>
-            {t.description_vi && <p className="text-xs text-ink-soft mt-1 line-clamp-2">{t.description_vi}</p>}
-            <p className="text-[10px] text-rose-500 mt-2">{t.slots.length} bước</p>
+            <p className="text-[14px] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+              {t.label_vi}
+            </p>
+            {t.description_vi && (
+              <p className="text-[12px] mt-1 line-clamp-2" style={{ color: "var(--color-ink-soft)" }}>
+                {t.description_vi}
+              </p>
+            )}
+            <p className="text-[11px] mt-2.5" style={{ color: "var(--color-accent)" }}>
+              {t.slots.length} bước
+            </p>
           </button>
         ))}
       </div>
@@ -284,8 +292,10 @@ function OutlineEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-ink-soft">Các bước ({slots.length})</h2>
-        <p className="text-xs text-ink-soft">{totalCandidates} ý tưởng</p>
+        <p className="section-eyebrow">Các bước · {slots.length}</p>
+        <p className="text-[11.5px]" style={{ color: "var(--color-ink-mute)" }}>
+          {totalCandidates} ý tưởng
+        </p>
       </div>
 
       <ol className="space-y-3">
@@ -313,11 +323,12 @@ function OutlineEditor({
         <button
           onClick={onSpin}
           disabled={saving || !allHaveCandidates}
-          className="w-full py-3.5 rounded-2xl text-base font-bold text-white"
-          style={{
-            backgroundColor: allHaveCandidates ? "#C4667A" : "#ddd",
-            boxShadow: allHaveCandidates ? "0 6px 16px rgba(196,102,122,0.35)" : "none",
-          }}
+          className="btn-primary w-full py-3.5 text-[15px]"
+          style={
+            !allHaveCandidates
+              ? { background: "rgba(58,33,41,0.12)", color: "var(--color-ink-mute)", cursor: "not-allowed" }
+              : undefined
+          }
         >
           {saving ? "Đang quay…" : allHaveCandidates ? "Quay vòng 🎲" : "Mỗi bước cần ít nhất 1 ý tưởng"}
         </button>
@@ -354,11 +365,20 @@ function SlotCard({
   const pickedIdeaIds = new Set(slot.candidates.filter((c) => c.date_idea_id).map((c) => c.date_idea_id));
 
   return (
-    <div className="rounded-2xl bg-white p-4" style={{ border: "1px solid rgba(255,201,213,0.4)" }}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-semibold text-rose-500">Bước {slotIndex + 1}</span>
-        <span className="text-sm font-bold text-ink">{SLOT_LABEL[slot.type] ?? slot.type}</span>
-        <span className="text-xs text-ink-soft">· {slot.label_vi}</span>
+    <div className="surface-card p-4" style={{ boxShadow: "var(--shadow-sm)" }}>
+      <div className="flex items-center gap-2 mb-2.5">
+        <span
+          className="inline-flex w-5 h-5 items-center justify-center rounded-full text-[10px] font-semibold"
+          style={{ background: "var(--color-accent-tint)", color: "var(--color-accent)" }}
+        >
+          {slotIndex + 1}
+        </span>
+        <span className="text-[14px] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+          {SLOT_LABEL[slot.type] ?? slot.type}
+        </span>
+        <span className="text-[11.5px]" style={{ color: "var(--color-ink-mute)" }}>
+          · {slot.label_vi}
+        </span>
         <div className="ml-auto flex items-center gap-1">
           {onMoveUp && <IconButton onClick={onMoveUp} label="Lên">↑</IconButton>}
           {onMoveDown && <IconButton onClick={onMoveDown} label="Xuống">↓</IconButton>}
@@ -367,15 +387,16 @@ function SlotCard({
       </div>
 
       {slot.candidates.length > 0 && (
-        <ul className="flex flex-wrap gap-1.5 mb-2">
+        <ul className="flex flex-wrap gap-1.5 mb-2.5">
           {slot.candidates.map((c) => (
             <li key={c.id}>
               <button
                 onClick={() => onRemoveCandidate(c.id)}
-                className="text-xs px-2 py-1 rounded-full bg-rose-100 text-rose-700"
+                className="chip chip-active gap-1"
                 title="Bấm để xóa"
               >
-                {c.label_vi} ✕
+                {c.label_vi}
+                <span style={{ opacity: 0.7 }}>✕</span>
               </button>
             </li>
           ))}
@@ -384,16 +405,19 @@ function SlotCard({
 
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="text-xs text-rose-500 underline underline-offset-2 mb-2"
+        className="text-[11.5px] mb-2 transition-colors"
+        style={{ color: "var(--color-accent)" }}
       >
         {expanded ? "Ẩn ý tưởng" : "Thêm ý tưởng"}
       </button>
 
       {expanded && (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {ideas.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[10px] font-semibold text-ink-soft uppercase tracking-wide">Từ ngân hàng ý tưởng</p>
+              <p className="field-label" style={{ marginBottom: 4 }}>
+                Từ kho ý tưởng
+              </p>
               <ul className="space-y-1">
                 {ideas.map((it) => (
                   <li key={it.id}>
@@ -402,9 +426,12 @@ function SlotCard({
                         type="checkbox"
                         checked={pickedIdeaIds.has(it.id)}
                         onChange={(e) => onToggleIdea(it, e.target.checked)}
-                        className="w-4 h-4 accent-rose-400"
+                        className="w-4 h-4"
+                        style={{ accentColor: "var(--color-accent)" }}
                       />
-                      <span className="text-xs text-ink truncate">{it.title || it.url || it.notes || "(idea)"}</span>
+                      <span className="text-[12.5px] truncate" style={{ color: "var(--color-ink)" }}>
+                        {it.title || it.url || it.notes || "(idea)"}
+                      </span>
                     </label>
                   </li>
                 ))}
@@ -417,13 +444,13 @@ function SlotCard({
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
               placeholder="+ Tự thêm…"
-              className="flex-1 text-xs rounded-xl px-3 py-1.5 outline-none"
-              style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+              className="input-base flex-1"
+              style={{ padding: "0.375rem 0.625rem", fontSize: "0.8125rem" }}
             />
             <button
               onClick={() => { onAddCustom(custom); setCustom(""); }}
-              className="text-xs px-3 py-1.5 rounded-xl text-rose-600"
-              style={{ border: "1px solid rgba(255,201,213,0.6)" }}
+              className="btn-ghost"
+              style={{ padding: "0.375rem 0.875rem", fontSize: "0.8125rem" }}
             >
               Thêm
             </button>
@@ -431,16 +458,11 @@ function SlotCard({
         </div>
       )}
 
-      <details className="mt-3 text-xs text-ink-soft">
+      <details className="mt-3 text-[11.5px]" style={{ color: "var(--color-ink-mute)" }}>
         <summary className="cursor-pointer">+ Chèn bước sau bước này</summary>
         <div className="flex flex-wrap gap-1 mt-2">
           {SLOT_TYPES.map((t) => (
-            <button
-              key={t}
-              onClick={() => onInsertAfter(t)}
-              className="text-xs px-2 py-1 rounded-full"
-              style={{ border: "1px solid rgba(220,220,220,0.6)" }}
-            >
+            <button key={t} onClick={() => onInsertAfter(t)} className="chip">
               {SLOT_LABEL[t]}
             </button>
           ))}
@@ -457,10 +479,10 @@ function IconButton({
     <button
       onClick={onClick}
       aria-label={label}
-      className="w-7 h-7 rounded-full text-sm"
+      className="w-7 h-7 rounded-full text-[12px] flex items-center justify-center transition-colors hover:bg-[rgba(58,33,41,0.04)]"
       style={{
-        border: "1px solid rgba(220,220,220,0.6)",
-        color: danger ? "#C4667A" : "#666",
+        border: "1px solid var(--color-hairline-strong)",
+        color: danger ? "var(--color-accent)" : "var(--color-ink-soft)",
       }}
     >
       {children}
@@ -474,24 +496,19 @@ function AddSlotButton({ onAdd }: { onAdd: (type: string) => void }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full py-2.5 rounded-2xl text-sm font-semibold text-rose-500"
-        style={{ border: "1px dashed rgba(255,201,213,0.6)" }}
+        className="w-full py-3 rounded-2xl text-[13px] font-medium transition-colors hover:bg-[rgba(58,33,41,0.02)]"
+        style={{ border: "1px dashed var(--color-hairline-strong)", color: "var(--color-ink-soft)" }}
       >
         + Thêm bước
       </button>
     );
   }
   return (
-    <div className="rounded-2xl p-3 bg-white" style={{ border: "1px solid rgba(255,201,213,0.4)" }}>
-      <p className="text-xs text-ink-soft mb-2">Chọn loại bước</p>
+    <div className="surface-card p-3.5" style={{ boxShadow: "var(--shadow-sm)" }}>
+      <p className="field-label">Chọn loại bước</p>
       <div className="flex flex-wrap gap-1.5">
         {SLOT_TYPES.map((t) => (
-          <button
-            key={t}
-            onClick={() => { onAdd(t); setOpen(false); }}
-            className="text-xs px-3 py-1.5 rounded-full"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
-          >
+          <button key={t} onClick={() => { onAdd(t); setOpen(false); }} className="chip">
             {SLOT_LABEL[t]}
           </button>
         ))}
@@ -526,21 +543,36 @@ function ItineraryView({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-ink">Kế hoạch hẹn 🎲</h2>
+      <div>
+        <p className="section-eyebrow mb-1.5">Kết quả vòng quay</p>
+        <h2 className="page-title">Kế hoạch hẹn 🎲</h2>
+      </div>
       <ol className="space-y-2">
         {itinerary.map((it, i) => {
           if (i >= revealCount) {
-            return <li key={i} className="rounded-2xl p-3 bg-rose-50 animate-pulse text-xs text-ink-soft">…</li>;
+            return (
+              <li
+                key={i}
+                className="rounded-2xl p-4 animate-pulse text-[11.5px]"
+                style={{ background: "rgba(58,33,41,0.04)", color: "var(--color-ink-mute)" }}
+              >
+                …
+              </li>
+            );
           }
           const slotEmoji = SLOT_LABEL[it.type ?? "other"] ?? "✨";
           return (
-            <li key={i} className="rounded-2xl bg-white p-3" style={{ border: "1px solid rgba(255,201,213,0.4)" }}>
-              <p className="text-[10px] font-semibold text-ink-soft uppercase tracking-wide">{slotEmoji} · Bước {i + 1}</p>
-              <p className="text-sm font-bold text-ink mt-1">
+            <li key={i} className="surface-card p-4" style={{ boxShadow: "var(--shadow-sm)" }}>
+              <p className="field-label" style={{ marginBottom: 4 }}>
+                {slotEmoji} · Bước {i + 1}
+              </p>
+              <p className="text-[15px] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
                 {it.pick?.label_vi ?? "(chưa có ý tưởng)"}
               </p>
               {it.manually_overridden && (
-                <p className="text-[10px] text-rose-500 mt-1">đã chọn tay</p>
+                <p className="text-[10.5px] mt-1" style={{ color: "var(--color-accent)" }}>
+                  đã chọn tay
+                </p>
               )}
             </li>
           );
@@ -548,12 +580,7 @@ function ItineraryView({
       </ol>
       {allRevealed && (
         <div className="flex gap-2">
-          <button
-            onClick={onReset}
-            disabled={saving}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-ink-soft active:scale-95 transition-transform"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
-          >
+          <button onClick={onReset} disabled={saving} className="btn-ghost flex-1 py-3">
             Quay lại 🎲
           </button>
         </div>

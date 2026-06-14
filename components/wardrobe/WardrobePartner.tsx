@@ -20,12 +20,21 @@ export function WardrobePartner({ partnerSlug, initial }: Props) {
   const [picked, setPicked] = useState<VisibleWardrobeItem | null>(null);
 
   if (items.length === 0) {
-    return <p className="text-center text-sm text-ink-soft py-8">Tủ đồ của người ấy trống.</p>;
+    return (
+      <div
+        className="text-center py-10 px-6 rounded-2xl"
+        style={{ border: "1px dashed var(--color-hairline-strong)" }}
+      >
+        <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+          Tủ đồ của người ấy còn trống.
+        </p>
+      </div>
+    );
   }
 
   return (
     <>
-      <p className="text-xs text-ink-soft mb-3">Nhấn vào một bộ để gợi ý cho lần hẹn tới.</p>
+      <p className="page-subtitle mb-4">Nhấn vào một bộ để gợi ý cho lần hẹn tới.</p>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {items.map((it) => (
           <ItemTile key={it.id} item={it} onClick={() => setPicked(it)} />
@@ -79,49 +88,65 @@ function SuggestSheet({
   const src = item.photo_signed_url ?? item.thumbnail_signed_url ?? "";
   return (
     <>
-      <div className="fixed inset-0 bg-black/30" style={{ zIndex: 100 }} onClick={() => !saving && onClose()} />
       <div
-        className="fixed left-0 right-0 bottom-0 rounded-t-3xl px-5 pt-5 max-w-md mx-auto bg-white lg:bottom-auto lg:top-1/2 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-3xl"
-        style={{ zIndex: 110, boxShadow: "0 -8px 30px rgba(0,0,0,0.15)", paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
+        className="fixed inset-0"
+        style={{ zIndex: 100, background: "rgba(20, 10, 14, 0.45)", backdropFilter: "blur(2px)" }}
+        onClick={() => !saving && onClose()}
+      />
+      <div
+        className="fixed left-0 right-0 bottom-0 rounded-t-3xl px-6 pt-5 max-w-md mx-auto bg-white lg:bottom-auto lg:top-1/2 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-2xl"
+        style={{ zIndex: 110, boxShadow: "var(--shadow-lg)", paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
       >
-        <div className="w-12 h-1.5 rounded-full bg-rose-100 mx-auto mb-4 lg:hidden" />
-        <h2 className="text-lg font-bold text-ink mb-1">Chọn cho người ấy mặc nha 💕</h2>
-        <p className="text-xs text-ink-soft mb-3">Người ấy sẽ nhận được thông báo gợi ý.</p>
+        <div
+          className="w-10 h-1 rounded-full mx-auto mb-4 lg:hidden"
+          style={{ background: "rgba(58,33,41,0.12)" }}
+        />
+        <p className="section-eyebrow mb-1.5">Gợi ý đồ mặc</p>
+        <h2
+          className="font-medium tracking-tight mb-1"
+          style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--color-ink)", lineHeight: 1.15 }}
+        >
+          Chọn cho người ấy mặc nha
+        </h2>
+        <p className="page-subtitle mb-4">Người ấy sẽ nhận được thông báo gợi ý.</p>
 
-        <div className="flex gap-3 mb-3">
+        <div className="surface-card-soft flex gap-3.5 p-3 mb-4">
           <div
-            className="w-20 h-20 rounded-xl flex-shrink-0 bg-rose-50"
-            style={{ backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}
+            className="w-16 h-16 rounded-lg flex-shrink-0"
+            style={{
+              background: "rgba(58,33,41,0.04)",
+              backgroundImage: `url(${src})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
           />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-ink">{item.label || "Đồ chưa đặt tên"}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+              {item.label || "Đồ chưa đặt tên"}
+            </p>
             {item.tags.length > 0 && (
-              <p className="text-xs text-ink-soft mt-1">{item.tags.map((t) => `#${t}`).join(" ")}</p>
+              <p className="text-[11.5px] mt-1" style={{ color: "var(--color-ink-mute)" }}>
+                {item.tags.map((t) => `#${t}`).join(" ")}
+              </p>
             )}
           </div>
         </div>
 
-        <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Lời nhắn (nếu muốn)</label>
+        <label className="field-label">Lời nhắn (nếu muốn)</label>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={3}
           maxLength={500}
           placeholder="Trông sẽ rất xinh…"
-          className="w-full text-sm rounded-xl px-3 py-2 mb-4 outline-none resize-none"
-          style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+          className="input-base resize-none mb-4"
         />
 
         <div className="flex gap-2">
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white active:scale-95 transition-transform"
-            style={{ backgroundColor: "#C4667A", opacity: saving ? 0.5 : 1 }}
-          >
+          <button onClick={handleSubmit} disabled={saving} className="btn-primary flex-1 py-3">
             {saving ? "Đang gửi…" : "Gửi gợi ý"}
           </button>
-          <button onClick={() => !saving && onClose()} className="px-5 py-3 rounded-2xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(255,201,213,0.5)" }}>
+          <button onClick={() => !saving && onClose()} className="btn-ghost">
             Hủy
           </button>
         </div>

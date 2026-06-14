@@ -15,7 +15,7 @@ import { Home, Settings, Heart } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { NotebookIcon } from "@/components/notebook/NotebookIcon";
 
-type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }>;
 
 function useUnseenAskCount(who: "heo" | "masuri") {
   const [count, setCount] = useState(0);
@@ -62,21 +62,22 @@ export function SideNav({ who }: { who: "heo" | "masuri" }) {
 
   return (
     <nav
-      className="hidden lg:flex fixed left-0 top-0 bottom-0 z-30 w-60 flex-col border-r border-rose-200/50 px-5 pt-8 pb-6"
+      className="hidden lg:flex fixed left-0 top-0 bottom-0 z-30 w-60 flex-col px-4 pt-9 pb-6"
       style={{
-        background: "rgba(255, 249, 245, 0.94)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
+        background: "rgba(255, 249, 245, 0.92)",
+        backdropFilter: "saturate(140%) blur(20px)",
+        WebkitBackdropFilter: "saturate(140%) blur(20px)",
+        borderRight: "1px solid var(--color-hairline)",
       } as React.CSSProperties}
     >
       <p
-        className="text-2xl font-bold text-rose-400 mb-8 px-2"
-        style={{ fontFamily: "var(--font-handwritten)" }}
+        className="mb-10 px-3 text-[20px] font-medium tracking-tight"
+        style={{ fontFamily: "var(--font-display)", color: "var(--color-ink)" }}
       >
         {sectionLabel}
       </p>
 
-      <ul className="flex flex-col gap-1">
+      <ul className="flex flex-col gap-0.5">
         {links.map(({ href, icon: Icon, label, matchPrefix }) => {
           const active = matchPrefix ? pathname.startsWith(href) : pathname === href;
           const isNotebook = href.endsWith("/notebook");
@@ -86,20 +87,23 @@ export function SideNav({ who }: { who: "heo" | "masuri" }) {
             <li key={href}>
               <Link
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-colors ${
-                  active ? "bg-rose-100" : "hover:bg-rose-50"
-                }`}
+                aria-current={active ? "page" : undefined}
+                className="group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors"
+                style={{
+                  background: active ? "var(--color-accent-tint)" : "transparent",
+                }}
               >
                 <span className="relative flex-shrink-0">
                   <Icon
-                    size={22}
-                    strokeWidth={active ? 2.2 : 1.6}
-                    className={`transition-colors duration-200 ${active ? "text-rose-500" : "text-rose-400"}`}
+                    size={20}
+                    strokeWidth={active ? 2.1 : 1.7}
+                    className="transition-colors duration-200"
+                    style={{ color: active ? "var(--color-accent)" : "var(--color-ink-mute)" }}
                   />
                   {showBadge && (
                     <span
-                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: "#E97A95", fontSize: 9, lineHeight: 1 }}
+                      className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full flex items-center justify-center text-white font-semibold"
+                      style={{ background: "var(--color-accent)", fontSize: 9, lineHeight: 1 }}
                       aria-label={`${unseenAsks} câu trả lời mới`}
                     >
                       {unseenAsks > 9 ? "9+" : unseenAsks}
@@ -107,9 +111,8 @@ export function SideNav({ who }: { who: "heo" | "masuri" }) {
                   )}
                 </span>
                 <span
-                  className={`font-accent text-base transition-colors duration-200 ${
-                    active ? "text-rose-500" : "text-rose-400"
-                  }`}
+                  className="text-sm font-medium tracking-tight transition-colors duration-200"
+                  style={{ color: active ? "var(--color-accent)" : "var(--color-ink)" }}
                 >
                   {label}
                 </span>
@@ -119,16 +122,19 @@ export function SideNav({ who }: { who: "heo" | "masuri" }) {
         })}
       </ul>
 
-      <div className="mt-auto px-2 text-[10px] text-ink-soft/60">
-        Heo &amp; Masuri 💕
+      <div
+        className="mt-auto px-3 text-[10px] tracking-wide uppercase"
+        style={{ color: "var(--color-ink-mute)", letterSpacing: "0.1em" }}
+      >
+        Heo &amp; Masuri
       </div>
     </nav>
   );
 }
 
-function CalendarIcon({ size = 22, strokeWidth = 1.6, className }: { size?: number; strokeWidth?: number; className?: string }) {
+function CalendarIcon({ size = 22, strokeWidth = 1.6, className, style }: { size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} style={style}>
       <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth={strokeWidth} />
       <path d="M3 9 L21 9" stroke="currentColor" strokeWidth={strokeWidth} />
       <path d="M8 3 L8 7" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />

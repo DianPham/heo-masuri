@@ -83,7 +83,7 @@ export function DateIdeasGrid({ initial }: { initial: DateIdea[] }) {
   return (
     <div>
       {/* Filter chips */}
-      <div className="flex gap-1.5 mb-3 flex-wrap">
+      <div className="flex gap-1.5 mb-4 flex-wrap">
         <Chip active={slotFilter === "all"} onClick={() => setSlotFilter("all")}>Tất cả</Chip>
         {SLOT_LIST.map((s) => (
           <Chip key={s} active={slotFilter === s} onClick={() => setSlotFilter(s)}>{SLOT_LABEL_VI[s]}</Chip>
@@ -116,19 +116,20 @@ export function DateIdeasGrid({ initial }: { initial: DateIdea[] }) {
           }}
         />
       ) : (
-        <button
-          onClick={() => setEditingId("new")}
-          className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white"
-          style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)" }}
-        >
+        <button onClick={() => setEditingId("new")} className="btn-primary w-full mb-5 py-3">
           + Thêm ý tưởng
         </button>
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-center text-sm text-ink-soft py-10">
-          {ideas.length === 0 ? "Chưa có ý tưởng nào." : "Không có ý tưởng nào trong loại này."}
-        </p>
+        <div
+          className="text-center py-10 px-6 rounded-2xl"
+          style={{ borderStyle: "dashed", border: "1px dashed var(--color-hairline-strong)" }}
+        >
+          <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+            {ideas.length === 0 ? "Chưa có ý tưởng nào." : "Không có ý tưởng nào trong loại này."}
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {filtered.map((i) =>
@@ -184,16 +185,7 @@ export function DateIdeasGrid({ initial }: { initial: DateIdea[] }) {
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button
-      onClick={onClick}
-      className="px-2.5 py-1 rounded-full text-xs whitespace-nowrap"
-      style={{
-        backgroundColor: active ? "rgba(255,201,213,0.6)" : "rgba(255,255,255,0.7)",
-        color: active ? "#C4667A" : "#666",
-        border: "1px solid rgba(255,201,213,0.4)",
-        fontWeight: active ? 600 : 400,
-      }}
-    >
+    <button onClick={onClick} className={`chip ${active ? "chip-active" : ""}`}>
       {children}
     </button>
   );
@@ -250,30 +242,43 @@ function IdeaCard({ idea, onEdit }: { idea: DateIdea; onEdit: () => void }) {
       onTouchEnd={cancelLongPress}
       onTouchCancel={cancelLongPress}
       title={idea.url ? "Mở · chuột phải để chỉnh sửa" : "Chỉnh sửa"}
-      className="text-left rounded-2xl overflow-hidden bg-white hover:shadow-lg transition-shadow flex flex-col active:scale-[0.98]"
+      className="surface-card group text-left overflow-hidden flex flex-col transition-all active:scale-[0.98] hover:translate-y-[-2px]"
       style={{
-        border: "1px solid rgba(255,201,213,0.4)",
-        boxShadow: "0 4px 12px rgba(196,102,122,0.06)",
+        boxShadow: "var(--shadow-sm)",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
         userSelect: "none",
       }}
     >
       <div
-        className="aspect-square w-full flex items-center justify-center bg-rose-50"
-        style={{ backgroundImage: idea.thumbnail_url ? `url(${idea.thumbnail_url})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="aspect-square w-full flex items-center justify-center"
+        style={{
+          background: idea.thumbnail_url ? undefined : "rgba(58,33,41,0.04)",
+          backgroundImage: idea.thumbnail_url ? `url(${idea.thumbnail_url})` : undefined,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
-        {!idea.thumbnail_url && <span className="text-3xl opacity-60">✨</span>}
+        {!idea.thumbnail_url && (
+          <span className="text-3xl" style={{ color: "var(--color-ink-mute)" }}>
+            ✨
+          </span>
+        )}
       </div>
-      <div className="p-2.5 flex-1">
-        <p className="text-sm font-semibold text-ink line-clamp-2">
+      <div className="p-3 flex-1">
+        <p
+          className="text-[13.5px] font-semibold tracking-tight line-clamp-2"
+          style={{ color: "var(--color-ink)", lineHeight: 1.3 }}
+        >
           {idea.title || idea.url || idea.notes || "Ý tưởng chưa đặt tên"}
         </p>
         {idea.slot_type && (
-          <p className="text-[10px] text-rose-500 mt-1">{SLOT_LABEL_VI[idea.slot_type]}</p>
+          <p className="text-[11px] mt-1.5" style={{ color: "var(--color-accent)" }}>
+            {SLOT_LABEL_VI[idea.slot_type]}
+          </p>
         )}
         {idea.tags.length > 0 && (
-          <p className="text-[10px] text-ink-soft mt-1 truncate">
+          <p className="text-[10.5px] mt-1 truncate" style={{ color: "var(--color-ink-mute)" }}>
             {idea.tags.map((t) => `#${t}`).join(" ")}
           </p>
         )}
@@ -382,7 +387,7 @@ function IdeaForm({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-4 space-y-3 mb-3" style={{ border: "1px solid rgba(255,201,213,0.6)" }}>
+    <div className="surface-card p-5 space-y-3.5 mb-5" style={{ boxShadow: "var(--shadow-sm)" }}>
       <Field label="URL">
         <div className="flex gap-2">
           <input
@@ -391,14 +396,12 @@ function IdeaForm({
             onChange={(e) => set("url", e.target.value)}
             onBlur={tryPreview}
             placeholder="https://tiktok.com/..."
-            className="flex-1 text-sm rounded-xl px-3 py-2 outline-none"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base flex-1"
           />
           <button
             onClick={tryPreview}
             disabled={previewing || !values.url.trim()}
-            className="px-3 py-2 rounded-xl text-xs font-semibold text-ink-soft whitespace-nowrap"
-            style={{ border: "1px solid rgba(220,220,220,0.6)", opacity: previewing ? 0.5 : 1 }}
+            className="btn-ghost whitespace-nowrap"
           >
             {previewing ? "Đang lấy…" : "Tự lấy"}
           </button>
@@ -410,8 +413,7 @@ function IdeaForm({
           value={values.title}
           onChange={(e) => set("title", e.target.value)}
           maxLength={200}
-          className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-          style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+          className="input-base"
         />
       </Field>
       <Field label="Mô tả">
@@ -420,8 +422,7 @@ function IdeaForm({
           onChange={(e) => set("description", e.target.value)}
           rows={2}
           maxLength={1000}
-          className="w-full text-sm rounded-xl px-3 py-2 outline-none resize-none"
-          style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+          className="input-base resize-none"
         />
       </Field>
       <Field label="Ghi chú">
@@ -431,8 +432,7 @@ function IdeaForm({
           onChange={(e) => set("notes", e.target.value)}
           maxLength={500}
           placeholder="cho ngày mưa, dễ thương, v.v."
-          className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-          style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+          className="input-base"
         />
       </Field>
       <div className="grid grid-cols-2 gap-3">
@@ -440,8 +440,7 @@ function IdeaForm({
           <select
             value={values.slot_type}
             onChange={(e) => set("slot_type", e.target.value as FormValues["slot_type"])}
-            className="w-full text-sm rounded-xl px-3 py-2 outline-none bg-white"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base bg-white"
           >
             <option value="">(chọn loại)</option>
             {SLOT_LIST.map((s) => (
@@ -449,32 +448,35 @@ function IdeaForm({
             ))}
           </select>
         </Field>
-        <Field label="Tags (cách nhau dấu phẩy)">
+        <Field label="Tags · cách nhau bằng phẩy">
           <input
             type="text"
             value={values.tags}
             onChange={(e) => set("tags", e.target.value)}
             placeholder="outdoor, cheap"
-            className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base"
           />
         </Field>
       </div>
       {values.thumbnail_url && (
-        <div className="text-xs text-ink-soft">
-          Ảnh: <span className="truncate">{values.thumbnail_url}</span>
-        </div>
+        <p className="text-[11px] truncate" style={{ color: "var(--color-ink-mute)" }}>
+          Ảnh: {values.thumbnail_url}
+        </p>
       )}
       <div className="flex gap-2 pt-1">
-        <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform" style={{ backgroundColor: "#C4667A", opacity: saving ? 0.5 : 1 }}>
+        <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
           {saving ? "Đang lưu…" : "Lưu"}
         </button>
-        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
+        <button onClick={onCancel} className="btn-ghost">
           Hủy
         </button>
       </div>
       {onArchive && (
-        <button onClick={onArchive} className="w-full text-xs text-rose-500 underline underline-offset-2">
+        <button
+          onClick={onArchive}
+          className="w-full text-[11.5px] py-1 transition-colors"
+          style={{ color: "var(--color-ink-mute)" }}
+        >
           Lưu trữ ý tưởng này
         </button>
       )}
@@ -485,7 +487,7 @@ function IdeaForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">{label}</label>
+      <label className="field-label">{label}</label>
       {children}
     </div>
   );

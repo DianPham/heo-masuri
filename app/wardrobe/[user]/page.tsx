@@ -48,15 +48,17 @@ export default async function PartnerWardrobePage({
   const items = await fetchItems(user);
 
   return (
-    <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
+    <div className="min-h-dvh px-5 pb-16 pt-10" style={{ backgroundColor: "var(--color-cream)" }}>
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-ink mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
+        <Link href="/wardrobe" className="back-link mb-4">
+          ← Tủ đồ của bạn
+        </Link>
+        <h1 className="page-title mb-1.5">
           Tủ đồ của {user === "heo" ? "Heo" : "Masuri"}
         </h1>
-        <p className="text-xs text-ink-soft mb-3">Nhấn vào một món để gợi ý cho người ấy mặc 💕</p>
-        <Link href="/wardrobe" className="inline-block text-xs text-rose-400 underline underline-offset-2 mb-4 active:scale-95 transition-all">
-          ← Về tủ đồ của bạn
-        </Link>
+        <p className="page-subtitle mb-6">
+          Nhấn vào một món để gợi ý cho người ấy mặc.
+        </p>
         <WardrobePartner partnerSlug={user as "heo" | "masuri"} initial={items} />
       </div>
     </div>

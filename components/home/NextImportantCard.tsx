@@ -43,15 +43,28 @@ export default async function NextImportantCard() {
   return (
     <Link
       href="/calendar/important-dates"
-      className="w-full max-w-xs flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm text-left transition-all duration-150 hover:bg-rose-50 active:scale-[0.98]"
-      style={{ border: "1px solid rgba(255,201,213,0.5)", boxShadow: "0 4px 12px rgba(196,102,122,0.08)" }}
+      className="w-full max-w-xs flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white text-left transition-all duration-150 active:scale-[0.98] hover:translate-y-[-1px]"
+      style={{ border: "1px solid var(--color-hairline)", boxShadow: "var(--shadow-sm)" }}
     >
-      <span className="text-2xl" aria-hidden>{next.row.emoji ?? "⭐"}</span>
+      <span
+        className="text-xl grid place-items-center w-10 h-10 rounded-xl flex-shrink-0"
+        style={{ background: next.days === 0 ? "var(--color-accent-tint)" : "rgba(58,33,41,0.04)" }}
+        aria-hidden
+      >
+        {next.row.emoji ?? "⭐"}
+      </span>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-ink-soft">Sắp tới</p>
-        <p className="text-sm font-semibold text-ink truncate">{next.row.label_vi}</p>
+        <p className="text-[11.5px]" style={{ color: "var(--color-ink-mute)" }}>
+          Sắp tới
+        </p>
+        <p className="text-[14px] font-semibold tracking-tight truncate" style={{ color: "var(--color-ink)" }}>
+          {next.row.label_vi}
+        </p>
       </div>
-      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: next.days === 0 ? "#C4667A" : "#888" }}>
+      <span
+        className="text-[12px] font-semibold whitespace-nowrap"
+        style={{ color: next.days === 0 ? "var(--color-accent)" : "var(--color-ink-mute)" }}
+      >
         {dayLabel}
       </span>
     </Link>

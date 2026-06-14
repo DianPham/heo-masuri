@@ -84,11 +84,7 @@ export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
           }}
         />
       ) : (
-        <button
-          onClick={() => setEditing("new")}
-          className="w-full py-3 mb-4 rounded-2xl text-sm font-semibold text-white active:scale-[0.98] transition-transform"
-          style={{ backgroundColor: "#C4667A", boxShadow: "0 4px 12px rgba(196,102,122,0.3)" }}
-        >
+        <button onClick={() => setEditing("new")} className="btn-primary w-full mb-5 py-3">
           + Thêm ngày đặc biệt
         </button>
       )}
@@ -98,9 +94,17 @@ export function ImportantDatesList({ initial }: { initial: ImportantDate[] }) {
       <Section title="Hàng năm" items={groups.yearly} {...{ editing, setEditing, dates, setDates, setSchedulingFor }} />
 
       {dates.length === 0 && (
-        <p className="text-center text-sm text-ink-soft py-8">
-          Chưa có ngày nào — thêm sinh nhật, kỷ niệm ở trên ↑
-        </p>
+        <div
+          className="text-center py-10 px-6 rounded-2xl"
+          style={{ border: "1px dashed var(--color-hairline-strong)" }}
+        >
+          <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+            Chưa có ngày nào.
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--color-ink-mute)" }}>
+            Thêm sinh nhật, kỷ niệm ở trên ↑
+          </p>
+        </div>
       )}
 
       {schedulingFor && (
@@ -136,8 +140,8 @@ function Section({
 }) {
   if (items.length === 0) return null;
   return (
-    <section className="mb-5">
-      <h2 className="text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2 px-1">{title}</h2>
+    <section className="mb-6">
+      <h2 className="section-eyebrow mb-2.5 px-1">{title}</h2>
       <ul className="space-y-2">
         {items.map(({ importantDate: d, date: occ }) => (
           <li key={d.id}>
@@ -200,22 +204,33 @@ function Row({
 }) {
   const days = daysFromTodayVN(occ);
   const dayLabel = days === 0 ? "Hôm nay" : days === 1 ? "Ngày mai" : `${days} ngày nữa`;
+  const isToday = days === 0;
   return (
-    <div
-      className="w-full rounded-2xl bg-white text-left hover:bg-rose-50 transition-all"
-      style={{ border: "1px solid rgba(255,201,213,0.4)" }}
-    >
+    <div className="surface-card overflow-hidden" style={{ boxShadow: "var(--shadow-sm)" }}>
       <button
         type="button"
         onClick={onClick}
-        className="w-full flex items-center gap-3 px-4 py-3 active:scale-[0.98] transition-transform"
+        className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-[rgba(58,33,41,0.02)]"
       >
-        <span className="text-2xl" aria-hidden>{d.emoji ?? "⭐"}</span>
+        <span
+          className="text-xl grid place-items-center w-10 h-10 rounded-xl flex-shrink-0"
+          style={{ background: isToday ? "var(--color-accent-tint)" : "rgba(58,33,41,0.04)" }}
+          aria-hidden
+        >
+          {d.emoji ?? "⭐"}
+        </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-ink truncate">{d.label_vi}</p>
-          <p className="text-xs text-ink-soft">{occ} · {KIND_LABEL_VI[d.kind]}</p>
+          <p className="text-[14px] font-semibold tracking-tight truncate" style={{ color: "var(--color-ink)" }}>
+            {d.label_vi}
+          </p>
+          <p className="text-[12px] mt-0.5" style={{ color: "var(--color-ink-mute)" }}>
+            {occ} · {KIND_LABEL_VI[d.kind]}
+          </p>
         </div>
-        <span className="text-xs font-semibold whitespace-nowrap" style={{ color: days === 0 ? "#C4667A" : "#888" }}>
+        <span
+          className="text-[11.5px] font-semibold whitespace-nowrap"
+          style={{ color: isToday ? "var(--color-accent)" : "var(--color-ink-mute)" }}
+        >
           {dayLabel}
         </span>
       </button>
@@ -223,9 +238,10 @@ function Row({
         <button
           type="button"
           onClick={onPlan}
-          className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-100/50 active:scale-[0.98] transition-all border-t border-rose-100"
+          className="hairline-t w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-[12px] font-medium transition-colors hover:bg-[rgba(58,33,41,0.02)]"
+          style={{ color: "var(--color-accent)" }}
         >
-          + Lên kế hoạch hẹn cho ngày này 💕
+          + Lên kế hoạch hẹn cho ngày này
         </button>
       )}
     </div>
@@ -285,30 +301,28 @@ function DateForm({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-4 space-y-3" style={{ border: "1px solid rgba(255,201,213,0.6)" }}>
+    <div className="surface-card p-5 space-y-3.5" style={{ boxShadow: "var(--shadow-sm)" }}>
       <FieldText label="Tên (tiếng Việt)" value={labelVi} onChange={setLabelVi} placeholder="Ngày yêu nhau" />
       <FieldText label="Tên (English)" value={labelEn} onChange={setLabelEn} placeholder="Anniversary" />
       <div className="grid grid-cols-2 gap-3">
         <FieldText label="Ngày" value={targetDate} onChange={setTargetDate} type="date" />
         <div>
-          <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Emoji</label>
+          <label className="field-label">Emoji</label>
           <input
             type="text"
             value={emoji}
             onChange={(e) => setEmoji(e.target.value.slice(0, 16))}
-            className="w-full text-base rounded-xl px-3 py-2 outline-none text-center"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base text-center"
           />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Loại</label>
+          <label className="field-label">Loại</label>
           <select
             value={kind}
             onChange={(e) => handleKindChange(e.target.value as ImportantDate["kind"])}
-            className="w-full text-sm rounded-xl px-3 py-2 outline-none bg-white"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base bg-white"
           >
             <option value="reunion">Đoàn tụ</option>
             <option value="anniversary">Kỷ niệm</option>
@@ -319,12 +333,11 @@ function DateForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">Lặp lại</label>
+          <label className="field-label">Lặp lại</label>
           <select
             value={recurrence}
             onChange={(e) => setRecurrence(e.target.value as ImportantDate["recurrence"])}
-            className="w-full text-sm rounded-xl px-3 py-2 outline-none bg-white"
-            style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+            className="input-base bg-white"
           >
             <option value="none">Không</option>
             <option value="monthly">Hàng tháng</option>
@@ -332,30 +345,32 @@ function DateForm({
           </select>
         </div>
       </div>
-      <label className="flex items-center gap-2 cursor-pointer select-none">
+      <label className="flex items-center gap-2.5 cursor-pointer select-none">
         <input
           type="checkbox"
           checked={showOnHome}
           onChange={(e) => setShowOnHome(e.target.checked)}
-          className="w-4 h-4 accent-rose-400"
+          className="w-4 h-4"
+          style={{ accentColor: "var(--color-accent)" }}
         />
-        <span className="text-sm text-ink">Hiện thẻ nhắc trên trang chính</span>
+        <span className="text-[13px]" style={{ color: "var(--color-ink)" }}>
+          Hiện thẻ nhắc trên trang chính
+        </span>
       </label>
       <div className="flex gap-2 pt-2">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-transform"
-          style={{ backgroundColor: "#C4667A", opacity: saving ? 0.5 : 1 }}
-        >
+        <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
           {saving ? "Đang lưu…" : "Lưu"}
         </button>
-        <button onClick={onCancel} className="px-4 py-2.5 rounded-xl text-sm text-ink-soft active:scale-95 transition-transform" style={{ border: "1px solid rgba(220,220,220,0.6)" }}>
+        <button onClick={onCancel} className="btn-ghost">
           Hủy
         </button>
       </div>
       {onDelete && (
-        <button onClick={onDelete} className="w-full text-xs text-rose-500 underline underline-offset-2">
+        <button
+          onClick={onDelete}
+          className="w-full text-[11.5px] py-1"
+          style={{ color: "var(--color-ink-mute)" }}
+        >
           Xóa ngày này khỏi danh sách
         </button>
       )}
@@ -378,14 +393,13 @@ function FieldText({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-1">{label}</label>
+      <label className="field-label">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full text-sm rounded-xl px-3 py-2 outline-none"
-        style={{ border: "1px solid rgba(220,220,220,0.6)" }}
+        className="input-base"
       />
     </div>
   );

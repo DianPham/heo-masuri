@@ -38,17 +38,15 @@ export default async function PlanByIdPage({
   if (!date) notFound();
 
   return (
-    <div className="min-h-dvh px-5 pb-10 pt-6" style={{ backgroundColor: "#FFF9F5" }}>
+    <div className="min-h-dvh px-5 pb-16 pt-8" style={{ backgroundColor: "var(--color-cream)" }}>
       <div className="max-w-2xl mx-auto">
-        <Link href="/dates/plan" className="text-xs text-rose-400 underline underline-offset-2">
+        <Link href="/dates/plan" className="back-link mb-4">
           ← Tất cả kế hoạch
         </Link>
-        <h1 className="text-xl font-bold text-ink mt-2 mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
-          {date.title || "Kế hoạch hẹn"}
-        </h1>
-        <p className="text-xs text-ink-soft mb-5">
-          {new Date(date.start_at).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })} —
-          {" "}
+        <h1 className="page-title mb-1.5">{date.title || "Kế hoạch hẹn"}</h1>
+        <p className="page-subtitle mb-6">
+          {new Date(date.start_at).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })}
+          {" — "}
           {new Date(date.end_at).toLocaleString("vi-VN", { timeStyle: "short" })}
         </p>
         <PlanShell initial={date} templates={templates} viewerId={viewerId} />

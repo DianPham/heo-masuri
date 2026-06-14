@@ -219,38 +219,57 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
     <div className="min-h-dvh lg:px-6 lg:py-4">
       {/* Header */}
       <header
-        className="px-4 pt-6 pb-3 sticky top-0 z-20 lg:px-0 lg:pt-2 lg:pb-3 lg:static"
-        style={{ backgroundColor: "rgba(255,249,245,0.94)", backdropFilter: "blur(8px)" }}
+        className="px-4 pt-5 pb-3 sticky top-0 z-20 lg:px-0 lg:pt-2 lg:pb-3 lg:static"
+        style={{
+          background: "rgba(255, 249, 245, 0.88)",
+          backdropFilter: "saturate(140%) blur(20px)",
+          WebkitBackdropFilter: "saturate(140%) blur(20px)",
+          borderBottom: "1px solid var(--color-hairline)",
+        }}
       >
         <div className="flex items-center gap-2 mb-3 lg:max-w-screen-2xl lg:mx-auto">
-          <button onClick={goPrev} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100 active:scale-95 transition-transform" aria-label="Tuần trước">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M11 14 L5 9 L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <button
+            onClick={goPrev}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-[rgba(58,33,41,0.05)] active:scale-95"
+            style={{ color: "var(--color-ink-soft)" }}
+            aria-label="Tuần trước"
+          >
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <path d="M11 14 L5 9 L11 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           <div className="flex-1 text-center">
-            <h1 className="text-base font-bold text-ink leading-tight" style={{ fontFamily: "var(--font-handwritten)" }}>
+            <h1
+              className="font-medium tracking-tight"
+              style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--color-ink)", lineHeight: 1.15 }}
+            >
               {weekLabel}
             </h1>
             {!isCurrentWeek && (
-              <button onClick={goToday} className="text-xs text-purple-500 underline underline-offset-2 active:scale-95 transition-transform">
+              <button
+                onClick={goToday}
+                className="text-[11px] mt-0.5 transition-colors"
+                style={{ color: "var(--color-accent)" }}
+              >
                 Về tuần này
               </button>
             )}
           </div>
-          <button onClick={goNext} className="w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-100 active:scale-95 transition-transform" aria-label="Tuần sau">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M7 4 L13 9 L7 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <button
+            onClick={goNext}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-[rgba(58,33,41,0.05)] active:scale-95"
+            style={{ color: "var(--color-ink-soft)" }}
+            aria-label="Tuần sau"
+          >
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <path d="M7 4 L13 9 L7 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           {isDesktop && (
             <button
               onClick={openNewEventSheet}
-              className="hidden lg:inline-flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
-              style={{
-                backgroundColor: "#C4667A",
-                boxShadow: "0 4px 12px rgba(196,102,122,0.3)",
-              }}
+              className="btn-primary hidden lg:inline-flex ml-2"
+              style={{ padding: "0.4375rem 0.875rem", fontSize: "0.8125rem" }}
               title="Sự kiện mới (⌘E)"
             >
               <span aria-hidden>+</span>
@@ -259,33 +278,46 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
           )}
         </div>
 
-        {who === "masuri" && (
+        <div className="flex justify-center items-center gap-4 mb-3 text-[11.5px]">
+          {who === "masuri" && (
+            <a
+              href="/masuri/calendar/template"
+              className="transition-colors hover:underline"
+              style={{ color: "var(--color-ink-soft)" }}
+            >
+              Lịch lặp hàng tuần
+            </a>
+          )}
           <a
-            href="/masuri/calendar/template"
-            className="block text-center text-xs text-rose-400 underline underline-offset-2 mb-2"
+            href="/calendar/important-dates"
+            className="transition-colors hover:underline"
+            style={{ color: "var(--color-ink-soft)" }}
           >
-            Lịch lặp hàng tuần ↗
+            Ngày đặc biệt
           </a>
-        )}
-        <div className="flex justify-center gap-3 mb-2">
-          <a href="/calendar/important-dates" className="text-xs text-rose-400 underline underline-offset-2">
-            Ngày quan trọng ↗
-          </a>
-          <a href="/dates/ideas" className="text-xs text-rose-400 underline underline-offset-2">
-            Ý tưởng hẹn ↗
+          <a
+            href="/dates/ideas"
+            className="transition-colors hover:underline"
+            style={{ color: "var(--color-ink-soft)" }}
+          >
+            Ý tưởng hẹn
           </a>
         </div>
 
         {/* Granularity selector */}
-        <div className="flex rounded-2xl overflow-hidden text-xs font-medium" style={{ border: "1px solid rgba(255,201,213,0.5)" }}>
+        <div
+          className="flex rounded-full overflow-hidden text-[11.5px] font-medium p-0.5"
+          style={{ background: "rgba(58,33,41,0.05)" }}
+        >
           {(["hour", "halfhour", "block"] as Granularity[]).map((g) => (
             <button
               key={g}
               onClick={() => setGranularity(g)}
-              className="flex-1 py-1.5 transition-colors"
+              className="flex-1 py-1.5 rounded-full transition-all"
               style={{
-                backgroundColor: granularity === g ? "rgba(255,201,213,0.6)" : "transparent",
-                color: granularity === g ? "#C4667A" : "#888",
+                background: granularity === g ? "#ffffff" : "transparent",
+                color: granularity === g ? "var(--color-accent)" : "var(--color-ink-mute)",
+                boxShadow: granularity === g ? "var(--shadow-sm)" : "none",
               }}
             >
               {g === "hour" ? "1 giờ" : g === "halfhour" ? "30 phút" : "Buổi"}
@@ -293,12 +325,11 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
           ))}
         </div>
 
-        {/* Fixed-height loading slot so toggling on/off doesn't shift content below. */}
         <p
-          className="text-xs text-ink-soft text-center mt-2"
+          className="text-[11px] text-center mt-2"
           style={{
+            color: "var(--color-ink-mute)",
             visibility: loading ? "visible" : "hidden",
-            opacity: 0.7,
             height: "1em",
             lineHeight: "1em",
           }}

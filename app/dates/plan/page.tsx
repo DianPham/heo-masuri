@@ -33,16 +33,14 @@ async function fetchPlans(): Promise<ScheduledDate[]> {
 export default async function PlanIndexPage() {
   const plans = await fetchPlans();
   return (
-    <div className="min-h-dvh px-5 pb-10 pt-8" style={{ backgroundColor: "#FFF9F5" }}>
+    <div className="min-h-dvh px-5 pb-16 pt-10" style={{ backgroundColor: "var(--color-cream)" }}>
       <div className="max-w-2xl mx-auto">
-        <Link href="/dates" className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-ink mb-3 active:scale-95 transition-all">
+        <Link href="/dates" className="back-link mb-4">
           ← Hẹn hò
         </Link>
-        <h1 className="text-2xl font-bold text-ink mb-1" style={{ fontFamily: "var(--font-handwritten)" }}>
-          Lên kế hoạch hẹn
-        </h1>
-        <p className="text-xs text-ink-soft mb-5">
-          Chọn khung hẹn, điền ứng viên, rồi để vòng quay quyết định cho.
+        <h1 className="page-title mb-1.5">Lên kế hoạch hẹn</h1>
+        <p className="page-subtitle mb-6 max-w-md">
+          Chọn khung giờ, điền vài ứng viên, rồi để vòng quay chốt giúp.
         </p>
         <PlanIndex initial={plans} />
       </div>

@@ -23,15 +23,25 @@ export default async function PlanSomethingCard() {
   return (
     <Link
       href="/dates/plan"
-      className="w-full max-w-xs flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm text-left hover:bg-rose-50 transition-all duration-150 active:scale-[0.98]"
-      style={{ border: "1px dashed rgba(196,102,122,0.5)", boxShadow: "0 4px 12px rgba(196,102,122,0.08)" }}
+      className="w-full max-w-xs flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white text-left transition-all duration-150 active:scale-[0.98] hover:translate-y-[-1px]"
+      style={{ border: "1px dashed var(--color-accent-soft)", boxShadow: "var(--shadow-sm)" }}
     >
-      <span className="text-2xl" aria-hidden>💕</span>
+      <span
+        className="text-xl grid place-items-center w-10 h-10 rounded-xl flex-shrink-0"
+        style={{ background: "var(--color-accent-tint)" }}
+        aria-hidden
+      >
+        💕
+      </span>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-ink-soft">Chưa có hẹn nào sắp tới</p>
-        <p className="text-sm font-semibold text-ink">Lên kế hoạch hẹn nhé? 💕</p>
+        <p className="text-[11.5px]" style={{ color: "var(--color-ink-mute)" }}>
+          Chưa có hẹn nào sắp tới
+        </p>
+        <p className="text-[14px] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+          Lên kế hoạch hẹn nhé?
+        </p>
       </div>
-      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "#C4667A" }}>
+      <span className="text-base" style={{ color: "var(--color-accent)" }}>
         →
       </span>
     </Link>
