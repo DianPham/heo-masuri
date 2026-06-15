@@ -309,6 +309,20 @@ export default async function MasuriNotebookPage() {
             emoji="📊"
             label={t("viewProgress")}
           />
+
+          {/* Surprise pool admin — Phase 2 §8.1 */}
+          <QuickAction
+            href="/masuri/surprises"
+            emoji="🎁"
+            label="Hộp bất ngờ cho Heo"
+          />
+
+          {/* GM / GN auto-notes admin — Phase 2 §8.2 */}
+          <QuickAction
+            href="/masuri/gmgn"
+            emoji="🌅"
+            label="Lời chào GM / GN"
+          />
         </div>
       </div>
 
