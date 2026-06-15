@@ -232,7 +232,15 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
     const nowMinutes = nowVn.getUTCHours() * 60 + nowVn.getUTCMinutes();
     const targetMinutes = Math.max(0, nowMinutes - 60);
     const targetRow = Math.floor(targetMinutes / slotMinutes);
-    scrollerRef.current?.scrollTo({ top: targetRow * ROW_HEIGHT_PX, behavior: "instant" as ScrollBehavior });
+    // No inner scroller anymore — scroll the layout's <main>.
+    const grid = scrollerRef.current;
+    if (!grid) return;
+    const main = grid.closest("main") as HTMLElement | null;
+    const offsetWithinMain = main
+      ? grid.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop
+      : grid.getBoundingClientRect().top + window.scrollY;
+    const target = offsetWithinMain + targetRow * ROW_HEIGHT_PX;
+    (main ?? window).scrollTo({ top: target, behavior: "instant" as ScrollBehavior });
   }, [mondayVnMs, slotMinutes]);
 
   // [day][slot] → event ids + sub-cell fill ranges (top + height as 0..1
@@ -452,8 +460,13 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
   return (
     <div className="px-2">
       <div
-        className="sticky top-[112px] z-10 grid grid-cols-[40px_repeat(7,1fr)] gap-0 mb-1"
-        style={{ backgroundColor: "rgba(255,249,245,0.94)" }}
+        className="sticky z-10 grid grid-cols-[40px_repeat(7,1fr)] gap-0 mb-1"
+        style={{
+          top: "var(--calendar-shell-h, 112px)",
+          backgroundColor: "rgba(255,249,245,0.94)",
+          backdropFilter: "saturate(140%) blur(12px)",
+          WebkitBackdropFilter: "saturate(140%) blur(12px)",
+        }}
       >
         <div />
         {dayLabels.map((dl, i) => {
@@ -492,7 +505,7 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
         })}
       </div>
 
-      <div ref={scrollerRef} className="relative" style={{ maxHeight: "calc(100dvh - 220px)", overflowY: "auto" }}>
+      <div ref={scrollerRef} className="relative">
         <div
           className="grid grid-cols-[40px_repeat(7,1fr)] gap-0 relative"
           style={{ gridAutoRows: `${ROW_HEIGHT_PX}px` }}

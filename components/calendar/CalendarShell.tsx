@@ -215,10 +215,31 @@ export function CalendarShell({ initialMonday, initialEvents, initialStars = [],
     return () => window.removeEventListener("keydown", onKey);
   }, [openNewEventSheet]);
 
+  // Expose the sticky shell-header height as a CSS var so the day-header strip
+  // inside WeekHourView can stick *below* it instead of overlapping. Only
+  // matters on mobile (the desktop shell is `lg:static` so the day header can
+  // sit at top:0 with no header above it).
+  const shellHeaderRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = shellHeaderRef.current;
+    if (!el) return;
+    const update = () => {
+      document.documentElement.style.setProperty("--calendar-shell-h", `${el.offsetHeight}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty("--calendar-shell-h");
+    };
+  }, []);
+
   return (
     <div className="min-h-dvh lg:px-6 lg:py-4">
       {/* Header */}
       <header
+        ref={shellHeaderRef}
         className="px-4 pt-5 pb-3 sticky top-0 z-20 lg:px-0 lg:pt-2 lg:pb-3 lg:static"
         style={{
           background: "rgba(255, 249, 245, 0.88)",

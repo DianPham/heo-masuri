@@ -110,7 +110,9 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     };
   }, [menu]);
 
-  // Anchor scroll to (now - 1h) on current-week paint.
+  // Anchor scroll to (now - 1h) on current-week paint. The grid no longer has
+  // its own inner scroller — find the closest scrolling ancestor (the layout's
+  // <main>) and scroll IT to the row's offset from the page top.
   useEffect(() => {
     const nowVn = new Date(Date.now() + 7 * 3_600_000);
     const dow = nowVn.getUTCDay() || 7;
@@ -121,7 +123,14 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     const nowMinutes = nowVn.getUTCHours() * 60 + nowVn.getUTCMinutes();
     const targetMinutes = Math.max(0, nowMinutes - 60);
     const targetRow = Math.floor(targetMinutes / slotMinutes);
-    scrollerRef.current?.scrollTo({ top: targetRow * ROW_HEIGHT_PX, behavior: "instant" as ScrollBehavior });
+    const grid = scrollerRef.current;
+    if (!grid) return;
+    const main = grid.closest("main") as HTMLElement | null;
+    const offsetWithinMain = main
+      ? grid.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop
+      : grid.getBoundingClientRect().top + window.scrollY;
+    const target = offsetWithinMain + targetRow * ROW_HEIGHT_PX;
+    (main ?? window).scrollTo({ top: target, behavior: "instant" as ScrollBehavior });
   }, [mondayVnMs, slotMinutes, ROW_HEIGHT_PX]);
 
   // [day][slot] grid with sub-cell range tracking (same shape as WeekHourView).
@@ -648,18 +657,21 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
       className="rounded-2xl overflow-hidden"
       style={{
         backgroundColor: "white",
-        border: "1px solid rgba(255,201,213,0.4)",
-        boxShadow: "0 6px 20px rgba(196,102,122,0.08)",
+        border: "1px solid var(--color-hairline)",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
-      {/* Sticky day header strip */}
+      {/* Sticky day header strip — sticks to the page <main> scroll while the
+         card body is in view, so the day labels stay column-aligned with the
+         grid below and the scrollbar lives on <main> (one scroll, not two). */}
       <div
         className="grid sticky top-0 z-10"
         style={{
           gridTemplateColumns: `${HOUR_COL_WIDTH_PX}px repeat(7, 1fr)`,
           backgroundColor: "rgba(255,249,245,0.96)",
-          backdropFilter: "blur(6px)",
-          borderBottom: "1px solid rgba(255,201,213,0.4)",
+          backdropFilter: "saturate(140%) blur(12px)",
+          WebkitBackdropFilter: "saturate(140%) blur(12px)",
+          borderBottom: "1px solid var(--color-hairline)",
         }}
       >
         <div />
@@ -704,8 +716,10 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
         })}
       </div>
 
-      {/* Scrollable grid */}
-      <div ref={scrollerRef} className="relative" style={{ maxHeight: "calc(100dvh - 220px)", overflowY: "auto" }}>
+      {/* Grid extends fully — no inner scroll. The page's <main> handles
+         scrolling so there's a single scrollbar and the day-header columns
+         stay column-aligned with the grid below them. */}
+      <div ref={scrollerRef} className="relative">
         <div
           className="grid relative"
           style={{
