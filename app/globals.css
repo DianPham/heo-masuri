@@ -15,10 +15,23 @@
   --color-paper: #FAF1EA;
   --color-ink: #3A2129;
   --color-ink-soft: #6B4453;
+  --color-ink-mute: #94777F;
 
   /* Functional */
   --color-gold: #E8B86D;
   --color-sage: #9CAF88;
+
+  /* Refined accent — deepened from the old #C4667A so it reads as
+     considered rather than candy on cream surfaces. */
+  --color-accent:        #B14963;
+  --color-accent-hover:  #9C3E55;
+  --color-accent-soft:   #F4D5DD;
+  --color-accent-tint:   rgba(177, 73, 99, 0.08);
+
+  /* Semantic borders — warm ink tone, not pink, so cards stop competing
+     with the rose CTAs. */
+  --color-hairline:        rgba(58, 33, 41, 0.07);
+  --color-hairline-strong: rgba(58, 33, 41, 0.12);
 
   /* Typography — must match layout.tsx font variables exactly */
   --font-display:      "Fraunces", Georgia, serif;
@@ -31,6 +44,11 @@
   --shadow:      0 8px 24px -8px rgba(168, 50, 79, 0.18);
   --shadow-card: 0 16px 48px -12px rgba(168, 50, 79, 0.24), 0 2px 8px rgba(168, 50, 79, 0.06);
   --shadow-lift: 0 4px 16px -6px rgba(168, 50, 79, 0.18);
+
+  /* Refined card shadows — single soft layer, ink-tone not rose. */
+  --shadow-sm: 0 1px 2px rgba(58, 33, 41, 0.04);
+  --shadow-md: 0 1px 2px rgba(58, 33, 41, 0.04), 0 8px 24px -16px rgba(58, 33, 41, 0.12);
+  --shadow-lg: 0 2px 4px rgba(58, 33, 41, 0.04), 0 16px 40px -16px rgba(58, 33, 41, 0.18);
 
   /* Notebook accents */
   --washi-pink:        #FFC9D5;
@@ -69,5 +87,156 @@
   /* iOS safe area */
   body {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────
+   Refined-minimal component layer. Page surfaces use these in place of
+   one-off inline styles so the rose CTAs stop competing with their own
+   chrome and the type hierarchy carries the weight instead.
+   ──────────────────────────────────────────────────────────────────── */
+@layer components {
+  .surface-card {
+    background: #ffffff;
+    border: 1px solid var(--color-hairline);
+    border-radius: 1rem;
+  }
+  .surface-card-soft {
+    background: var(--color-cream);
+    border: 1px solid var(--color-hairline);
+    border-radius: 1rem;
+  }
+  .hairline { border: 1px solid var(--color-hairline); }
+  .hairline-t { border-top: 1px solid var(--color-hairline); }
+  .hairline-b { border-bottom: 1px solid var(--color-hairline); }
+
+  .input-base {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: 0.625rem;
+    padding: 0.5625rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--color-ink);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input-base::placeholder { color: var(--color-ink-mute); }
+  .input-base:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-tint);
+  }
+  .input-base:disabled {
+    background: rgba(58, 33, 41, 0.03);
+    color: var(--color-ink-mute);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    background: var(--color-accent);
+    color: #ffffff;
+    border-radius: 0.625rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  }
+  .btn-primary:hover { background: var(--color-accent-hover); }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    background: transparent;
+    color: var(--color-ink-soft);
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: 0.625rem;
+    padding: 0.5625rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background 0.15s, transform 0.1s, border-color 0.15s;
+  }
+  .btn-ghost:hover { background: rgba(58, 33, 41, 0.035); border-color: rgba(58,33,41,0.18); }
+  .btn-ghost:active { transform: scale(0.97); }
+
+  .field-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.375rem;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    color: var(--color-ink);
+  }
+  .page-title-lg {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--color-ink);
+  }
+  .page-subtitle {
+    font-size: 0.8125rem;
+    color: var(--color-ink-soft);
+    line-height: 1.55;
+  }
+
+  .section-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--color-ink-soft);
+    transition: color 0.15s, transform 0.1s;
+  }
+  .back-link:hover { color: var(--color-ink); }
+  .back-link:active { transform: scale(0.97); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-ink-soft);
+    background: rgba(58, 33, 41, 0.04);
+    border: 1px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .chip:hover { background: rgba(58, 33, 41, 0.07); color: var(--color-ink); }
+  .chip-active {
+    background: var(--color-accent-tint);
+    color: var(--color-accent);
+    border-color: var(--color-accent-soft);
+    font-weight: 600;
   }
 }

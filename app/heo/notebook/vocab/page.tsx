@@ -182,10 +182,12 @@ function DateView({
   onLongPress: (w: VocabWord) => void;
 }) {
   return (
-    <div className="px-5 space-y-3 mb-4">
-      {words.map((w) => (
-        <WordCard key={w.id} word={w} onLongPress={onLongPress} />
-      ))}
+    <div className="px-5 mb-4 max-w-5xl mx-auto">
+      <div className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0 lg:grid-cols-3">
+        {words.map((w) => (
+          <WordCard key={w.id} word={w} onLongPress={onLongPress} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -199,7 +201,7 @@ function TopicView({
   onLongPress: (w: VocabWord) => void;
 }) {
   return (
-    <div className="px-5 space-y-6 mb-4">
+    <div className="px-5 space-y-6 mb-4 max-w-5xl mx-auto">
       {Object.entries(groups).map(([topic, words]) => (
         <div key={topic}>
           <div className="flex items-center gap-2 mb-3">
@@ -211,7 +213,7 @@ function TopicView({
               {words.length} từ
             </span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0 lg:grid-cols-3">
             {words.map((w) => (
               <WordCard key={w.id} word={w} onLongPress={onLongPress} />
             ))}

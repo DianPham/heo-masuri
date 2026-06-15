@@ -59,7 +59,17 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
   );
 }
 
-export type PrefKey = "missing_enabled" | "thinking_enabled" | "hug_kiss_enabled" | "angry_enabled";
+export type PrefKey =
+  | "missing_enabled"
+  | "thinking_enabled"
+  | "hug_kiss_enabled"
+  | "angry_enabled"
+  // Phase 2 (migration 010):
+  | "surprise_enabled"
+  | "gmgn_enabled"
+  | "date_planning_enabled"
+  | "outfit_enabled"
+  | "important_date_enabled";
 
 // Check pref + quiet hours before sending. Default to allow when no prefs row exists.
 export async function sendPushIfAllowed(

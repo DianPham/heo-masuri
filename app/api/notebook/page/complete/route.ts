@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
+import { sendWebhook } from "@/lib/discord";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
@@ -89,20 +90,15 @@ export async function POST(req: NextRequest) {
       });
 
       // Discord webhook
-      const webhookUrl = process.env.DISCORD_WEBHOOK_LOGS;
-      if (webhookUrl && title) {
-        await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: "Sổ tiếng Anh",
-            embeds: [{
-              title: "🎉 Heo hoàn thành bài học!",
-              description: `**${title}** — Heo vừa học xong trang hôm nay 🌸`,
-              color: 0xa8d5a2,
-            }],
-          }),
-        }).catch(() => {});
+      if (title) {
+        await sendWebhook(process.env.DISCORD_WEBHOOK_LOGS, {
+          username: "Sổ tiếng Anh",
+          embeds: [{
+            title: "🎉 Heo hoàn thành bài học!",
+            description: `**${title}** — Heo vừa học xong trang hôm nay 🌸`,
+            color: 0xa8d5a2,
+          }],
+        });
       }
     }
 

@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
+import { sendWebhook } from "@/lib/discord";
 
 export const dynamic = "force-dynamic";
 
@@ -210,30 +211,25 @@ export async function POST(req: NextRequest) {
   const approveUrl = `${appUrl}/m/notebook/approve/${pageId}`;
 
   // Discord webhook
-  const webhookUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW;
-  if (webhookUrl) {
+  {
     const meta = page.generation_meta as Record<string, unknown> ?? {};
     const newVocab: string[] = Array.isArray(meta.new_vocab) ? meta.new_vocab as string[] : [];
     const cardCount = (page.cards as unknown[]).length;
 
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: "Sổ tiếng Anh",
-        embeds: [{
-          title: "📓 Trang ngày mai sẵn sàng",
-          description:
-            `**${page.title_vi}** / ${page.title_en}\n` +
-            `Topic: \`${page.topic}\` • Độ khó: ${page.difficulty}/3\n` +
-            `${cardCount} thẻ` +
-            (newVocab.length > 0 ? ` • Từ mới: _${newVocab.join(", ")}_` : "") +
-            `\n\n[👀 Duyệt nhanh](${approveUrl})`,
-          color: 0xf8b4c4,
-          fields: [{ name: "Ngày", value: page.scheduled_for, inline: true }],
-        }],
-      }),
-    }).catch(() => {});
+    await sendWebhook(process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW, {
+      username: "Sổ tiếng Anh",
+      embeds: [{
+        title: "📓 Trang ngày mai sẵn sàng",
+        description:
+          `**${page.title_vi}** / ${page.title_en}\n` +
+          `Topic: \`${page.topic}\` • Độ khó: ${page.difficulty}/3\n` +
+          `${cardCount} thẻ` +
+          (newVocab.length > 0 ? ` • Từ mới: _${newVocab.join(", ")}_` : "") +
+          `\n\n[👀 Duyệt nhanh](${approveUrl})`,
+        color: 0xf8b4c4,
+        fields: [{ name: "Ngày", value: page.scheduled_for, inline: true }],
+      }],
+    });
   }
 
   // Push to Masuri

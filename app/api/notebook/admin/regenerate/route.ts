@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { sendWebhook } from "@/lib/discord";
 import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
@@ -94,27 +95,22 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Discord notification
-  const webhookUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW;
-  if (webhookUrl) {
+  {
     const statusLine = routineFired
       ? "✅ Routine đã được kích hoạt — bài mới sẽ xuất hiện trong vài phút."
       : `⚠️ Routine chưa kích hoạt được (${routineError ?? "unknown"}) — chạy thủ công nha.`;
 
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: "Sổ tiếng Anh",
-        embeds: [{
-          title: "🔄 Masuri yêu cầu tạo lại trang",
-          description:
-            `Trang cho ngày **${page.scheduled_for}** đã bị archive.\n` +
-            (hint?.trim() ? `💬 Hint: _${hint.trim()}_\n\n` : "\n") +
-            statusLine,
-          color: routineFired ? 0xa8d5a2 : 0xfae8b8,
-        }],
-      }),
-    }).catch(() => {});
+    await sendWebhook(process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW, {
+      username: "Sổ tiếng Anh",
+      embeds: [{
+        title: "🔄 Masuri yêu cầu tạo lại trang",
+        description:
+          `Trang cho ngày **${page.scheduled_for}** đã bị archive.\n` +
+          (hint?.trim() ? `💬 Hint: _${hint.trim()}_\n\n` : "\n") +
+          statusLine,
+        color: routineFired ? 0xa8d5a2 : 0xfae8b8,
+      }],
+    });
   }
 
   revalidatePath("/masuri/notebook");

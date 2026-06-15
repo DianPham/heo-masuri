@@ -99,6 +99,7 @@ export default function MasuriAskReplyPage() {
 
   return (
     <div style={PAPER_BG} className="min-h-dvh px-5 pb-10">
+      <div className="max-w-xl mx-auto">
       {/* Header */}
       <div className="pt-10 pb-5 flex items-center gap-3">
         <Link
@@ -196,6 +197,7 @@ export default function MasuriAskReplyPage() {
           </button>
         )}
       </motion.div>
+      </div>
     </div>
   );
 }

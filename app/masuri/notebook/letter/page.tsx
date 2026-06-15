@@ -136,6 +136,7 @@ export default async function MasuriLetterListPage() {
 
   return (
     <div style={PAPER_BG} className="min-h-dvh px-5 pb-10">
+      <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="pt-10 pb-6 flex items-center gap-3">
         <Link
@@ -302,6 +303,7 @@ export default async function MasuriLetterListPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

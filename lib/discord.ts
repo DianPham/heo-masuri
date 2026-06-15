@@ -8,16 +8,45 @@ type DiscordEmbed = {
   timestamp?: string;
 };
 
-async function sendWebhook(webhookUrl: string | undefined, body: object) {
+/**
+ * Prefix the webhook display name with `[STAGING]` when ENVIRONMENT=staging,
+ * so messages routed to the staging Discord category are visually unmistakable.
+ * Production / unset → unchanged.
+ *
+ * Every Discord webhook post in this codebase must route its `username` field
+ * through this helper. Phase 2 §3.3.
+ */
+export function webhookUsername(displayName: string): string {
+  return process.env.ENVIRONMENT === "staging"
+    ? `[STAGING] ${displayName}`
+    : displayName;
+}
+
+type WebhookBody = {
+  username?: string;
+  content?: string;
+  embeds?: DiscordEmbed[];
+  [key: string]: unknown;
+};
+
+/**
+ * Low-level webhook poster. Applies `webhookUsername()` automatically to the
+ * `username` field if present. Callers should pass the raw display name.
+ */
+export async function sendWebhook(webhookUrl: string | undefined, body: WebhookBody) {
   if (!webhookUrl) {
     console.warn("[discord] Webhook URL not configured — skipping");
     return;
   }
+  const finalBody: WebhookBody = {
+    ...body,
+    username: body.username ? webhookUsername(body.username) : undefined,
+  };
   try {
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(finalBody),
     });
     if (!res.ok) {
       console.error("[discord] Webhook failed:", res.status, await res.text());

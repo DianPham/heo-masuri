@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
+import { sendWebhook } from "@/lib/discord";
 
 export const dynamic = "force-dynamic";
 
@@ -114,26 +115,19 @@ async function handle(req: NextRequest) {
 
   // Alert if any draft was auto-published without approval
   if (unapproved.length > 0) {
-    const webhookUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW;
-    if (webhookUrl) {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: "Sổ tiếng Anh",
-          embeds: [
-            {
-              title: "⚠️ Trang tự động xuất bản chưa duyệt",
-              description:
-                `Các trang sau đã được xuất bản tự động lúc 6am mà Masuri chưa duyệt:\n` +
-                unapproved.map((t) => `• ${t}`).join("\n") +
-                `\n\nKiểm tra và sửa ngay nếu cần nha.`,
-              color: 0xff9999,
-            },
-          ],
-        }),
-      }).catch(() => {});
-    }
+    await sendWebhook(process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW, {
+      username: "Sổ tiếng Anh",
+      embeds: [
+        {
+          title: "⚠️ Trang tự động xuất bản chưa duyệt",
+          description:
+            `Các trang sau đã được xuất bản tự động lúc 6am mà Masuri chưa duyệt:\n` +
+            unapproved.map((t) => `• ${t}`).join("\n") +
+            `\n\nKiểm tra và sửa ngay nếu cần nha.`,
+          color: 0xff9999,
+        },
+      ],
+    });
   }
 
   // Also send the daily reminder push to Heo (she just got a new page)

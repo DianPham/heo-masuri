@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Pig } from "@/components/theme/Pig";
 import { ThinkingButtons } from "@/components/buttons/ThinkingButtons";
 import { Countdown } from "@/components/countdown/Countdown";
+import NextImportantCard from "@/components/home/NextImportantCard";
+import PlanSomethingCard from "@/components/home/PlanSomethingCard";
 
 export default async function MasuriHome() {
   const locale = await getLocale();
@@ -136,6 +138,12 @@ export default async function MasuriHome() {
             <div className="flex-1 h-px bg-rose-200/70" />
           </div>
           <ThinkingButtons who="masuri" locale={locale} />
+          <div className="w-full flex justify-center pt-1">
+            <NextImportantCard />
+          </div>
+          <div className="w-full flex justify-center">
+            <PlanSomethingCard />
+          </div>
         </div>
       )}
 

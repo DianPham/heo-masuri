@@ -7,13 +7,15 @@ interface NotebookIconProps {
   className?: string;
   /** Accepted but unused — for compatibility with lucide-style nav links */
   strokeWidth?: number;
+  /** Forwarded so callers can set CSS color via style for currentColor inheritance. */
+  style?: React.CSSProperties;
 }
 
 /**
  * Custom bottom-nav icon: a notebook with a tiny pig ear peeking over the top.
  * Uses currentColor by default so the nav can tint it active/inactive.
  */
-export function NotebookIcon({ size = 24, color = "currentColor", className = "" }: NotebookIconProps) {
+export function NotebookIcon({ size = 24, color = "currentColor", className = "", style }: NotebookIconProps) {
   return (
     <svg
       width={size}
@@ -22,6 +24,7 @@ export function NotebookIcon({ size = 24, color = "currentColor", className = ""
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      style={style}
     >
       {/* Notebook spine */}
       <rect x="4" y="3" width="2.5" height="18" rx="1" fill={color} opacity="0.35" />

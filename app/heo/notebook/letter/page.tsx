@@ -224,7 +224,7 @@ export default async function LetterPage() {
         )}
       </div>
 
-      <div className="px-5 pb-10 space-y-5">
+      <div className="px-5 pb-10 space-y-5 max-w-2xl mx-auto">
 
         {/* ── Write button ──────────────────────────────────── */}
         {sunday ? (

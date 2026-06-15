@@ -17,6 +17,7 @@
 import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import path from "path";
+import { sendWebhook } from "@/lib/discord";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
@@ -55,8 +56,7 @@ async function main() {
   const wordCards = cards.filter((c: Record<string, unknown>) => c.type === "word");
 
   // ── Discord webhook ───────────────────────────────────────
-  const webhookUrl = process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW;
-  if (webhookUrl) {
+  {
     const payload = {
       username: "Sổ tiếng Anh",
       embeds: [
@@ -92,19 +92,7 @@ async function main() {
       ],
     };
 
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      console.error("Discord webhook failed:", res.status, await res.text());
-    } else {
-      console.error("Discord webhook sent.");
-    }
-  } else {
-    console.error("DISCORD_WEBHOOK_NOTEBOOK_REVIEW not set — skipping Discord.");
+    await sendWebhook(process.env.DISCORD_WEBHOOK_NOTEBOOK_REVIEW, payload);
   }
 
   // ── Web Push to Masuri ────────────────────────────────────

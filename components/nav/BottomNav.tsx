@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, Settings } from "lucide-react";
+import { Home, Settings, Calendar, Heart } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 import { NotebookIcon } from "@/components/notebook/NotebookIcon";
 
-type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+type NavIcon = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }>;
 
 /** G3: poll for unseen ask replies and show a badge dot on the notebook icon. */
 function useUnseenAskCount(who: "heo" | "masuri") {
@@ -44,9 +44,11 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
   const base = `/${who}`;
   const unseenAsks = useUnseenAskCount(who);
 
-  const links: { href: string; icon: NavIcon; label: string }[] = [
+  const links: { href: string; icon: NavIcon; label: string; matchPrefix?: boolean }[] = [
     { href: base, icon: Home as NavIcon, label: t("home") },
-    { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook") },
+    { href: "/calendar", icon: Calendar as NavIcon, label: t("calendar"), matchPrefix: true },
+    { href: `${base}/notebook`, icon: NotebookIcon as NavIcon, label: t("notebook"), matchPrefix: true },
+    { href: "/dates", icon: Heart as NavIcon, label: t("dates"), matchPrefix: true },
     { href: `${base}/settings`, icon: Settings as NavIcon, label: t("settings") },
   ];
 
@@ -58,20 +60,18 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 border-t border-rose-200/50 md:border md:border-rose-200/60 md:left-1/2 md:right-auto md:bottom-6 md:-translate-x-1/2 md:rounded-2xl md:shadow-[0_8px_24px_rgba(196,102,122,0.18)]"
+      className="fixed bottom-0 left-0 right-0 z-30 md:left-1/2 md:right-auto md:bottom-6 md:-translate-x-1/2 md:rounded-full"
       style={{
-        background: "rgba(255, 249, 245, 0.94)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
+        background: "rgba(255, 249, 245, 0.86)",
+        backdropFilter: "saturate(140%) blur(20px)",
+        WebkitBackdropFilter: "saturate(140%) blur(20px)",
+        borderTop: "1px solid var(--color-hairline)",
+        boxShadow: "var(--shadow-md)",
       } as React.CSSProperties}
     >
-      <div className="flex items-center justify-around px-8 pt-3 pb-[calc(0.625rem+env(safe-area-inset-bottom))] max-w-md mx-auto md:max-w-lg md:pb-3">
-        {links.map(({ href, icon: Icon, label }) => {
-          // Home: exact match. Notebook: starts-with (has sub-pages). Settings: exact.
-          const active =
-            href.endsWith("/notebook")
-              ? pathname.startsWith(href)
-              : pathname === href;
+      <div className="flex items-center justify-around px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] max-w-md mx-auto md:max-w-fit md:gap-1 md:px-2 md:py-2 md:pb-2">
+        {links.map(({ href, icon: Icon, label, matchPrefix }) => {
+          const active = matchPrefix ? pathname.startsWith(href) : pathname === href;
           const isNotebook = href.endsWith("/notebook");
           const showBadge = isNotebook && unseenAsks > 0;
 
@@ -79,26 +79,28 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
             <Link
               key={href}
               href={href}
-              className="relative flex flex-col items-center gap-1.5 py-2 px-8 rounded-2xl outline-none"
+              aria-current={active ? "page" : undefined}
+              className="relative flex flex-col items-center gap-0.5 py-2 px-3 md:px-4 rounded-full outline-none active:scale-95 transition-transform"
             >
               {active && (
                 <motion.div
                   layoutId={`nav-pill-${who}`}
-                  className="absolute inset-0 rounded-2xl bg-rose-100"
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: "var(--color-accent-tint)" }}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
               <span className="relative z-10">
                 <Icon
-                  size={22}
-                  strokeWidth={active ? 2.2 : 1.6}
-                  className={`transition-colors duration-200 ${active ? "text-rose-500" : "text-rose-300"}`}
+                  size={20}
+                  strokeWidth={active ? 2.1 : 1.7}
+                  className="transition-colors duration-200"
+                  style={{ color: active ? "var(--color-accent)" : "var(--color-ink-mute)" }}
                 />
-                {/* G3: unseen ask-reply badge */}
                 {showBadge && (
                   <span
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: "#E97A95", fontSize: 9, lineHeight: 1 }}
+                    className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full flex items-center justify-center text-white font-semibold"
+                    style={{ background: "var(--color-accent)", fontSize: 9, lineHeight: 1 }}
                     aria-label={`${unseenAsks} câu trả lời mới`}
                   >
                     {unseenAsks > 9 ? "9+" : unseenAsks}
@@ -106,9 +108,8 @@ export function BottomNav({ who }: { who: "heo" | "masuri" }) {
                 )}
               </span>
               <span
-                className={`relative z-10 text-sm font-accent transition-colors duration-200 ${
-                  active ? "text-rose-500" : "text-rose-300"
-                }`}
+                className="relative z-10 text-[10px] font-medium tracking-tight transition-colors duration-200"
+                style={{ color: active ? "var(--color-accent)" : "var(--color-ink-mute)" }}
               >
                 {label}
               </span>
