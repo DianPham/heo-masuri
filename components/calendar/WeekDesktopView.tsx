@@ -38,8 +38,10 @@ const WEEKDAY_VI_LONG = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", 
 // felt crowded (per CP10 test-pass feedback).
 const ROW_HEIGHT_FULL = 44;
 const ROW_HEIGHT_COMPACT = 32;
-const HOUR_COL_WIDTH_FULL = 60;
-const HOUR_COL_WIDTH_COMPACT = 44;
+// Hour column needs enough room for "23:30" at 12px tabular-nums plus right
+// padding — 56px is the minimum that doesn't feel cramped on a 1280px MacBook.
+const HOUR_COL_WIDTH_FULL = 64;
+const HOUR_COL_WIDTH_COMPACT = 56;
 
 function vnDayIndex(iso: string, mondayVnMs: number): number {
   return Math.floor((new Date(iso).getTime() - mondayVnMs) / 86_400_000);
@@ -885,8 +887,8 @@ function DesktopRow({
   return (
     <>
       <div
-        className="text-xs text-ink-soft text-right pr-2 leading-none flex items-start justify-end pt-1 border-r"
-        style={{ borderColor: "rgba(255,201,213,0.25)" }}
+        className="text-[11.5px] text-right pr-2.5 leading-none flex items-start justify-end pt-1 border-r tabular-nums tracking-tight"
+        style={{ borderColor: "var(--color-hairline)", color: "var(--color-ink-mute)" }}
       >
         {hourLabelText}
       </div>

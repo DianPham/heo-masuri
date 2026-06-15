@@ -460,7 +460,7 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
   return (
     <div className="px-2">
       <div
-        className="sticky z-10 grid grid-cols-[40px_repeat(7,1fr)] gap-0 mb-1"
+        className="sticky z-10 grid grid-cols-[48px_repeat(7,1fr)] gap-0 mb-1"
         style={{
           top: "var(--calendar-shell-h, 112px)",
           backgroundColor: "rgba(255,249,245,0.94)",
@@ -507,7 +507,7 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
 
       <div ref={scrollerRef} className="relative">
         <div
-          className="grid grid-cols-[40px_repeat(7,1fr)] gap-0 relative"
+          className="grid grid-cols-[48px_repeat(7,1fr)] gap-0 relative"
           style={{ gridAutoRows: `${ROW_HEIGHT_PX}px` }}
         >
           {Array.from({ length: totalSlots }).map((_, row) => (
@@ -529,8 +529,8 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
               className="absolute pointer-events-none"
               style={{
                 top: nowRow.top,
-                left: `calc(40px + ${nowRow.day} * ((100% - 40px) / 7))`,
-                width: `calc((100% - 40px) / 7)`,
+                left: `calc(48px + ${nowRow.day} * ((100% - 48px) / 7))`,
+                width: `calc((100% - 48px) / 7)`,
                 height: 1.5,
                 backgroundColor: "#E97A95",
                 boxShadow: "0 0 6px rgba(233,122,149,0.5)",
@@ -583,7 +583,10 @@ function RowFragment({
 
   return (
     <>
-      <div className="text-[10px] text-ink-soft text-right pr-1 leading-none flex items-start justify-end pt-0.5">
+      <div
+        className="text-[11px] text-right pr-1.5 leading-none flex items-start justify-end pt-0.5 tabular-nums tracking-tight"
+        style={{ color: "var(--color-ink-mute)" }}
+      >
         {hourLabel && !isHalfHour ? hourLabel.text : ""}
       </div>
       {grid.map((dayCells, day) => {
