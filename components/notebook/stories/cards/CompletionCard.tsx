@@ -33,12 +33,36 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
   useEffect(() => {
     if (isReview) return;
 
-    // Mark page as completed (sets completed_at — drives scrapbook + Masuri progress)
-    fetch("/api/notebook/page/complete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ page_id: pageId }),
-    }).catch(() => {});
+    // Mark page as completed (sets completed_at — drives scrapbook + Masuri progress).
+    // Uses keepalive so the request survives if Heo immediately taps a button to
+    // navigate away (previously the fire-and-forget fetch was being cancelled
+    // mid-flight and the lesson stayed unmarked). One retry on failure for the
+    // case where the cookie hasn't propagated to the edge yet.
+    async function markComplete() {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await fetch("/api/notebook/page/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page_id: pageId }),
+            keepalive: true,
+          });
+          if (res.ok) return;
+          // 403 = cookie not set yet; brief wait + retry once.
+          if (res.status === 403 && attempt === 0) {
+            await new Promise((r) => setTimeout(r, 400));
+            continue;
+          }
+          const text = await res.text().catch(() => "");
+          console.error("[CompletionCard] page/complete failed", res.status, text);
+          return;
+        } catch (err) {
+          console.error("[CompletionCard] page/complete threw", err);
+          if (attempt === 1) return;
+        }
+      }
+    }
+    markComplete();
 
     // Bump streak
     fetch("/api/notebook/streak/bump", { method: "POST" })

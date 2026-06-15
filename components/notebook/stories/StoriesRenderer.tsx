@@ -285,19 +285,22 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
 
   return (
     <>
-      {/* ── Full-screen overlay (above bottom nav) ────────────── */}
-      {/* At lg+ keep a phone-sized centered column (~420px) so the story doesn't
-         stretch absurdly wide. The outer dim layer is also rendered there. */}
-      <div className="hidden lg:block fixed inset-0 z-40" style={{ backgroundColor: "rgba(58,33,41,0.18)" }} />
+      {/* ── Full-screen lesson view ───────────────────────────────────────
+         Mobile: covers the whole viewport (above the bottom nav).
+         Desktop (lg+): the SideNav stays visible on the left (240px), the
+         story fills the rest of the viewport — content max-width 720px
+         centered inside so readable line length stays sane.
+         Earlier this was a 420px floating modal — too small on a Macbook. */}
       <div
-        className="fixed inset-0 z-50 overflow-hidden select-none lg:inset-y-6 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:w-[420px] lg:rounded-3xl lg:shadow-[0_10px_50px_rgba(0,0,0,0.25)] lg:border lg:border-rose-200/60"
+        className="fixed inset-0 z-50 overflow-hidden select-none lg:left-60"
         style={PAPER_BG}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onClick={onTapNav}
       >
-        {/* Top bar: close + progress dots + counter */}
-        <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-3">
+        {/* Top bar: close + progress dots + counter
+           Max-width matches the card column on desktop so the dots line up. */}
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-3 lg:max-w-3xl lg:mx-auto lg:px-8">
           <button
             type="button"
             data-no-nav="true"
@@ -324,7 +327,7 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
           </span>
         </div>
 
-        {/* Card area */}
+        {/* Card area — capped to 720px on desktop so reading width stays sane */}
         <div className="absolute inset-0 pt-16">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -334,7 +337,7 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
               initial="enter"
               animate="center"
               exit="exit"
-              className="absolute inset-0 pt-4 overflow-y-auto"
+              className="absolute inset-0 pt-4 overflow-y-auto lg:max-w-3xl lg:mx-auto"
             >
               {renderCard()}
             </motion.div>

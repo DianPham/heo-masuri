@@ -239,13 +239,50 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
     [grid]
   );
 
-  const onCellMouseEnter = useCallback((day: number, row: number) => {
+  // Hover tooltip — when the cursor enters a cell with own or partner detail,
+  // we show a floating reason card. Replaces the right-click "View details"
+  // affordance that was inconvenient. Right-click is still kept for own-event
+  // edit/delete actions.
+  const [hover, setHover] = useState<{ day: number; row: number; x: number; y: number } | null>(null);
+
+  const onCellMouseEnter = useCallback((day: number, row: number, e?: React.MouseEvent) => {
     setDrag((prev) => {
       if (!prev || prev.day !== day) return prev;
       if (row !== prev.endRow) didDragRef.current = true;
       return { day: prev.day, startRow: prev.startRow, endRow: row };
     });
+    if (e) {
+      setHover({ day, row, x: e.clientX, y: e.clientY });
+    } else {
+      setHover({ day, row, x: 0, y: 0 });
+    }
   }, []);
+
+  const onCellMouseMove = useCallback((day: number, row: number, e: React.MouseEvent) => {
+    setHover((prev) => (prev && prev.day === day && prev.row === row ? { day, row, x: e.clientX, y: e.clientY } : prev));
+  }, []);
+
+  const onGridMouseLeave = useCallback(() => {
+    setHover(null);
+  }, []);
+
+  // Resolve the hovered cell into the actual event objects (own + partner) so
+  // we can render both reasons in one tooltip when applicable.
+  const hoverDetail = useMemo(() => {
+    if (!hover) return null;
+    const cell = grid[hover.day]?.[hover.row];
+    if (!cell) return null;
+    const own = cell.ownerEventIds
+      .map((id) => optimisticEvents.find((e) => e.id === id))
+      .filter((e): e is VisibleEvent => Boolean(e));
+    const partner = cell.partnerEventIds
+      .map((id) => optimisticEvents.find((e) => e.id === id))
+      .filter((e): e is VisibleEvent => Boolean(e));
+    const ownWithDetail = own.filter((e) => e.title || e.note || e.emoji);
+    const partnerWithDetail = partner.filter((e) => e.title || e.note || e.emoji);
+    if (ownWithDetail.length === 0 && partnerWithDetail.length === 0) return null;
+    return { own: ownWithDetail, partner: partnerWithDetail };
+  }, [hover, grid, optimisticEvents]);
 
   // Map cell key "day-row" → true if a partner event with shared details
   // STARTS in this cell. Used to render a tiny ⓘ badge so the viewer can
@@ -721,7 +758,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
       {/* Grid extends fully — no inner scroll. The page's <main> handles
          scrolling so there's a single scrollbar and the day-header columns
          stay column-aligned with the grid below them. */}
-      <div ref={scrollerRef} className="relative">
+      <div ref={scrollerRef} className="relative" onMouseLeave={onGridMouseLeave}>
         <div
           className="grid relative"
           style={{
@@ -744,6 +781,7 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
                 onTap={handleCellTap}
                 onCellMouseDown={onCellMouseDown}
                 onCellMouseEnter={onCellMouseEnter}
+                onCellMouseMove={onCellMouseMove}
                 onCellContextMenu={onCellContextMenu}
                 onResizeStart={onResizeStart}
               />
@@ -786,6 +824,42 @@ export function WeekDesktopView({ monday, events, viewerId, slotMinutes, onChang
             onChange();
           }}
         />
+      )}
+
+      {/* Hover tooltip — shows own + partner reasons for the hovered cell.
+         Replaces the old right-click "View details" menu for partner cells. */}
+      {hover && hoverDetail && (
+        <div
+          className="fixed pointer-events-none"
+          style={{
+            left: Math.min(hover.x + 14, (typeof window !== "undefined" ? window.innerWidth : 9999) - 280),
+            top: Math.min(hover.y + 14, (typeof window !== "undefined" ? window.innerHeight : 9999) - 200),
+            maxWidth: 280,
+            zIndex: 80,
+            background: "#ffffff",
+            border: "1px solid var(--color-hairline)",
+            borderRadius: 12,
+            boxShadow: "var(--shadow-md)",
+            padding: "0.5rem 0.75rem",
+          }}
+        >
+          {hoverDetail.own.map((ev, i) => (
+            <div key={`o-${ev.id}`} className={i > 0 ? "mt-2" : ""}>
+              <p className="section-eyebrow" style={{ color: "var(--color-accent)" }}>Bạn bận</p>
+              <ReasonLine ev={ev} />
+            </div>
+          ))}
+          {hoverDetail.partner.map((ev, i) => (
+            <div
+              key={`p-${ev.id}`}
+              className={hoverDetail.own.length > 0 || i > 0 ? "mt-2 pt-2" : ""}
+              style={hoverDetail.own.length > 0 && i === 0 ? { borderTop: "1px solid var(--color-hairline)" } : undefined}
+            >
+              <p className="section-eyebrow" style={{ color: "#3a6da0" }}>Người ấy bận</p>
+              <ReasonLine ev={ev} />
+            </div>
+          ))}
+        </div>
       )}
 
       {menu && (
@@ -847,6 +921,24 @@ function MenuItem({
   );
 }
 
+function ReasonLine({ ev }: { ev: VisibleEvent }) {
+  return (
+    <div className="mt-0.5">
+      {(ev.emoji || ev.title) && (
+        <p className="text-[13px] font-semibold tracking-tight" style={{ color: "var(--color-ink)" }}>
+          {ev.emoji && <span className="mr-1">{ev.emoji}</span>}
+          {ev.title || "(không tên)"}
+        </p>
+      )}
+      {ev.note && (
+        <p className="text-[11.5px] mt-0.5 whitespace-pre-wrap" style={{ color: "var(--color-ink-soft)" }}>
+          {ev.note}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function PartnerDetail({ event }: { event?: VisibleEvent }) {
   if (!event) return null;
   return (
@@ -869,6 +961,7 @@ function DesktopRow({
   onTap,
   onCellMouseDown,
   onCellMouseEnter,
+  onCellMouseMove,
   onCellContextMenu,
   onResizeStart,
 }: {
@@ -880,7 +973,8 @@ function DesktopRow({
   partnerSharedStartsByCell: Set<string>;
   onTap: (day: number, slot: number) => void;
   onCellMouseDown: (day: number, row: number, e: React.MouseEvent) => void;
-  onCellMouseEnter: (day: number, row: number) => void;
+  onCellMouseEnter: (day: number, row: number, e?: React.MouseEvent) => void;
+  onCellMouseMove: (day: number, row: number, e: React.MouseEvent) => void;
   onCellContextMenu: (day: number, row: number, e: React.MouseEvent) => void;
   onResizeStart: (eventId: string, e: React.MouseEvent) => void;
 }) {
@@ -907,7 +1001,8 @@ function DesktopRow({
             key={day}
             onClick={() => onTap(day, row)}
             onMouseDown={(e) => onCellMouseDown(day, row, e)}
-            onMouseEnter={() => onCellMouseEnter(day, row)}
+            onMouseEnter={(e) => onCellMouseEnter(day, row, e)}
+            onMouseMove={(e) => onCellMouseMove(day, row, e)}
             onContextMenu={(e) => onCellContextMenu(day, row, e)}
             className="group border-r border-b relative overflow-hidden hover:bg-rose-50/40 transition-colors"
             style={{
@@ -936,31 +1031,17 @@ function DesktopRow({
               />
             ))}
             {partnerSharedStartsByCell.has(`${day}-${row}`) && (
-              <>
-                <span
-                  className="absolute top-0.5 right-0.5 pointer-events-none text-[9px] leading-none font-semibold rounded-full px-1 py-0.5 transition-opacity group-hover:opacity-0"
-                  style={{
-                    color: "#3a6da0",
-                    backgroundColor: "rgba(255,255,255,0.85)",
-                    zIndex: 2,
-                  }}
-                  aria-label="Đối phương đã chia sẻ chi tiết"
-                >
-                  ⓘ
-                </span>
-                {/* Hover-only hint — replaces the ⓘ on hover with a clearer call to action */}
-                <span
-                  className="absolute top-0.5 right-0.5 left-0.5 pointer-events-none text-[9px] leading-tight font-semibold rounded px-1 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-center"
-                  style={{
-                    color: "#3a6da0",
-                    backgroundColor: "rgba(255,255,255,0.95)",
-                    border: "1px solid rgba(120,175,220,0.5)",
-                    zIndex: 3,
-                  }}
-                >
-                  Chuột phải để xem
-                </span>
-              </>
+              <span
+                className="absolute top-0.5 right-0.5 pointer-events-none text-[9px] leading-none font-semibold rounded-full px-1 py-0.5"
+                style={{
+                  color: "#3a6da0",
+                  backgroundColor: "rgba(255,255,255,0.85)",
+                  zIndex: 2,
+                }}
+                aria-label="Đối phương đã chia sẻ chi tiết"
+              >
+                ⓘ
+              </span>
             )}
             {cell.ownerRanges.map((r, i) => (
               <span
