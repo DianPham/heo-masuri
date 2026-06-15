@@ -1,36 +1,83 @@
 /**
  * /heo/notebook/today — Daily Stories renderer.
- * Fetches today's published page, or the most recent unfinished carry-over lesson.
- * Falls back to the hard-coded test page when no DB page exists.
+ *
+ * Resolves the active lesson directly from Supabase rather than self-fetching
+ * /api/notebook/today (that round-trip was flaking on Vercel — when it failed
+ * the page silently rendered TEST_PAGE, which made the Study button land on
+ * "Chào buổi sáng" / Day 1 instead of the real carry-over lesson).
+ *
+ * Priority:
+ *   1. Today's published page (normal case)
+ *   2. Most recent unfinished published page from before today (carry-over)
  */
 import type { DailyPage } from "@/types/notebook";
 import { TEST_PAGE } from "@/lib/notebook/test-page";
 import { StoriesRenderer } from "@/components/notebook/stories/StoriesRenderer";
+import { createServerClient } from "@/lib/supabase/server";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
-type TodayResponse = {
+type Resolved = {
   page: DailyPage | null;
-  completed: boolean;
   carry_over: boolean;
 };
 
-async function fetchTodayPage(): Promise<TodayResponse> {
-  try {
-    const base =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+function todayVN(): string {
+  return new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+}
 
-    const res = await fetch(`${base}/api/notebook/today`, { cache: "no-store" });
-    if (!res.ok) return { page: null, completed: false, carry_over: false };
-    return (await res.json()) as TodayResponse;
-  } catch {
-    return { page: null, completed: false, carry_over: false };
+function toPage(row: Record<string, unknown>): DailyPage {
+  return {
+    id: row.id as string,
+    title_vi: row.title_vi as string,
+    title_en: row.title_en as string,
+    topic: row.topic as string,
+    difficulty: row.difficulty as 1 | 2 | 3 | 4 | 5,
+    cards: row.cards as DailyPage["cards"],
+    scheduled_for: row.scheduled_for as string,
+    completed_at: row.completed_at as string | null,
+  };
+}
+
+async function resolveTodayPage(): Promise<Resolved> {
+  try {
+    const supabase = createServerClient();
+    const { data: heo } = await supabase.from("users").select("id").eq("slug", "heo").single();
+    if (!heo) return { page: null, carry_over: false };
+
+    const today = todayVN();
+
+    const { data: todayRow } = await supabase
+      .from("daily_pages")
+      .select("*")
+      .eq("for_user", heo.id)
+      .eq("scheduled_for", today)
+      .eq("status", "published")
+      .maybeSingle();
+
+    if (todayRow) return { page: toPage(todayRow), carry_over: false };
+
+    const { data: carryRow } = await supabase
+      .from("daily_pages")
+      .select("*")
+      .eq("for_user", heo.id)
+      .eq("status", "published")
+      .is("completed_at", null)
+      .lt("scheduled_for", today)
+      .order("scheduled_for", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (carryRow) return { page: toPage(carryRow), carry_over: true };
+    return { page: null, carry_over: false };
+  } catch (err) {
+    console.error("[/heo/notebook/today] resolve failed", err);
+    return { page: null, carry_over: false };
   }
 }
 
 export default async function TodayPage() {
-  const { page, carry_over } = await fetchTodayPage();
+  const { page, carry_over } = await resolveTodayPage();
   const resolved = page ?? TEST_PAGE;
 
   return (
