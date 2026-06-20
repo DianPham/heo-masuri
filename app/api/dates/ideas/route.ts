@@ -10,8 +10,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
+
+function ideaLabel(idea: { title?: string | null; notes?: string | null; url?: string | null }): string {
+  return (idea.title || idea.notes || idea.url || "ý tưởng mới").toString().slice(0, 60);
+}
 
 const SLOT_TYPES = ["eat","drink","activity","walk","movie","drive","home","other"] as const;
 
@@ -85,5 +90,16 @@ export async function POST(req: NextRequest) {
     console.error("[dates/ideas POST]", error);
     return NextResponse.json({ error: error?.message ?? "insert failed" }, { status: 500 });
   }
+
+  const label = ideaLabel(data);
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "date_planning_enabled",
+    build: (name) => ({
+      push: { title: `${name} lưu một ý tưởng hẹn 💡`, body: label, url: "/dates/ideas", tag: "date-idea" },
+      activity: { icon: "💡", message: `${name} lưu ý tưởng: ${label}`, url: "/dates/ideas" },
+    }),
+  });
+
   return NextResponse.json({ idea: data });
 }

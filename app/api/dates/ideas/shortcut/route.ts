@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { fetchUrlPreview } from "@/lib/url-preview";
 import { aiCleanPreview } from "@/lib/ai-clean";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -76,5 +77,17 @@ export async function POST(req: NextRequest) {
     console.error("[dates/ideas/shortcut POST]", error);
     return NextResponse.json({ error: "insert failed" }, { status: 500 });
   }
+
+  // Always added as Heo → notify Masuri (notifyPartner resolves the partner).
+  const label = (ai?.title ?? preview.title ?? notes ?? url).toString().slice(0, 60);
+  await notifyPartner({
+    actorId: heo.id,
+    prefKey: "date_planning_enabled",
+    build: (name) => ({
+      push: { title: `${name} lưu một ý tưởng hẹn 💡`, body: label, url: "/dates/ideas", tag: "date-idea" },
+      activity: { icon: "💡", message: `${name} lưu ý tưởng: ${label}`, url: "/dates/ideas" },
+    }),
+  });
+
   return NextResponse.json({ ok: true, id: data.id });
 }

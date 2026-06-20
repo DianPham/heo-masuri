@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
-import { sendPushIfAllowed } from "@/lib/push";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -93,16 +93,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error?.message ?? "insert failed" }, { status: 500 });
   }
 
-  // Notify the target.
-  try {
-    await sendPushIfAllowed(targetId, "outfit_enabled", {
-      title: "👗 Người ấy chọn đồ cho bạn 💕",
-      body: item.label ? `Gợi ý mặc "${item.label}" nha` : "Mở tủ đồ xem nha",
-      url: "/wardrobe",
-    });
-  } catch (e) {
-    console.error("[suggestions push]", e);
-  }
+  // Notify the target (= partner, since there are only two users).
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "outfit_enabled",
+    build: (name) => ({
+      push: {
+        title: `${name} chọn đồ cho bạn 👗💕`,
+        body: item.label ? `Gợi ý mặc "${item.label}" nha` : "Mở tủ đồ xem nha",
+        url: "/wardrobe",
+        tag: "outfit-suggestion",
+      },
+      activity: {
+        icon: "👗",
+        message: item.label ? `${name} gợi ý bạn mặc: ${item.label}` : `${name} gợi ý đồ cho bạn`,
+        url: "/wardrobe",
+      },
+    }),
+  });
 
   return NextResponse.json({ suggestion: data });
 }

@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,24 @@ export async function PATCH(
       })
       .eq("id", wearItem);
   }
+
+  // Notify the suggester (= partner) how the target responded.
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "outfit_enabled",
+    build: (name) => {
+      const reply =
+        status === "accepted"
+          ? { icon: "✅", verb: "chốt", push: "đồng ý mặc bộ bạn chọn 💕" }
+          : status === "counter"
+          ? { icon: "🔄", verb: "đổi", push: "muốn mặc bộ khác — xem nha" }
+          : { icon: "🙈", verb: "từ chối", push: "hôm nay muốn mặc bộ khác nha" };
+      return {
+        push: { title: `${name} ${reply.push}`, body: "Mở tủ đồ xem nha", url: "/wardrobe", tag: "outfit-suggestion" },
+        activity: { icon: reply.icon, message: `${name} ${reply.verb} gợi ý đồ`, url: "/wardrobe" },
+      };
+    },
+  });
 
   return NextResponse.json({ suggestion: data });
 }

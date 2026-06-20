@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
-import { sendPushIfAllowed } from "@/lib/push";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -140,20 +140,27 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 3) Push partner with celebratory copy.
+  // 3) Notify partner (push + in-app) with celebratory copy.
   if (partner) {
-    const fromName = viewer?.slug === "masuri" ? "Masuri" : "Heo";
     const dayLabel = vnDayLabel(body.start_at);
-    const msg = `${fromName} lên kế hoạch cho ${dayLabel} 💕`;
-    try {
-      await sendPushIfAllowed(partner.id, "date_planning_enabled", {
-        title: msg,
-        body: title ?? "Mở app để cùng lên kế hoạch nha 💕",
-        url: `/dates/plan/${dateRow.id}`,
-      });
-    } catch (e) {
-      console.error("[scheduled POST push]", e);
-    }
+    void viewer; // partner naming handled by notifyPartner
+    await notifyPartner({
+      actorId: viewerId,
+      prefKey: "date_planning_enabled",
+      build: (name) => ({
+        push: {
+          title: `${name} lên kế hoạch cho ${dayLabel} 💕`,
+          body: title ?? "Mở app để cùng lên kế hoạch nha 💕",
+          url: `/dates/plan/${dateRow.id}`,
+          tag: "date-plan",
+        },
+        activity: {
+          icon: "📅",
+          message: `${name} lên kế hoạch hẹn ${dayLabel}`,
+          url: `/dates/plan/${dateRow.id}`,
+        },
+      }),
+    });
   }
 
   return NextResponse.json({

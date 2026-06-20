@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +119,43 @@ export async function PATCH(
     console.error("[scheduled PATCH realtime]", e);
   }
 
+  // Notify partner only on meaningful changes — NOT on collaborative outline /
+  // itinerary edits (those are already live-synced via the channel above and
+  // would spam on every keystroke-level candidate add).
+  const meaningful =
+    update.status !== undefined ||
+    update.title !== undefined ||
+    update.start_at !== undefined ||
+    update.end_at !== undefined ||
+    update.dress_code !== undefined ||
+    update.dress_code_emoji !== undefined;
+  if (meaningful) {
+    const planTitle = (data.title as string | null) ?? "buổi hẹn";
+    const statusChanged = update.status !== undefined;
+    await notifyPartner({
+      actorId: viewerId,
+      prefKey: "date_planning_enabled",
+      build: (name) => ({
+        push: {
+          title: statusChanged && update.status === "cancelled"
+            ? `${name} huỷ một buổi hẹn`
+            : `${name} cập nhật kế hoạch hẹn ✏️`,
+          body: planTitle,
+          url: `/dates/plan/${id}`,
+          tag: "date-plan",
+        },
+        activity: {
+          icon: statusChanged && update.status === "cancelled" ? "❌" : "✏️",
+          message:
+            statusChanged && update.status === "cancelled"
+              ? `${name} huỷ buổi hẹn: ${planTitle}`
+              : `${name} sửa kế hoạch: ${planTitle}`,
+          url: `/dates/plan/${id}`,
+        },
+      }),
+    });
+  }
+
   return NextResponse.json({ date: data });
 }
 
@@ -131,7 +169,7 @@ export async function DELETE(
   const { id } = await params;
   const supabase = createServerClient();
   const { data: row } = await supabase
-    .from("scheduled_dates").select("created_by").eq("id", id).maybeSingle();
+    .from("scheduled_dates").select("created_by, title").eq("id", id).maybeSingle();
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (row.created_by !== viewerId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -147,5 +185,16 @@ export async function DELETE(
 
   const { error } = await supabase.from("scheduled_dates").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const planTitle = (row.title as string | null) ?? "buổi hẹn";
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "date_planning_enabled",
+    build: (name) => ({
+      push: { title: `${name} xoá một buổi hẹn`, body: planTitle, url: "/dates/plan", tag: "date-plan" },
+      activity: { icon: "🗑️", message: `${name} xoá buổi hẹn: ${planTitle}`, url: "/dates/plan" },
+    }),
+  });
+
   return NextResponse.json({ ok: true });
 }

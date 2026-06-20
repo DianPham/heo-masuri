@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
 import { signWardrobeItems, type WardrobeItemRow } from "@/lib/wardrobe";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,26 @@ export async function PATCH(
     return NextResponse.json({ error: error?.message ?? "update failed" }, { status: 500 });
   }
   const [item] = await signWardrobeItems(supabase, [data as WardrobeItemRow]);
+
+  const itemLabel = (data.label as string | null) || "một món đồ";
+  const archived = update.archived === true;
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "outfit_enabled",
+    build: (name) => {
+      const ownerSlug = name === "Heo" ? "heo" : "masuri";
+      return archived
+        ? {
+            push: { title: `${name} cất một món đồ đi`, body: itemLabel, url: `/wardrobe/${ownerSlug}`, tag: "wardrobe" },
+            activity: { icon: "🧺", message: `${name} cất đồ: ${itemLabel}`, url: `/wardrobe/${ownerSlug}` },
+          }
+        : {
+            push: { title: `${name} chỉnh tủ đồ 👗`, body: itemLabel, url: `/wardrobe/${ownerSlug}`, tag: "wardrobe" },
+            activity: { icon: "👗", message: `${name} chỉnh đồ: ${itemLabel}`, url: `/wardrobe/${ownerSlug}` },
+          };
+    },
+  });
+
   return NextResponse.json({ item });
 }
 
@@ -67,7 +88,7 @@ export async function DELETE(
   const supabase = createServerClient();
   const { data: existing } = await supabase
     .from("wardrobe_items")
-    .select("owner, photo_url, thumbnail_url")
+    .select("owner, photo_url, thumbnail_url, label")
     .eq("id", id)
     .maybeSingle();
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -83,5 +104,16 @@ export async function DELETE(
     console.error("[wardrobe items DELETE]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  const itemLabel = (existing.label as string | null) || "một món đồ";
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "outfit_enabled",
+    build: (name) => ({
+      push: { title: `${name} xoá một món khỏi tủ`, body: itemLabel, url: "/wardrobe", tag: "wardrobe" },
+      activity: { icon: "🗑️", message: `${name} xoá đồ: ${itemLabel}`, url: "/wardrobe" },
+    }),
+  });
+
   return NextResponse.json({ ok: true });
 }

@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
 import { signWardrobeItems, type WardrobeItemRow } from "@/lib/wardrobe";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -87,5 +88,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error?.message ?? "insert failed" }, { status: 500 });
   }
   const [item] = await signWardrobeItems(supabase, [data as WardrobeItemRow]);
+
+  const itemLabel = label || "một món đồ mới";
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "outfit_enabled",
+    build: (name) => ({
+      push: {
+        title: `${name} thêm đồ vào tủ 👗`,
+        body: `Vào chọn "${itemLabel}" cho người ấy mặc nha`,
+        url: `/wardrobe/${name === "Heo" ? "heo" : "masuri"}`,
+        tag: "wardrobe",
+      },
+      activity: {
+        icon: "👗",
+        message: `${name} thêm vào tủ đồ: ${itemLabel}`,
+        url: `/wardrobe/${name === "Heo" ? "heo" : "masuri"}`,
+      },
+    }),
+  });
+
   return NextResponse.json({ item });
 }
