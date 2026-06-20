@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,17 @@ export async function PATCH(
     console.error("[important-dates PATCH]", error);
     return NextResponse.json({ error: error?.message ?? "update failed" }, { status: 500 });
   }
+
+  const label = (data.label_vi as string | null) ?? "ngày đặc biệt";
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "important_date_enabled",
+    build: (name) => ({
+      push: { title: `${name} chỉnh một ngày đặc biệt ✏️`, body: label, url: "/calendar/important-dates", tag: "important-date" },
+      activity: { icon: (data.emoji as string | null) || "⭐", message: `${name} chỉnh ngày: ${label}`, url: "/calendar/important-dates" },
+    }),
+  });
+
   return NextResponse.json({ date: data });
 }
 
@@ -96,10 +108,25 @@ export async function DELETE(
 
   const { id } = await params;
   const supabase = createServerClient();
+  const { data: existing } = await supabase
+    .from("important_dates").select("label_vi, emoji").eq("id", id).maybeSingle();
   const { error } = await supabase.from("important_dates").delete().eq("id", id);
   if (error) {
     console.error("[important-dates DELETE]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  if (existing) {
+    const label = (existing.label_vi as string | null) ?? "ngày đặc biệt";
+    await notifyPartner({
+      actorId: viewerId,
+      prefKey: "important_date_enabled",
+      build: (name) => ({
+        push: { title: `${name} xoá một ngày đặc biệt`, body: label, url: "/calendar/important-dates", tag: "important-date" },
+        activity: { icon: "🗑️", message: `${name} xoá ngày: ${label}`, url: "/calendar/important-dates" },
+      }),
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }

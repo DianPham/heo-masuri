@@ -76,30 +76,74 @@ function isTikTokShortLink(hostname: string): boolean {
  * (www.tiktok.com/@user/video/123) form. TikTok's oEmbed endpoint only accepts
  * canonical URLs — passing a short link returns 404 with no body.
  *
- * Strategy: GET with redirect=follow, abort the body read once headers land,
- * read `res.url` for the post-redirect URL. Strip query strings (TikTok adds a
- * tracking `?_t=...&_r=...` that oEmbed will reject too).
+ * STABILITY (the vt. flakiness fix): the previous single redirect=follow GET
+ * downloaded the body and, on any timeout, returned the UNRESOLVED short link.
+ * Downstream oEmbed/noembed/client-retry all need the canonical URL, so a
+ * resolution miss meant the whole fetch silently failed for that vt. link —
+ * "sometimes works, sometimes doesn't".
+ *
+ * New strategy, in order:
+ *   1. Manual-redirect hop loop reading the `Location` header only (no body
+ *      download → fast + reliable; undici exposes 3xx + Location on the server
+ *      with redirect:"manual"). Up to 5 hops.
+ *   2. Fallback: redirect:"follow" + res.url (the old behaviour).
+ *   3. One retry of the whole thing if the first attempt yields no canonical.
+ * Always strips the tracking query string.
  */
 async function resolveTikTokShortLink(url: URL): Promise<URL> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const resolved = await resolveOnce(url);
+    if (resolved && !isTikTokShortLink(resolved.hostname)) {
+      resolved.search = "";
+      return resolved;
+    }
+  }
+  // Couldn't expand — return the original (callers will try page-state, which
+  // follows redirects itself and recovers the canonical from res.url).
+  url.search = "";
+  return url;
+}
+
+async function resolveOnce(url: URL): Promise<URL | null> {
+  // 1) Manual-redirect hop loop — read Location, don't download bodies.
+  let current = url;
+  for (let hop = 0; hop < 5; hop++) {
+    const res = await fetchWithTimeout(current.toString(), {
+      method: "GET",
+      headers: { "User-Agent": BROWSER_UA, Accept: "text/html" },
+      redirect: "manual",
+    });
+    if (!res) break;
+    const loc = res.headers.get("location");
+    res.body?.cancel().catch(() => undefined);
+    if (loc && res.status >= 300 && res.status < 400) {
+      try {
+        current = new URL(loc, current);
+      } catch {
+        break;
+      }
+      if (!isTikTokShortLink(current.hostname)) return current;
+      continue; // another short hop (vt → vt is rare but possible)
+    }
+    // Non-3xx on a short-link host → manual mode can't help; break to fallback.
+    break;
+  }
+
+  // 2) Fallback: follow + res.url.
   const res = await fetchWithTimeout(url.toString(), {
     method: "GET",
-    headers: {
-      "User-Agent": BROWSER_UA,
-      Accept: "text/html",
-    },
+    headers: { "User-Agent": BROWSER_UA, Accept: "text/html" },
     redirect: "follow",
   });
-  // Abort the body — we only wanted the final URL.
   res?.body?.cancel().catch(() => undefined);
-  if (!res || !res.url) return url;
-  try {
-    const resolved = new URL(res.url);
-    // Strip TikTok's tracking query string; the path alone identifies the video.
-    resolved.search = "";
-    return resolved;
-  } catch {
-    return url;
+  if (res?.url) {
+    try {
+      return new URL(res.url);
+    } catch {
+      /* ignore */
+    }
   }
+  return null;
 }
 
 function isInstagram(hostname: string): boolean {
@@ -177,38 +221,53 @@ async function readBodyCapped(res: Response): Promise<string | null> {
 async function fetchTikTokPreview(url: URL): Promise<Preview> {
   // Expand short links (vt./vm./vs.tiktok.com) to the canonical /video/ or
   // /photo/ path.
-  const canonical = isTikTokShortLink(url.hostname)
+  let canonical = isTikTokShortLink(url.hostname)
     ? await resolveTikTokShortLink(url)
     : url;
   canonical.search = "";
-  const canonicalStr = canonical.toString();
-  const isPhotoPath = /\/photo\//i.test(canonical.pathname);
+  let canonicalStr = canonical.toString();
+  let isPhotoPath = /\/photo\//i.test(canonical.pathname);
+  // Did short-link expansion succeed? If not, the page-state fetch (which
+  // follows redirects) is our recovery path for the canonical URL.
+  const stillShort = isTikTokShortLink(canonical.hostname);
 
-  // Photo posts: try microlink first. The mobile-UA scrape works locally but
-  // fails from Vercel's datacenter IP (TikTok rate-limits photo paths
-  // aggressively). microlink.io has its own infra and reliably returns the
-  // caption + cover image for /photo/ URLs.
-  if (isPhotoPath) {
+  // Photo posts (with a real canonical): try microlink first. The mobile-UA
+  // scrape works locally but fails from Vercel's datacenter IP (TikTok
+  // rate-limits photo paths aggressively); microlink.io has its own infra.
+  if (isPhotoPath && !stillShort) {
     const ml = await tryMicrolink(canonicalStr);
     if (ml) return { ...ml, canonical_url: canonicalStr };
   }
 
   // Tier — mobile-UA scrape → <script id="api-data"> JSON. Works for /video/
-  // and /photo/ when not IP-blocked. Cheap when it works.
-  const fromState = await fetchTikTokViaPageState(canonical);
-  if (fromState) return { ...fromState, canonical_url: canonicalStr };
+  // and /photo/ when not IP-blocked, AND recovers the post-redirect canonical
+  // URL (res.url) even when resolveTikTokShortLink couldn't expand the vt link.
+  const state = await fetchTikTokViaPageState(canonical);
+  if (state.resolvedUrl) {
+    try {
+      const r = new URL(state.resolvedUrl);
+      r.search = "";
+      if (!isTikTokShortLink(r.hostname)) {
+        canonical = r;
+        canonicalStr = r.toString();
+        isPhotoPath = /\/photo\//i.test(r.pathname);
+      }
+    } catch {
+      /* keep prior canonical */
+    }
+  }
+  if (state.preview) return { ...state.preview, canonical_url: canonicalStr };
 
-  // Video-only paths from here. oEmbed + noembed both 400 on /photo/.
-  if (!isPhotoPath) {
+  // Remaining tiers, now with the best canonical we could resolve.
+  if (isPhotoPath) {
+    const ml = await tryMicrolink(canonicalStr);
+    if (ml) return { ...ml, canonical_url: canonicalStr };
+  } else {
+    // oEmbed + noembed both 400 on /photo/ and on unexpanded short links.
     const oembed = await tryTikTokOembed(canonicalStr);
     if (oembed) return { ...oembed, canonical_url: canonicalStr };
     const noembed = await tryNoembed(canonicalStr);
     if (noembed) return { ...noembed, canonical_url: canonicalStr };
-  }
-
-  // Final fallback for photos (after page-state failed) and videos (after
-  // every TikTok-specific path failed): try microlink as a generic last resort.
-  if (!isPhotoPath) {
     const ml = await tryMicrolink(canonicalStr);
     if (ml) return { ...ml, canonical_url: canonicalStr };
   }
@@ -359,7 +418,9 @@ async function tryNoembed(canonicalUrl: string): Promise<Preview | null> {
  * Falls back to the legacy __UNIVERSAL_DATA_FOR_REHYDRATION__ scopes for
  * older page versions (none seen recently but cheap to keep).
  */
-async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
+async function fetchTikTokViaPageState(
+  url: URL
+): Promise<{ preview: Preview | null; resolvedUrl: string | null }> {
   const MOBILE_UA =
     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 " +
     "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
@@ -373,9 +434,12 @@ async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
     },
     redirect: "follow",
   });
-  if (!res || !res.ok) return null;
+  // Capture the post-redirect URL even on a failed/empty body — it lets the
+  // caller recover the canonical URL for a vt. link the resolver couldn't expand.
+  const resolvedUrl = res?.url || null;
+  if (!res || !res.ok) return { preview: null, resolvedUrl };
   const html = await readBodyCapped(res);
-  if (!html) return null;
+  if (!html) return { preview: null, resolvedUrl };
 
   // Primary: <script id="api-data"> with videoDetail.itemInfo.itemStruct.
   const apiMatch = /<script[^>]+id=["']api-data["'][^>]*>([\s\S]*?)<\/script>/i.exec(html);
@@ -384,7 +448,7 @@ async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
       const data = JSON.parse(apiMatch[1]);
       const item = data?.videoDetail?.itemInfo?.itemStruct;
       const fromItem = extractFromItem(item);
-      if (fromItem) return fromItem;
+      if (fromItem) return { preview: fromItem, resolvedUrl };
     } catch { /* fall through */ }
   }
 
@@ -402,7 +466,7 @@ async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
         scope["webapp.image-detail"]?.itemInfo?.itemStruct ??
         null;
       const fromItem = extractFromItem(item);
-      if (fromItem) return fromItem;
+      if (fromItem) return { preview: fromItem, resolvedUrl };
     } catch { /* fall through */ }
   }
 
@@ -420,12 +484,12 @@ async function fetchTikTokViaPageState(url: URL): Promise<Preview | null> {
           item.author = { uniqueId: item.author };
         }
         const fromItem = extractFromItem(item);
-        if (fromItem) return fromItem;
+        if (fromItem) return { preview: fromItem, resolvedUrl };
       }
     } catch { /* ignore */ }
   }
 
-  return null;
+  return { preview: null, resolvedUrl };
 }
 
 /** Common shape extractor — itemStruct has the same field names across all

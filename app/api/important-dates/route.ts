@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -79,5 +80,16 @@ export async function POST(req: NextRequest) {
     console.error("[important-dates POST]", error);
     return NextResponse.json({ error: error?.message ?? "insert failed" }, { status: 500 });
   }
+
+  const label = (data.label_vi as string | null) ?? "ngày đặc biệt";
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "important_date_enabled",
+    build: (name) => ({
+      push: { title: `${name} thêm một ngày đặc biệt ⭐`, body: label, url: "/calendar/important-dates", tag: "important-date" },
+      activity: { icon: data.emoji || "⭐", message: `${name} thêm ngày đặc biệt: ${label}`, url: "/calendar/important-dates" },
+    }),
+  });
+
   return NextResponse.json({ date: data });
 }

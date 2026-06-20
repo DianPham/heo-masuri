@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
 import { pickForSlot, type SlotCandidate } from "@/lib/spin";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -92,5 +93,21 @@ export async function POST(
     console.error("[scheduled spin update]", updErr);
     return NextResponse.json({ error: "spin failed" }, { status: 500 });
   }
+
+  const planTitle = (updated.title as string | null) ?? "buổi hẹn";
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "date_planning_enabled",
+    build: (name) => ({
+      push: {
+        title: `${name} quay xong kế hoạch hẹn 🎲`,
+        body: `Mở "${planTitle}" xem kết quả nha 💕`,
+        url: `/dates/plan/${id}`,
+        tag: "date-plan",
+      },
+      activity: { icon: "🎲", message: `${name} chốt lịch trình: ${planTitle}`, url: `/dates/plan/${id}` },
+    }),
+  });
+
   return NextResponse.json({ itinerary, date: updated });
 }

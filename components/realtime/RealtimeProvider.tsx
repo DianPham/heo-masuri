@@ -4,6 +4,7 @@ import { useEffect, useRef, createContext, useContext, useState, useCallback } f
 import { createClient } from "@/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { Who } from "@/lib/soft-gate";
+import { ActivityToast } from "./ActivityToast";
 
 export type RealtimeEvent =
   | { event: "missing:new"; payload: { id: string; intensity: number; count_today: number } }
@@ -13,7 +14,11 @@ export type RealtimeEvent =
   | { event: "angry:reply"; payload: { id: string; reply: string } }
   | { event: "angry:resolved"; payload: { id: string } }
   | { event: "reunion:updated"; payload: { target_date: string | null } }
-  | { event: "heo:studying"; payload: { card_index: number; total: number; page_title: string } };
+  | { event: "heo:studying"; payload: { card_index: number; total: number; page_title: string } }
+  | {
+      event: "activity:new";
+      payload: { actor_slug: "heo" | "masuri" | null; icon: string; message: string; url: string | null };
+    };
 
 type Listener = (e: RealtimeEvent) => void;
 
@@ -72,6 +77,10 @@ export function RealtimeProvider({
   return (
     <RealtimeContext.Provider value={{ addListener, broadcast }}>
       {children}
+      {/* Mounted here so the shared-feature activity toast is present on every
+         authenticated page (calendar/dates/wardrobe/notebook all wrap in this
+         provider), not just the home shells. */}
+      {who === "heo" || who === "masuri" ? <ActivityToast who={who} /> : null}
     </RealtimeContext.Provider>
   );
 }

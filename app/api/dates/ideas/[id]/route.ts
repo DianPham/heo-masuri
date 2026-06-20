@@ -6,10 +6,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { getViewerUserId } from "@/lib/calendar";
+import { notifyPartner } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
 const SLOT_TYPES = ["eat","drink","activity","walk","movie","drive","home","other"] as const;
+
+function ideaLabel(idea: { title?: string | null; notes?: string | null; url?: string | null }): string {
+  return (idea.title || idea.notes || idea.url || "ý tưởng").toString().slice(0, 60);
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -59,6 +64,24 @@ export async function PATCH(
     console.error("[dates/ideas PATCH]", error);
     return NextResponse.json({ error: error?.message ?? "update failed" }, { status: 500 });
   }
+
+  const label = ideaLabel(data);
+  const archived = update.archived === true;
+  await notifyPartner({
+    actorId: viewerId,
+    prefKey: "date_planning_enabled",
+    build: (name) =>
+      archived
+        ? {
+            push: { title: `${name} cất một ý tưởng đi`, body: label, url: "/dates/ideas", tag: "date-idea" },
+            activity: { icon: "🗂️", message: `${name} lưu trữ ý tưởng: ${label}`, url: "/dates/ideas" },
+          }
+        : {
+            push: { title: `${name} chỉnh một ý tưởng hẹn ✏️`, body: label, url: "/dates/ideas", tag: "date-idea" },
+            activity: { icon: "✏️", message: `${name} chỉnh ý tưởng: ${label}`, url: "/dates/ideas" },
+          },
+  });
+
   return NextResponse.json({ idea: data });
 }
 
@@ -71,10 +94,25 @@ export async function DELETE(
 
   const { id } = await params;
   const supabase = createServerClient();
+  const { data: existing } = await supabase
+    .from("date_ideas").select("title, notes, url").eq("id", id).maybeSingle();
   const { error } = await supabase.from("date_ideas").delete().eq("id", id);
   if (error) {
     console.error("[dates/ideas DELETE]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  if (existing) {
+    const label = ideaLabel(existing);
+    await notifyPartner({
+      actorId: viewerId,
+      prefKey: "date_planning_enabled",
+      build: (name) => ({
+        push: { title: `${name} xoá một ý tưởng hẹn`, body: label, url: "/dates/ideas", tag: "date-idea" },
+        activity: { icon: "🗑️", message: `${name} xoá ý tưởng: ${label}`, url: "/dates/ideas" },
+      }),
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }
