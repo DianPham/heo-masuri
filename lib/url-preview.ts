@@ -183,6 +183,36 @@ function decodeHtml(s: string): string {
     .replace(/&apos;/g, "'");
 }
 
+/**
+ * Normalize a TikTok author handle. TikTok's degraded oEmbed now returns "@"
+ * (a bare at-sign) or an empty string as author_name — this is the source of
+ * idea cards whose title is just "@". Strip a leading @ and return null for
+ * anything empty. Callers must treat a null author as "no author" and never
+ * synthesize a title of just "@".
+ */
+function cleanTikTokAuthor(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const s = name.trim().replace(/^@+/, "").trim();
+  return s.length > 0 ? s : null;
+}
+
+/**
+ * Reject placeholder / spinner images so we never store a loading GIF as a
+ * thumbnail. microlink returns TikTok's `tiktok-loading.<hash>.gif` (served
+ * from the webapp static host) when it can't resolve the real cover, and og:*
+ * scrapes sometimes hand back the same asset-host stubs.
+ */
+function isPlaceholderImage(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const u = url.toLowerCase();
+  return (
+    u.includes("tiktok-loading") ||
+    u.includes("/webapp/") ||
+    u.includes("tiktok-web-tx") ||
+    u.includes("placeholder")
+  );
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit = {}): Promise<Response | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -230,6 +260,16 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
   // Did short-link expansion succeed? If not, the page-state fetch (which
   // follows redirects) is our recovery path for the canonical URL.
   const stillShort = isTikTokShortLink(canonical.hostname);
+
+  // PRIMARY tier: tikwm.com. It's reliable from datacenter IPs and resolves
+  // short links itself, so try the ORIGINAL url first (sidesteps the flaky
+  // redirect resolution that produced blank cards), then the canonical if that
+  // missed. Covers both /video/ and /photo/. Returns a real cover + caption,
+  // unlike TikTok's degraded oEmbed ("@" stub) and microlink (spinner GIF).
+  const tikwm =
+    (await tryTikwm(url.toString())) ??
+    (canonicalStr !== url.toString() ? await tryTikwm(canonicalStr) : null);
+  if (tikwm) return { ...tikwm, canonical_url: canonicalStr };
 
   // Photo posts (with a real canonical): try microlink first. The mobile-UA
   // scrape works locally but fails from Vercel's datacenter IP (TikTok
@@ -285,6 +325,64 @@ async function fetchTikTokPreview(url: URL): Promise<Preview> {
 }
 
 /**
+ * tikwm.com — free public TikTok metadata API and our PRIMARY tier.
+ *
+ * Why this exists: TikTok's own oEmbed now serves an anonymized stub
+ * (author_name "@", empty title) and microlink returns a loading-spinner GIF
+ * as the image — so the previous chain produced blank cards or a bare "@".
+ * tikwm returns the real caption + a real cover thumbnail for BOTH /video/ and
+ * /photo/ posts, works from datacenter IPs (Vercel), and accepts the raw
+ * vt./vm. short link directly — no redirect resolution needed.
+ * Verified 2026-06-26 against the exact links failing in prod.
+ */
+async function tryTikwm(anyTikTokUrl: string): Promise<Preview | null> {
+  const api = `https://www.tikwm.com/api/?url=${encodeURIComponent(anyTikTokUrl)}`;
+  const res = await fetchWithTimeout(api, {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    redirect: "follow",
+  });
+  if (!res || !res.ok) return null;
+  type TikwmRes = {
+    code?: number;
+    data?: {
+      title?: string;
+      cover?: string;
+      origin_cover?: string;
+      images?: string[];
+      author?: { unique_id?: string; nickname?: string };
+    };
+  };
+  try {
+    const body = (await res.json()) as TikwmRes;
+    if (body.code !== 0 || !body.data) return null;
+    const d = body.data;
+    const author =
+      cleanTikTokAuthor(d.author?.unique_id) ?? cleanTikTokAuthor(d.author?.nickname);
+    const caption = d.title?.trim() || null;
+    const rawImage =
+      d.cover?.trim() ||
+      d.origin_cover?.trim() ||
+      (Array.isArray(d.images) && d.images.length > 0 ? d.images[0] : null) ||
+      null;
+    const image = isPlaceholderImage(rawImage) ? null : rawImage;
+    const title =
+      caption && author
+        ? `@${author} · ${caption}`
+        : caption || (author ? `@${author}` : null);
+    if (!title && !image) return null;
+    return {
+      title,
+      description: author ? `@${author}` : null,
+      image,
+      source: "tiktok.com",
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * microlink.io — free public metadata extractor. Verified locally (~6s) to
  * return clean JSON for TikTok /photo/ URLs where our own scrape fails from
  * Vercel's IP. Returns { author, title, description, image: { url } }.
@@ -314,8 +412,9 @@ async function tryMicrolink(canonicalUrl: string): Promise<Preview | null> {
     const d = body.data;
     const caption = d.description?.trim() || null;
     const author = d.author?.trim() || null;
-    const image =
+    const rawImage =
       typeof d.image === "string" ? d.image : d.image?.url ?? null;
+    const image = isPlaceholderImage(rawImage) ? null : rawImage;
     const title =
       caption && author
         ? `@${author.replace(/^@/, "")} · ${caption}`
@@ -348,15 +447,21 @@ async function tryTikTokOembed(canonicalUrl: string): Promise<Preview | null> {
   };
   try {
     const data = (await res.json()) as TikTokOembed;
+    // Sanitize: TikTok's degraded oEmbed returns author_name "@" and an empty
+    // title. cleanTikTokAuthor drops the bare "@", and an empty caption becomes
+    // null — so we never synthesize a title of just "@".
+    const author = cleanTikTokAuthor(data.author_name);
+    const caption = data.title?.trim() || null;
+    const image = data.thumbnail_url?.trim() || null;
     const title =
-      data.title && data.author_name
-        ? `${data.author_name} · ${data.title}`
-        : data.title ?? data.author_name ?? null;
-    if (title || data.thumbnail_url) {
+      caption && author
+        ? `@${author} · ${caption}`
+        : caption || (author ? `@${author}` : null);
+    if (title || image) {
       return {
         title,
-        description: data.author_name ?? null,
-        image: data.thumbnail_url ?? null,
+        description: author ? `@${author}` : null,
+        image,
         source: "tiktok.com",
       };
     }
@@ -386,15 +491,18 @@ async function tryNoembed(canonicalUrl: string): Promise<Preview | null> {
   try {
     const data = (await res.json()) as NoembedRes;
     if (data.error) return null;
+    const author = cleanTikTokAuthor(data.author_name);
+    const caption = data.title?.trim() || null;
+    const image = data.thumbnail_url?.trim() || null;
     const title =
-      data.title && data.author_name
-        ? `${data.author_name} · ${data.title}`
-        : data.title ?? data.author_name ?? null;
-    if (title || data.thumbnail_url) {
+      caption && author
+        ? `@${author} · ${caption}`
+        : caption || (author ? `@${author}` : null);
+    if (title || image) {
       return {
         title,
-        description: data.author_name ?? null,
-        image: data.thumbnail_url ?? null,
+        description: author ? `@${author}` : null,
+        image,
         source: "tiktok.com",
       };
     }
@@ -591,10 +699,11 @@ async function fetchGenericPreview(url: URL): Promise<Preview> {
 
   const ogTitle = extractMeta(html, "og:title");
   const ogDesc = extractMeta(html, "og:description") ?? extractMeta(html, "description");
-  const ogImage =
+  const ogImageRaw =
     extractMeta(html, "og:image") ??
     extractMeta(html, "og:image:secure_url") ??
     extractMeta(html, "twitter:image");
+  const ogImage = isPlaceholderImage(ogImageRaw) ? null : ogImageRaw;
   const titleTag = extractTitleTag(html);
 
   return {
