@@ -70,6 +70,15 @@ function tagList(s: string): string[] {
   return s.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
 }
 
+/** Pretty host for a URL fallback title (no raw URL dumped on the card). */
+function hostnameOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
 export function DateIdeasGrid({ initial }: { initial: DateIdea[] }) {
   const [ideas, setIdeas] = useState<DateIdea[]>(initial);
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
@@ -265,22 +274,35 @@ function IdeaCard({ idea, onEdit }: { idea: DateIdea; onEdit: () => void }) {
           </span>
         )}
       </div>
-      <div className="p-3 flex-1">
+      <div className="p-3 flex-1 min-w-0 flex flex-col gap-1.5">
         <p
-          className="text-[13.5px] font-semibold tracking-tight line-clamp-2"
+          className="text-[13.5px] font-semibold tracking-tight line-clamp-2 break-words"
           style={{ color: "var(--color-ink)", lineHeight: 1.3 }}
         >
-          {idea.title || idea.url || idea.notes || "Ý tưởng chưa đặt tên"}
+          {idea.title || idea.notes || (idea.url ? hostnameOf(idea.url) : "Ý tưởng chưa đặt tên")}
         </p>
-        {idea.slot_type && (
-          <p className="text-[11px] mt-1.5" style={{ color: "var(--color-accent)" }}>
-            {SLOT_LABEL_VI[idea.slot_type]}
+        {idea.description &&
+          !(idea.title ?? "").toLowerCase().includes(idea.description.toLowerCase()) && (
+          <p
+            className="text-[11.5px] line-clamp-2 break-words"
+            style={{ color: "var(--color-ink-soft)", lineHeight: 1.35 }}
+          >
+            {idea.description}
           </p>
         )}
-        {idea.tags.length > 0 && (
-          <p className="text-[10.5px] mt-1 truncate" style={{ color: "var(--color-ink-mute)" }}>
-            {idea.tags.map((t) => `#${t}`).join(" ")}
-          </p>
+        {(idea.slot_type || idea.tags.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mt-auto pt-0.5">
+            {idea.slot_type && (
+              <span className="text-[10.5px] font-medium" style={{ color: "var(--color-accent)" }}>
+                {SLOT_LABEL_VI[idea.slot_type]}
+              </span>
+            )}
+            {idea.tags.length > 0 && (
+              <span className="text-[10.5px] truncate min-w-0" style={{ color: "var(--color-ink-mute)" }}>
+                {idea.tags.slice(0, 3).map((t) => `#${t}`).join(" ")}
+              </span>
+            )}
+          </div>
         )}
       </div>
     </button>
