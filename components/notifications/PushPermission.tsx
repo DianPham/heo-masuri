@@ -40,11 +40,52 @@ export function PushPermission() {
     // push for that direction. A short delay avoids prompting before the SW
     // is ready and before the first paint settles.
     const id = setTimeout(tryShow, 3500);
+
+    // Self-heal: if permission is ALREADY granted, make sure a live push
+    // subscription actually exists and is registered server-side. A granted
+    // permission does NOT guarantee a valid subscription — the device may have
+    // dropped it, the PWA may have been reinstalled, the keys may have rotated,
+    // or the original POST may have failed. Without this, such a user is never
+    // re-prompted (permission != "default") and silently never receives push.
+    ensureSubscribed();
+
     return () => {
       window.removeEventListener("push-eligible", tryShow);
       clearTimeout(id);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tryShow]);
+
+  /** Subscribe (or reuse an existing subscription) and upsert it server-side. */
+  async function subscribeAndSave(): Promise<boolean> {
+    const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!pubKey) return false;
+    if (!("serviceWorker" in navigator)) return false;
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(pubKey),
+      });
+    }
+    const res = await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription: sub.toJSON(), userAgent: navigator.userAgent }),
+    });
+    return res.ok;
+  }
+
+  async function ensureSubscribed() {
+    try {
+      if (typeof Notification === "undefined") return;
+      if (Notification.permission !== "granted") return;
+      await subscribeAndSave();
+    } catch {
+      /* best-effort */
+    }
+  }
 
   async function handleEnable() {
     setState("hidden");
@@ -54,18 +95,7 @@ export function PushPermission() {
     if (perm !== "granted") return;
 
     try {
-      const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!pubKey) return;
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(pubKey),
-      });
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription: sub.toJSON(), userAgent: navigator.userAgent }),
-      });
+      await subscribeAndSave();
     } catch {}
   }
 
