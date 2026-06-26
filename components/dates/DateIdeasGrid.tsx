@@ -366,13 +366,21 @@ function IdeaForm({
       const r = await fetch(oembedUrl, { headers: { Accept: "application/json" } });
       if (!r.ok) return null;
       const d = await r.json();
+      // Sanitize: TikTok's degraded oEmbed hands back author_name "@" with an
+      // empty title. Strip the leading @ and drop an empty author so we never
+      // save a title of just "@" (the exact bug being fixed here).
+      const author = (d.author_name || "").trim().replace(/^@+/, "").trim();
+      const caption = (d.title || "").trim();
+      const image = (d.thumbnail_url || "").trim();
       const title =
-        d.title && d.author_name ? `${d.author_name} · ${d.title}` : d.title || d.author_name || "";
-      if (!title && !d.thumbnail_url) return null;
+        caption && author
+          ? `@${author} · ${caption}`
+          : caption || (author ? `@${author}` : "");
+      if (!title && !image) return null;
       return {
         title,
-        description: d.author_name || "",
-        image: d.thumbnail_url || "",
+        description: author ? `@${author}` : "",
+        image,
       };
     } catch {
       return null;
