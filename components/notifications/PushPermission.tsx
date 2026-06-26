@@ -33,7 +33,17 @@ export function PushPermission() {
 
   useEffect(() => {
     window.addEventListener("push-eligible", tryShow);
-    return () => window.removeEventListener("push-eligible", tryShow);
+    // Also surface the prompt on app load if the user hasn't decided yet.
+    // Previously the prompt ONLY fired on a "missing" tap or an incoming
+    // thinking ping (signalPushEligible) — so a partner who never hit those
+    // (e.g. Masuri) was never asked and never subscribed, silently breaking
+    // push for that direction. A short delay avoids prompting before the SW
+    // is ready and before the first paint settles.
+    const id = setTimeout(tryShow, 3500);
+    return () => {
+      window.removeEventListener("push-eligible", tryShow);
+      clearTimeout(id);
+    };
   }, [tryShow]);
 
   async function handleEnable() {

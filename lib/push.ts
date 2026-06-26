@@ -39,6 +39,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
 
   const notif = JSON.stringify(payload);
 
+  let delivered = 0;
   await Promise.allSettled(
     subs.map(async (sub) => {
       try {
@@ -46,17 +47,27 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           notif
         );
+        delivered++;
       } catch (err: unknown) {
-        // Remove stale subscriptions (410 Gone)
-        if (err && typeof err === "object" && "statusCode" in err && err.statusCode === 410) {
-          await supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("endpoint", sub.endpoint);
+        const status =
+          err && typeof err === "object" && "statusCode" in err
+            ? (err as { statusCode?: number }).statusCode
+            : undefined;
+        // Prune dead endpoints: 410 Gone + 404 NotRegistered. A push service
+        // returns these once a subscription is permanently invalid (uninstalled
+        // PWA, expired, rotated keys). Leaving them lets every future send fail
+        // silently against a ghost device.
+        if (status === 410 || status === 404) {
+          await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+        } else {
+          console.error("[push] send failed", status, sub.endpoint.slice(0, 48));
         }
       }
     })
   );
+  if (delivered === 0) {
+    console.warn(`[push] no successful deliveries for user ${userId} (${subs.length} subs tried)`);
+  }
 }
 
 export type PrefKey =
