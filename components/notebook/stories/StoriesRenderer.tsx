@@ -18,7 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { DailyPage, WordCard as WordCardType } from "@/types/notebook";
-import { buildViMap } from "@/lib/notebook/test-page";
+import { buildViMap } from "@/lib/notebook/vi-map";
 import { useRealtimeBroadcast } from "@/components/realtime/RealtimeProvider";
 import { StoriesProgress } from "./StoriesProgress";
 import { IntroCard } from "./cards/IntroCard";
