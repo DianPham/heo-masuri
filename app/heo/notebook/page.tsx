@@ -212,8 +212,11 @@ export default async function HeoNotebookPage() {
     fetchUnreadCounts(),
   ]);
 
-  const nowVN = new Date(Date.now() + 7 * 3_600_000);
-  const todayLabel = nowVN.toLocaleDateString("vi-VN", {
+  // Render VN-local label from real UTC. Don't pre-shift the Date —
+  // toLocaleDateString with timeZone: "Asia/Ho_Chi_Minh" does the offset
+  // itself, and pre-shifting on top of that produced a +14h drift that
+  // showed tomorrow's date between VN midnight and ~10am.
+  const todayLabel = new Date().toLocaleDateString("vi-VN", {
     weekday: "long",
     day: "numeric",
     month: "long",
