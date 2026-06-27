@@ -82,6 +82,17 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
   const longPressTimerRef = useRef<number | null>(null);
   const longPressedRef = useRef(false);
 
+  // Partner-only peek — mobile equivalent of the desktop hover tooltip. When
+  // the user taps a cell that's busy ONLY for their partner, we show the
+  // partner's reason in a small bottom sheet with an "add my own here" action
+  // (instead of silently creating an own event on top, which was the old
+  // behavior and made it impossible to see why the partner was busy).
+  const [partnerPeek, setPartnerPeek] = useState<{
+    day: number;
+    slot: number;
+    events: VisibleEvent[];
+  } | null>(null);
+
   // Mobile drag-select state. After a 500ms long-press over an empty cell we
   // enter "selection" mode (haptic buzz). Touchmove tracks via elementFromPoint;
   // touchend opens the create sheet for the spanned range.
@@ -403,9 +414,26 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
       return;
     }
 
-    // Empty cell OR partner-only cell. Both create a new own event.
-    // Partner-only is intentionally clickable now — you can overlay your busy
-    // on top of theirs (Bug 2). The cell will then render as the overlap color.
+    // Partner-only cell → show their reason in a peek sheet instead of
+    // silently overlaying our own event. The peek's "add my own here" button
+    // calls createOwnAt() to keep the overlay path one tap away.
+    if (cell.partnerEventIds.length > 0) {
+      const partnerEvents = cell.partnerEventIds
+        .map((id) => optimisticEvents.find((e) => e.id === id))
+        .filter((e): e is VisibleEvent => Boolean(e));
+      setPartnerPeek({ day, slot, events: partnerEvents });
+      return;
+    }
+
+    // Empty cell → create a new own event immediately.
+    await createOwnAt(day, slot);
+  }
+
+  /** Create a new own event covering the given cell. Optimistic + best-effort. */
+  async function createOwnAt(day: number, slot: number) {
+    const dayStartMs = mondayVnMs + day * 86_400_000;
+    const cellStartMs = dayStartMs + slot * slotMinutes * 60_000;
+    const cellEndMs = cellStartMs + slotMinutes * 60_000;
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const optimistic: VisibleEvent = {
       id: tempId,
@@ -547,6 +575,105 @@ export function WeekHourView({ monday, events, viewerId, slotMinutes, onChange, 
           onDelete={sheet.mode === "edit" ? handleSheetDelete : undefined}
           onClose={() => setSheet(null)}
         />
+      )}
+
+      {partnerPeek && (
+        <PartnerPeekSheet
+          events={partnerPeek.events}
+          onAddOwn={async () => {
+            const { day, slot } = partnerPeek;
+            setPartnerPeek(null);
+            await createOwnAt(day, slot);
+          }}
+          onClose={() => setPartnerPeek(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Bottom sheet that shows partner's busy reason(s) for the tapped cell.
+ * Includes a single secondary action — "Tạo việc bận của tôi" — that creates
+ * an own event covering the same cell (preserves the previous overlay path).
+ */
+function PartnerPeekSheet({
+  events,
+  onAddOwn,
+  onClose,
+}: {
+  events: VisibleEvent[];
+  onAddOwn: () => void;
+  onClose: () => void;
+}) {
+  // Any event with share_details=true gets its title/note/emoji rendered;
+  // share_details=false collapses to "Bận — không có ghi chú".
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="absolute inset-0"
+        style={{ backgroundColor: "rgba(58,33,41,0.35)" }}
+      />
+      <div
+        className="surface-card relative w-full max-w-md mx-3 mb-3 p-5 flex flex-col gap-4"
+        style={{ boxShadow: "var(--shadow-lg)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-col gap-3">
+          <p className="section-eyebrow" style={{ color: "#3a6da0" }}>
+            Người ấy bận
+          </p>
+          {events.map((ev) => (
+            <PeekReason key={ev.id} ev={ev} />
+          ))}
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button onClick={onClose} className="btn-ghost flex-1">
+            Đóng
+          </button>
+          <button onClick={onAddOwn} className="btn-primary flex-1">
+            Tạo việc bận của tôi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PeekReason({ ev }: { ev: VisibleEvent }) {
+  if (!ev.share_details) {
+    return (
+      <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+        Bận — không có ghi chú
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1">
+      {(ev.emoji || ev.title) && (
+        <p
+          className="text-[15px] font-semibold tracking-tight"
+          style={{ color: "var(--color-ink)" }}
+        >
+          {ev.emoji && <span className="mr-1.5">{ev.emoji}</span>}
+          {ev.title || "(không tên)"}
+        </p>
+      )}
+      {ev.note && (
+        <p
+          className="text-[13px] whitespace-pre-wrap"
+          style={{ color: "var(--color-ink-soft)" }}
+        >
+          {ev.note}
+        </p>
+      )}
+      {!ev.emoji && !ev.title && !ev.note && (
+        <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+          (không có chi tiết)
+        </p>
       )}
     </div>
   );
