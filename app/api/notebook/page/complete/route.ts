@@ -79,13 +79,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (masuri) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
       const title = (page as Record<string, unknown>).title_vi as string | null;
 
       await sendPushToUser(masuri.id, {
         title: "Heo vừa hoàn thành bài học! 🎉",
         body: title ? `"${title}" — Heo học xong rồi 🌸` : "Heo học xong bài hôm nay rồi 🌸",
-        url: `${appUrl}/masuri/notebook`,
+        url: `/masuri/notebook`,
         tag: "heo-completed",
       });
 
