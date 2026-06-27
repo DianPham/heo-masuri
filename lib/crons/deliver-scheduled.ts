@@ -105,12 +105,11 @@ export async function runDeliverScheduled(): Promise<DeliveryResult> {
         continue;
       }
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
       const { title, bodyPreview } = pushForKind(letter.kind as LetterKind, letter.body);
       await sendPushToUser(letter.to_user, {
         title,
         body: bodyPreview,
-        url: `${appUrl}/heo/notebook/letter/${letter.id}`,
+        url: `/heo/notebook/letter/${letter.id}`,
         tag: `letter-${letter.id}`,
       }).catch((err) => console.error("[deliver-scheduled] push failed", letter.id, err));
 

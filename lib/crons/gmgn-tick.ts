@@ -106,11 +106,10 @@ export async function runGmgnTick(): Promise<GmgnTickResult> {
         .update({ last_delivered_at: nowIso, last_pool_index: nextIndex })
         .eq("id", rec.id);
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
       await sendPushIfAllowed(rec.to_user, "gmgn_enabled", {
         title: pushTitleForKind(kind),
         body: bodyRaw.length > 60 ? bodyRaw.slice(0, 60) + "…" : bodyRaw,
-        url: `${appUrl}/heo/notebook/letter/${inserted.id}`,
+        url: `/heo/notebook/letter/${inserted.id}`,
         tag: `gmgn-${kind}`,
       }).catch((err) => console.error("[gmgn-tick] push failed", rec.id, err));
 

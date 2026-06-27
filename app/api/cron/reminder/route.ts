@@ -70,8 +70,6 @@ export async function GET(req: NextRequest) {
     // After 3+ days of no activity, switch to the softer "Masuri misses Heo" message
     const isLongSilence = daysInactive !== null && daysInactive >= 3;
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-
     // ── §J3: Rotating normal reminder copy (5 variants, picks by weekday) ──
     // Deterministic — same day of the week always gets the same message,
     // so it rotates week-over-week without any randomness or DB state.
@@ -106,13 +104,13 @@ export async function GET(req: NextRequest) {
       ? {
           title: "Masuri nhớ Heo nhiều lắm 💕",
           body: "Không cần học nhiều đâu nha — một từ thôi cũng được. Heo có thể làm được 🌸",
-          url: `${appUrl}/heo/notebook/today`,
+          url: `/heo/notebook/today`,
           tag: "reminder-gentle",
         }
       : {
           title: normalReminder.title,
           body: normalReminder.body,
-          url: `${appUrl}/heo/notebook/today`,
+          url: `/heo/notebook/today`,
           tag: "reminder",
         };
 

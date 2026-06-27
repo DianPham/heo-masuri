@@ -150,7 +150,7 @@ async function handle(req: NextRequest) {
       body: JSON.stringify({
         title: "Trang hôm nay đã sẵn sàng 📓",
         body,
-        url: `${appUrl}/heo/notebook/today`,
+        url: `/heo/notebook/today`,
         tag: "daily-page",
       }),
     }).catch(() => {});

@@ -23,11 +23,10 @@ export async function POST(req: NextRequest) {
   const { data: masuri } = await supabase.from("users").select("id").eq("slug", "masuri").single();
   if (!masuri) return NextResponse.json({ ok: false });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   await sendPushToUser(masuri.id, {
     title: "📓 Trang ngày mai cần duyệt",
     body: title_vi ?? "Mở app để duyệt nhanh nha",
-    url: `${appUrl}/m/notebook/approve/${page_id}`,
+    url: `/m/notebook/approve/${page_id}`,
     tag: "notebook-review",
   });
 
