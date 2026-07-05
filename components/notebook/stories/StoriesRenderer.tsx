@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import type { DailyPage, WordCard as WordCardType } from "@/types/notebook";
 import { buildViMap } from "@/lib/notebook/vi-map";
 import { useRealtimeBroadcast } from "@/components/realtime/RealtimeProvider";
+import { CardErrorBoundary } from "./CardErrorBoundary";
 import { StoriesProgress } from "./StoriesProgress";
 import { IntroCard } from "./cards/IntroCard";
 import { WordCard } from "./cards/WordCard";
@@ -85,6 +86,10 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
   // ── Gesture tracking ───────────────────────────────────────────
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const gestureHandled = useRef(false);
+  // Debounce tap-navigation so a rapid double-tap can't re-key the card mid
+  // transition (that interruption is what starved nested entrance animations
+  // and left exercise cards blank). Self-healing time gate — no stuck flag.
+  const lastTapNav = useRef(0);
 
   // ── Restore from localStorage ─────────────────────────────────
   useEffect(() => {
@@ -203,6 +208,12 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
         "[data-no-nav], button, input, textarea, select, a, label, [contenteditable]"
       )
     ) return;
+
+    // Ignore taps that land within 220ms of the previous one — prevents an
+    // accidental double-tap from advancing two cards / interrupting a transition.
+    const now = typeof performance !== "undefined" ? performance.now() : 0;
+    if (now - lastTapNav.current < 220) return;
+    lastTapNav.current = now;
 
     const pct = e.clientX / window.innerWidth;
     if (pct <= 0.35 && current > 0) {
@@ -329,7 +340,14 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
 
         {/* Card area — capped to 720px on desktop so reading width stays sane */}
         <div className="absolute inset-0 pt-16">
-          <AnimatePresence mode="wait" custom={direction}>
+          {/* NO mode="wait": with mode="wait" the incoming card's mount is
+             deferred until the outgoing card's exit finishes, and on that
+             deferred mount nested motion children with initial opacity:0 get
+             stranded at opacity:0 → blank exercise body (see fbeb031, which
+             fixed the same class in ExerciseCard's own wrappers). Cards are
+             absolute inset-0 so they overlap cleanly during the slide; the
+             incoming card mounts immediately and its children animate normally. */}
+          <AnimatePresence custom={direction}>
             <motion.div
               key={current}
               custom={direction}
@@ -339,7 +357,9 @@ export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps
               exit="exit"
               className="absolute inset-0 pt-4 overflow-y-auto lg:max-w-3xl lg:mx-auto"
             >
-              {renderCard()}
+              <CardErrorBoundary onNext={handleSkip}>
+                {renderCard()}
+              </CardErrorBoundary>
             </motion.div>
           </AnimatePresence>
         </div>

@@ -206,7 +206,11 @@ export function WordTrain({ data, onContinue }: Props) {
                 key={`b-${idx}`}
                 type="button"
                 layout
-                initial={{ scale: 0.85, opacity: 0 }}
+                // On-mount content — render visible immediately. Never gate the
+                // tappable words behind an entrance opacity animation that can
+                // stick at 0 (the blank-word_train failure mode). layout still
+                // animates reflow as chips are removed.
+                initial={false}
                 animate={{ scale: 1, opacity: 1 }}
                 onClick={() => tapBank(idx)}
                 className="px-3 py-1.5 rounded-full text-sm font-semibold text-ink bg-white active:scale-95 transition-transform"
