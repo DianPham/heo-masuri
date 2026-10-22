@@ -14,8 +14,7 @@ import { useTTS } from "@/hooks/useTTS";
 import { VocabWordSheet } from "@/components/notebook/VocabWordSheet";
 import { Pig } from "@/components/theme/Pig";
 import { Tape } from "@/components/notebook/Tape";
-import { LANG_META, normalizePinyin } from "@/lib/notebook/lesson";
-import type { LessonLang, VocabWord } from "@/types/notebook";
+import type { VocabWord } from "@/types/notebook";
 
 // ── Paper grid bg ─────────────────────────────────────────────
 const PAPER_BG: React.CSSProperties = {
@@ -26,7 +25,6 @@ const PAPER_BG: React.CSSProperties = {
 };
 
 type View = "date" | "topic";
-type LangFilter = "all" | LessonLang;
 
 const TOPIC_LABEL: Record<string, string> = {
   greeting: "Chào hỏi",
@@ -43,7 +41,6 @@ export default function VocabPage() {
   const [words, setWords] = useState<VocabWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<View>("date");
-  const [langFilter, setLangFilter] = useState<LangFilter>("all");
   const [search, setSearch] = useState("");
   const [activeSheet, setActiveSheet] = useState<VocabWord | null>(null);
 
@@ -61,19 +58,14 @@ export default function VocabPage() {
   }, []);
 
   // ── Filter ──────────────────────────────────────────────────
-  // Language tabs only appear once Heo has saved Chinese words.
-  const hasZh = words.some((w) => w.lang === "zh");
-  const byLang = langFilter === "all" ? words : words.filter((w) => (w.lang ?? "en") === langFilter);
   const q = search.trim().toLowerCase();
-  const qPinyin = normalizePinyin(q);
   const filtered = q
-    ? byLang.filter(
+    ? words.filter(
         (w) =>
           w.word_en.toLowerCase().includes(q) ||
-          w.word_vi.toLowerCase().includes(q) ||
-          (qPinyin.length > 0 && !!w.pinyin && normalizePinyin(w.pinyin).includes(qPinyin))
+          w.word_vi.toLowerCase().includes(q)
       )
-    : byLang;
+    : words;
 
   // ── Group by topic (for topic view) ─────────────────────────
   const byTopic = filtered.reduce<Record<string, VocabWord[]>>((acc, w) => {
@@ -115,26 +107,6 @@ export default function VocabPage() {
             className="w-full pl-10 pr-4 py-3 rounded-2xl border border-rose-200 bg-white text-sm text-ink placeholder:text-rose-300 outline-none focus:border-rose-400"
           />
         </div>
-
-        {/* Language filter */}
-        {hasZh && (
-          <div className="flex gap-2">
-            {(["all", "en", "zh"] as LangFilter[]).map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setLangFilter(l)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                  langFilter === l
-                    ? "bg-rose-500 text-white border-rose-500"
-                    : "bg-white text-rose-400 border-rose-200"
-                }`}
-              >
-                {l === "all" ? "Tất cả" : `${LANG_META[l].flag} ${LANG_META[l].name_vi}`}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* View toggle */}
         <div
@@ -179,7 +151,7 @@ export default function VocabPage() {
       {!loading && words.length > 0 && (
         <div className="px-5 pb-8 mt-2">
           <Link
-            href={langFilter === "all" ? "/heo/notebook/vocab/review" : `/heo/notebook/vocab/review?lang=${langFilter}`}
+            href="/heo/notebook/vocab/review"
             className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border-2 border-dashed border-rose-300 text-sm font-semibold text-rose-500 active:bg-rose-50 transition-colors"
           >
             🃏 Ôn từ vựng
@@ -260,7 +232,7 @@ function WordCard({
   word: VocabWord;
   onLongPress: (w: VocabWord) => void;
 }) {
-  const { speak } = useTTS(word.lang ?? "en");
+  const { speak } = useTTS();
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pressed, setPressed] = useState(false);
 
@@ -315,13 +287,10 @@ function WordCard({
             <div className="flex items-baseline gap-2 flex-wrap">
               <span
                 className="text-2xl font-bold text-ink leading-tight"
-                style={{ fontFamily: word.lang === "zh" ? "var(--font-body)" : "var(--font-display)" }}
+                style={{ fontFamily: "var(--font-display)" }}
               >
                 {word.word_en}
               </span>
-              {word.pinyin && (
-                <span className="text-sm text-rose-500 font-semibold">{word.pinyin}</span>
-              )}
               {word.pos && (
                 <span className="text-xs text-rose-400 font-semibold uppercase tracking-wide">
                   {word.pos}
@@ -380,7 +349,6 @@ function WordCard({
         className="px-5 py-2.5 text-xs text-ink-soft flex items-center gap-1"
         style={{ backgroundColor: "rgba(255,249,245,0.8)" }}
       >
-        {word.lang === "zh" && <span>{LANG_META.zh.flag}</span>}
         <span>Lưu {savedDate}</span>
         {word.source_page_title_vi && (
           <>

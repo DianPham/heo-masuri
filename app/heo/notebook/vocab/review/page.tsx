@@ -67,11 +67,7 @@ export default function VocabReviewPage() {
   const [ratingWord, setRatingWord] = useState<string | null>(null);
 
   useEffect(() => {
-    // ?lang=en|zh reviews one language only (passed from the vocab book filter).
-    // Read from location rather than useSearchParams to keep this page static.
-    const lang = new URLSearchParams(window.location.search).get("lang");
-    const langParam = lang === "en" || lang === "zh" ? `&lang=${lang}` : "";
-    fetch(`/api/notebook/vocab?limit=200${langParam}`)
+    fetch("/api/notebook/vocab?limit=200")
       .then((r) => r.json())
       .then(({ words }) => {
         const s = pickSession(words ?? []);
@@ -180,13 +176,13 @@ export default function VocabReviewPage() {
               <div className="flex items-center gap-3 mb-3">
                 <span
                   className="text-4xl font-bold text-ink leading-tight"
-                  style={{ fontFamily: current.lang === "zh" ? "var(--font-body)" : "var(--font-display)" }}
+                  style={{ fontFamily: "var(--font-display)" }}
                 >
                   {current.word_en}
                 </span>
                 <button
                   type="button"
-                  onClick={() => speak(current.word_en, current.lang)}
+                  onClick={() => speak(current.word_en)}
                   className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-rose-400 active:bg-rose-50"
                 >
                   <span style={{ fontSize: 20 }}>🔊</span>
@@ -201,7 +197,7 @@ export default function VocabReviewPage() {
                 >
                   <button
                     type="button"
-                    onClick={() => speak(current.example_en!, current.lang)}
+                    onClick={() => speak(current.example_en!)}
                     className="text-left w-full"
                   >
                     <p className="text-sm italic text-ink flex items-start gap-2">
@@ -221,9 +217,6 @@ export default function VocabReviewPage() {
                     className="space-y-2"
                   >
                     <div className="h-px bg-rose-100" />
-                    {current.pinyin && (
-                      <p className="text-lg font-semibold text-rose-500">{current.pinyin}</p>
-                    )}
                     <p className="text-xl font-semibold text-ink-soft">
                       {current.word_vi}
                     </p>
@@ -238,7 +231,7 @@ export default function VocabReviewPage() {
                     type="button"
                     onClick={() => {
                       setRevealed(true);
-                      speak(current.word_en, current.lang);
+                      speak(current.word_en);
                     }}
                     className="w-full py-3 rounded-2xl border-2 border-dashed border-rose-300 text-sm font-semibold text-rose-500 active:bg-rose-50"
                     initial={{ opacity: 0 }}

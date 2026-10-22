@@ -73,7 +73,6 @@ export function VocabWordSheet({ word, onClose, onDeleted }: VocabWordSheetProps
           >
             {word.word_en}
           </p>
-          {word.pinyin && <p className="text-sm text-rose-500 font-semibold mt-0.5">{word.pinyin}</p>}
           <p className="text-sm text-ink-soft mt-0.5">{word.word_vi}</p>
         </div>
 

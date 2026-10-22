@@ -2,8 +2,7 @@
 
 import { motion } from "motion/react";
 import { useTTS } from "@/hooks/useTTS";
-import type { LessonWordCard } from "@/lib/notebook/lesson";
-import type { LessonLang } from "@/types/notebook";
+import type { WordCard as WordCardType } from "@/types/notebook";
 
 const POS_VI: Record<string, string> = {
   noun: "danh từ",
@@ -13,14 +12,10 @@ const POS_VI: Record<string, string> = {
   adverb: "trạng từ",
   phrase: "cụm từ",
   interjection: "thán từ",
-  pronoun: "đại từ",
-  particle: "trợ từ",
-  measure_word: "lượng từ",
-  number: "số từ",
 };
 
-export function WordCard({ card, lang }: { card: LessonWordCard; lang: LessonLang }) {
-  const { speak } = useTTS(lang);
+export function WordCard({ card }: { card: WordCardType; viMap?: Record<string, string> }) {
+  const { speak } = useTTS();
 
   return (
     <div className="flex flex-col justify-between h-full px-7 py-10">
@@ -56,31 +51,22 @@ export function WordCard({ card, lang }: { card: LessonWordCard; lang: LessonLan
         <button
           type="button"
           data-no-nav="true"
-          onClick={() => speak(card.word)}
+          onClick={() => speak(card.word_en)}
           className="group flex items-center gap-2 mx-auto rounded-2xl px-4 py-2 active:bg-rose-50 transition-colors"
-          aria-label={`Nghe phát âm: ${card.word}`}
+          aria-label={`Nghe phát âm: ${card.word_en}`}
         >
           <span
             className="text-5xl font-bold text-ink"
-            style={{ fontFamily: lang === "zh" ? "var(--font-body)" : "var(--font-display)" }}
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            {card.word}
+            {card.word_en}
           </span>
           <span className="text-rose-400 text-xl group-active:scale-110 transition-transform">
             🔊
           </span>
         </button>
 
-        {card.pinyin && (
-          <p className="text-2xl text-rose-500 font-semibold tracking-wide">{card.pinyin}</p>
-        )}
-
         <p className="text-xl text-ink-soft font-medium">{card.word_vi}</p>
-        {card.han_viet && (
-          <p className="text-xs text-amber-700 font-semibold">
-            Hán Việt: <span className="uppercase tracking-wide">{card.han_viet}</span>
-          </p>
-        )}
       </motion.div>
 
       {/* Example sentences */}
@@ -94,20 +80,17 @@ export function WordCard({ card, lang }: { card: LessonWordCard; lang: LessonLan
         <button
           type="button"
           data-no-nav="true"
-          onClick={() => speak(card.example)}
+          onClick={() => speak(card.example_en)}
           className="text-left w-full"
-          aria-label={`Nghe ví dụ: ${card.example}`}
+          aria-label={`Nghe ví dụ: ${card.example_en}`}
         >
           <p
-            className={`text-base text-ink leading-relaxed flex items-start gap-2 ${lang === "zh" ? "" : "italic"}`}
+            className="text-base text-ink leading-relaxed italic flex items-start gap-2"
             style={{ fontFamily: "var(--font-body)" }}
           >
             <span className="text-rose-400 not-italic shrink-0">🔊</span>
-            &ldquo;{card.example}&rdquo;
+            &ldquo;{card.example_en}&rdquo;
           </p>
-          {card.example_pinyin && (
-            <p className="text-sm text-rose-500 leading-relaxed pl-6">{card.example_pinyin}</p>
-          )}
         </button>
         <p className="text-sm text-ink-soft leading-relaxed pl-6">
           &ldquo;{card.example_vi}&rdquo;

@@ -10,8 +10,6 @@ import { createServerClient } from "@/lib/supabase/server";
 import { UseRestButton } from "@/components/notebook/UseRestButton";
 import { TourGuide } from "@/components/notebook/TourGuide";
 import { InfoTip } from "@/components/notebook/InfoTip";
-import { LANG_META } from "@/lib/notebook/lesson";
-import type { LessonLang } from "@/types/notebook";
 
 export const revalidate = 60;
 
@@ -20,18 +18,7 @@ type TodayStatus = {
   completed: boolean;
   carry_over: boolean;
   title_vi?: string;
-  /** Tracks this lesson can be studied in, and which are done */
-  langs?: { lang: LessonLang; done: boolean }[];
 };
-
-type LangRow = { title_zh?: string | null; completed_en_at?: string | null; completed_zh_at?: string | null };
-
-function langsOf(row: LangRow): { lang: LessonLang; done: boolean }[] {
-  const langs: { lang: LessonLang; done: boolean }[] = [{ lang: "en", done: Boolean(row.completed_en_at) }];
-  // title_zh is written together with cards_zh — it marks "has a Chinese track"
-  if (row.title_zh) langs.push({ lang: "zh", done: Boolean(row.completed_zh_at) });
-  return langs;
-}
 
 async function fetchTodayStatus(): Promise<TodayStatus> {
   try {
@@ -44,7 +31,7 @@ async function fetchTodayStatus(): Promise<TodayStatus> {
     // Today's published page
     const { data: todayRow } = await supabase
       .from("daily_pages")
-      .select("title_vi, completed_at, scheduled_for, title_zh, completed_en_at, completed_zh_at")
+      .select("title_vi, completed_at, scheduled_for")
       .eq("for_user", heo.id)
       .eq("status", "published")
       .eq("scheduled_for", today)
@@ -56,14 +43,13 @@ async function fetchTodayStatus(): Promise<TodayStatus> {
         completed: Boolean(todayRow.completed_at),
         carry_over: false,
         title_vi: todayRow.title_vi as string,
-        langs: langsOf(todayRow),
       };
     }
 
     // Carry-over: most recent unfinished page before today
     const { data: carryRow } = await supabase
       .from("daily_pages")
-      .select("title_vi, scheduled_for, title_zh, completed_en_at, completed_zh_at")
+      .select("title_vi, scheduled_for")
       .eq("for_user", heo.id)
       .eq("status", "published")
       .is("completed_at", null)
@@ -78,7 +64,6 @@ async function fetchTodayStatus(): Promise<TodayStatus> {
         completed: false,
         carry_over: true,
         title_vi: carryRow.title_vi as string,
-        langs: langsOf(carryRow),
       };
     }
 
@@ -423,10 +408,7 @@ function TodayTile({
   status: TodayStatus;
 }) {
   // Visual state derived from actual page data
-  const { available, completed, carry_over, title_vi, langs = [] } = status;
-  const bilingual = langs.length > 1;
-  // Finished in one language, the other still open → offer it
-  const otherToLearn = completed ? langs.find((l) => !l.done) : undefined;
+  const { available, completed, carry_over, title_vi } = status;
 
   const gradient = completed
     ? "linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%)"  // green — done
@@ -487,47 +469,17 @@ function TodayTile({
           >
             {headline}
           </p>
-          {available && !completed && bilingual ? (
-            // Pick the language up front — either one finishes today's lesson
-            <div className="flex flex-wrap gap-2">
-              {langs.map(({ lang }) => (
-                <Link
-                  key={lang}
-                  href={`/heo/notebook/today?lang=${lang}`}
-                  className="inline-flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2.5 rounded-2xl"
-                  style={{
-                    backgroundColor: lang === "zh" ? "#D9822B" : btnColor,
-                    boxShadow: `0 4px 12px ${lang === "zh" ? "#D9822B" : btnColor}55`,
-                  }}
-                >
-                  {LANG_META[lang].flag} <span className="capitalize">{LANG_META[lang].name_vi}</span>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {btnLabel && (
-                <Link
-                  href="/heo/notebook/today"
-                  className="inline-flex items-center gap-2 text-white text-sm font-semibold px-5 py-2.5 rounded-2xl"
-                  style={{
-                    backgroundColor: btnColor,
-                    boxShadow: `0 4px 12px ${btnColor}55`,
-                  }}
-                >
-                  {btnLabel}
-                </Link>
-              )}
-              {otherToLearn && (
-                <Link
-                  href={`/heo/notebook/today?lang=${otherToLearn.lang}`}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-2xl bg-white/80"
-                  style={{ color: "#B45309", border: "1.5px solid rgba(217,130,43,0.5)" }}
-                >
-                  + Học thêm {LANG_META[otherToLearn.lang].name_vi} {LANG_META[otherToLearn.lang].flag}
-                </Link>
-              )}
-            </div>
+          {btnLabel && (
+            <Link
+              href="/heo/notebook/today"
+              className="inline-flex items-center gap-2 text-white text-sm font-semibold px-5 py-2.5 rounded-2xl"
+              style={{
+                backgroundColor: btnColor,
+                boxShadow: `0 4px 12px ${btnColor}55`,
+              }}
+            >
+              {btnLabel}
+            </Link>
           )}
         </div>
       </div>

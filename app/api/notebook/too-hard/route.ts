@@ -5,13 +5,12 @@
  * Sends a push notification to Masuri (rate-limited: max 1 per page per day server-side).
  * Rate-limit key: one push per page_id per VN calendar day.
  *
- * Body: { page_id: string, card_index: number, lang?: "en" | "zh" }
+ * Body: { page_id: string, card_index: number }
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
 import { cookies } from "next/headers";
-import { parseLang } from "@/lib/notebook/lesson";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +31,6 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
     const page_id: string = body.page_id ?? "";
-    const lang = parseLang(body.lang) ?? "en";
 
     if (!page_id) {
       return NextResponse.json({ error: "page_id required" }, { status: 400 });
@@ -62,9 +60,7 @@ export async function POST(req: NextRequest) {
 
     await sendPushToUser(masuri.id, {
       title: "Heo đang thấy khó 😣",
-      body: lang === "zh"
-        ? "Một thẻ trong bài tiếng Trung hơi khó — Heo vẫn tiếp tục nha 💕"
-        : "Một thẻ trong trang hôm nay hơi khó — Heo vẫn tiếp tục nha 💕",
+      body: "Một thẻ trong trang hôm nay hơi khó — Heo vẫn tiếp tục nha 💕",
       url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/masuri/notebook`,
       tag: "too-hard",
     });

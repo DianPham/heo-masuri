@@ -11,7 +11,7 @@ export default async function ApprovePage({ params }: { params: Promise<{ id: st
   const { data: page, error } = await supabase
     .from("daily_pages")
     .select(
-      "id, title_vi, title_en, title_zh, topic, difficulty, cards, cards_zh, scheduled_for, status, generated_by, generation_meta, created_at"
+      "id, title_vi, title_en, topic, difficulty, cards, scheduled_for, status, generated_by, generation_meta, created_at"
     )
     .eq("id", id)
     .single();

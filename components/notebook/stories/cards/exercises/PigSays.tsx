@@ -1,30 +1,30 @@
 "use client";
 
 /**
- * PigSays — Pig says something in Vietnamese; Heo types it in English/Chinese.
- * Lenient check: ignores punctuation and capitalisation; Chinese accepts
- * hanzi or pinyin (tones optional).
+ * PigSays — Pig says something in Vietnamese; Heo types the English.
+ * Lenient check: ignores punctuation and capitalisation.
  */
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
-import { LANG_META, answerMatches, type LessonPigSays } from "@/lib/notebook/lesson";
-import type { LessonLang } from "@/types/notebook";
+import type { PigSaysData } from "@/types/notebook";
+
+function normalize(s: string) {
+  return s.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ");
+}
 
 interface Props {
-  data: LessonPigSays;
-  lang: LessonLang;
+  data: PigSaysData;
   onContinue: () => void;
 }
 
-export function PigSays({ data, lang, onContinue }: Props) {
-  const { prompt_vi, target, target_pinyin, hints } = data;
-  const langName = LANG_META[lang].name_vi;
+export function PigSays({ data, onContinue }: Props) {
+  const { prompt_vi, target_en, hints } = data;
   const [answer, setAnswer] = useState("");
   const [phase, setPhase] = useState<"input" | "correct" | "wrong">("input");
   const [showHints, setShowHints] = useState(false);
 
   function check() {
-    if (answerMatches(answer, target, lang, target_pinyin)) {
+    if (normalize(answer) === normalize(target_en)) {
       setPhase("correct");
     } else {
       setPhase("wrong");
@@ -48,10 +48,7 @@ export function PigSays({ data, lang, onContinue }: Props) {
       </div>
 
       <p className="text-sm text-ink-soft text-center">
-        Heo dịch sang {langName} nha 💬
-        {lang === "zh" && (
-          <span className="block text-xs mt-0.5">Gõ chữ Hán hay pinyin đều được, không cần dấu thanh</span>
-        )}
+        Heo dịch sang tiếng Anh nha 💬
       </p>
 
       {/* Hints toggle */}
@@ -94,7 +91,7 @@ export function PigSays({ data, lang, onContinue }: Props) {
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         disabled={phase !== "input"}
-        placeholder={`Gõ câu ${langName} ở đây...`}
+        placeholder="Gõ câu tiếng Anh ở đây..."
         rows={3}
         className="w-full rounded-2xl border border-rose-200 px-4 py-3 text-sm text-ink placeholder:text-rose-300 outline-none focus:border-rose-400 resize-none"
         style={{ fontFamily: "var(--font-body)" }}
@@ -113,22 +110,13 @@ export function PigSays({ data, lang, onContinue }: Props) {
             }}
           >
             {phase === "correct" ? (
-              <>
-                <p className="text-sm font-bold text-green-700 text-center">
-                  Chính xác! Heo dịch giỏi lắm 🌸
-                </p>
-                {lang === "zh" && (
-                  <p className="text-sm text-ink text-center mt-1">
-                    {target}
-                    {target_pinyin && <span className="text-rose-500"> · {target_pinyin}</span>}
-                  </p>
-                )}
-              </>
+              <p className="text-sm font-bold text-green-700 text-center">
+                Chính xác! Heo dịch giỏi lắm 🌸
+              </p>
             ) : (
               <>
                 <p className="text-xs text-rose-400 font-semibold mb-1">Một cách dịch đúng:</p>
-                <p className="text-sm text-ink italic">&ldquo;{target}&rdquo;</p>
-                {target_pinyin && <p className="text-xs text-rose-500 mt-0.5">{target_pinyin}</p>}
+                <p className="text-sm text-ink italic">&ldquo;{target_en}&rdquo;</p>
               </>
             )}
           </motion.div>

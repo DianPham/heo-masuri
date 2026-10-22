@@ -3,27 +3,21 @@
 /**
  * ApprovalUI — Masuri's page review UI.
  * Three actions: Duyệt / Sửa (inline card editing) / Tạo lại.
- * The Chinese track (if generated) is previewed read-only in its own tab;
- * inline editing covers the English track.
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import type {
   Card, IntroCard, WordCard, ReadingCard, ExerciseCard, AskPromptCard, CompletionCard,
-  DailyPage, LessonLang, ZhCard,
 } from "@/types/notebook";
-import { LANG_META, toLessonView, type LessonCard } from "@/lib/notebook/lesson";
 
 interface DraftPage {
   id: string;
   title_vi: string;
   title_en: string;
-  title_zh?: string | null;
   topic: string;
   difficulty: number;
   cards: Card[];
-  cards_zh?: ZhCard[] | null;
   scheduled_for: string;
   status: string;
   generated_by: string;
@@ -50,18 +44,6 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
 
   // Regenerate hint
   const [hint, setHint] = useState("");
-
-  // Which track the preview shows
-  const [track, setTrack] = useState<LessonLang>("en");
-  const zhView = toLessonView(
-    {
-      id: page.id, title_vi: page.title_vi, title_en: page.title_en, topic: page.topic,
-      difficulty: page.difficulty as DailyPage["difficulty"], cards: page.cards,
-      scheduled_for: page.scheduled_for, completed_at: null, cards_zh: page.cards_zh,
-    },
-    "zh"
-  );
-  const showZh = track === "zh" && mode !== "edit" && zhView !== null;
 
   const alreadyApproved = approved;
   const meta = page.generation_meta ?? {};
@@ -165,7 +147,6 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
               {page.title_vi}
             </h1>
             <p className="text-sm text-ink-soft">{page.title_en}</p>
-            {page.title_zh && <p className="text-sm text-ink-soft">🇨🇳 {page.title_zh}</p>}
           </div>
           {alreadyApproved && (
             <span className="shrink-0 text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">
@@ -241,41 +222,7 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
         )}
       </AnimatePresence>
 
-      {/* ── Track tabs ───────────────────────────────────────── */}
-      <div className="px-5 mt-3 flex items-center gap-2">
-        {(["en", "zh"] as LessonLang[]).map((l) => {
-          const disabled = l === "zh" && zhView === null;
-          const active = l === "zh" ? showZh : !showZh;
-          return (
-            <button
-              key={l}
-              type="button"
-              disabled={disabled || (l === "zh" && mode === "edit")}
-              onClick={() => setTrack(l)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors disabled:opacity-40 ${
-                active ? "bg-rose-500 text-white border-rose-500" : "bg-white text-rose-400 border-rose-200"
-              }`}
-            >
-              {LANG_META[l].flag} {LANG_META[l].name_vi}
-            </button>
-          );
-        })}
-        {zhView === null && (
-          <span className="text-xs text-ink-soft">Chưa có bản tiếng Trung</span>
-        )}
-        {zhView !== null && mode === "edit" && (
-          <span className="text-xs text-ink-soft">Chỉ sửa bản tiếng Anh — bản tiếng Trung cần sửa thì bấm Tạo lại</span>
-        )}
-      </div>
-
       {/* ── Card list ────────────────────────────────────────── */}
-      {showZh && zhView ? (
-        <div className="px-5 space-y-3 mt-2">
-          {zhView.cards.map((card, i) => (
-            <ZhCardPreview key={i} card={card} index={i} />
-          ))}
-        </div>
-      ) : (
       <div className="px-5 space-y-3 mt-2">
         {(mode === "edit" ? editCards : page.cards).map((card, i) =>
           mode === "edit" ? (
@@ -291,7 +238,6 @@ export function ApprovalUI({ page }: { page: DraftPage }) {
           )
         )}
       </div>
-      )}
 
       {/* ── Action bar ──────────────────────────────────────── */}
       <div
@@ -785,76 +731,6 @@ function CardPreview({ card, index }: { card: Card; index: number }) {
             ))}
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-// Chinese track preview — renders the neutral lesson view (hanzi + pinyin + VI)
-function ZhCardPreview({ card, index }: { card: LessonCard; index: number }) {
-  const label: Record<string, string> = {
-    intro: "Giới thiệu", word: "Từ vựng", reading: "Đọc hiểu",
-    exercise: "Bài tập", ask_prompt: "Gợi ý hỏi", completion: "Hoàn thành",
-  };
-  const zh = (text?: string, pinyin?: string) => (
-    <>
-      {text && <p className="text-base text-ink">{text}</p>}
-      {pinyin && <p className="text-xs text-rose-500">{pinyin}</p>}
-    </>
-  );
-  return (
-    <div className="rounded-2xl p-4 bg-white" style={{ boxShadow: "0 2px 8px rgba(58,33,41,0.08)" }}>
-      <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2">
-        {index + 1}. {label[card.type] ?? card.type}
-        {card.type === "exercise" && <span className="normal-case font-normal text-ink-soft"> · {card.exercise.exercise_type}</span>}
-      </p>
-      {card.type === "intro" && <p className="text-base font-bold text-ink">{card.title_vi}</p>}
-      {card.type === "word" && (
-        <div>
-          <p className="text-lg font-bold text-ink">
-            {card.image_emoji && <span className="mr-2">{card.image_emoji}</span>}
-            {card.word} <span className="text-sm font-semibold text-rose-500">{card.pinyin}</span>
-          </p>
-          <p className="text-sm text-ink-soft">
-            {card.word_vi}
-            {card.han_viet && <span className="text-amber-700"> · Hán Việt: {card.han_viet}</span>}
-          </p>
-          <div className="mt-1">{zh(card.example, card.example_pinyin)}</div>
-          <p className="text-xs text-ink-soft">{card.example_vi}</p>
-        </div>
-      )}
-      {card.type === "reading" && (
-        <div className="space-y-1.5">
-          {card.sentences.map((s, i) => (
-            <div key={i}>
-              {zh(s.text, s.pinyin)}
-              <p className="text-xs text-ink-soft italic">{s.vi}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      {card.type === "exercise" && (() => {
-        const e = card.exercise;
-        switch (e.exercise_type) {
-          case "word_train":
-            return <div>{zh(e.target, e.target_pinyin)}<p className="text-xs text-ink-soft">Chips: {e.shuffled_words.join(" · ")}</p></div>;
-          case "spot_imposter":
-            return <div><p className="text-base text-ink">{e.tokens.join(" ")}</p><p className="text-xs text-ink-soft">{e.imposter_word} → {e.correct_word}</p></div>;
-          case "pig_says":
-            return <div><p className="text-xs text-ink-soft">{e.prompt_vi}</p>{zh(e.target, e.target_pinyin)}</div>;
-          case "caption_polaroid":
-            return <div><p className="text-xs text-ink-soft">{e.image_emoji} {e.starter_words.join(" · ")}</p>{zh(e.example, e.example_pinyin)}</div>;
-          case "sentence_remix":
-            return <div>{zh(e.base, e.base_pinyin)}<p className="text-xs text-ink-soft">{e.instruction_vi}</p>{zh(e.target, e.target_pinyin)}</div>;
-          default:
-            return <p className="text-xs text-ink-soft">{e.prompt_vi}</p>;
-        }
-      })()}
-      {card.type === "ask_prompt" && <p className="text-sm text-ink-soft">{card.suggestion_vi}</p>}
-      {card.type === "completion" && (
-        <p className="text-sm font-semibold text-rose-700">
-          Lưu {card.vocab_to_save.length} từ: {card.vocab_to_save.join(", ")}
-        </p>
       )}
     </div>
   );

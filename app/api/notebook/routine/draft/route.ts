@@ -4,20 +4,18 @@
  * Called by the Claude Code Routine after generating content.
  * Secured by CRON_SECRET.
  *
- * Body: the full page JSON — English track in `cards`, optional Chinese track
- * in `title_zh` + `cards_zh` (see scripts/routine/ROUTINE_PROMPT.md).
+ * Body: the full page JSON (same schema as write_draft_page.ts)
  */
-import { NextRequest, NextResponse, after } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
 import { sendWebhook } from "@/lib/discord";
-import { validateEnCards, validateZhCards } from "@/lib/notebook/validate-lesson";
-import { prepareLessonAudio } from "@/lib/tts";
 
 export const dynamic = "force-dynamic";
-// Room for voicing the lesson after the response (see after() below)
-export const maxDuration = 60;
+
+const VALID_CARD_TYPES = ["intro", "word", "reading", "exercise", "ask_prompt", "completion"];
+const VALID_EXERCISE_TYPES = ["word_train", "spot_imposter", "pig_says", "caption_polaroid", "sentence_remix", "two_truths"];
 
 function validate(page: Record<string, unknown>): string[] {
   const errors: string[] = [];
@@ -27,13 +25,58 @@ function validate(page: Record<string, unknown>): string[] {
   if (!page.title_en) errors.push("title_en required");
   if (!page.topic) errors.push("topic required");
   if (![1, 2, 3].includes(page.difficulty as number)) errors.push("difficulty must be 1-3");
-  errors.push(...validateEnCards(page.cards));
-  // Chinese track is optional (the lesson still works in English without it,
-  // and zh-backfill can add it later) — but if sent, it must be complete.
-  if (page.cards_zh != null) {
-    if (typeof page.title_zh !== "string" || !page.title_zh.trim())
-      errors.push("title_zh required when cards_zh is sent");
-    errors.push(...validateZhCards(page.cards_zh));
+  if (!Array.isArray(page.cards) || page.cards.length < 4) errors.push("cards must have at least 4 items");
+  else {
+    const cards = page.cards as Record<string, unknown>[];
+    if (cards[0]?.type !== "intro") errors.push("first card must be intro");
+    if (cards[cards.length - 1]?.type !== "completion") errors.push("last card must be completion");
+    if (cards.length > 12) errors.push("too many cards (max 12)");
+    for (const [i, card] of cards.entries()) {
+      if (!VALID_CARD_TYPES.includes(card.type as string))
+        errors.push(`card[${i}] invalid type '${card.type}'`);
+      if (card.type === "exercise") {
+        if (!VALID_EXERCISE_TYPES.includes(card.exercise_type as string))
+          errors.push(`card[${i}] invalid exercise_type '${card.exercise_type}'`);
+        // Validate required data fields per exercise type — prevents silent blank renders
+        const d = card.data as Record<string, unknown> | null | undefined;
+        if (!d) { errors.push(`card[${i}] exercise missing data object`); }
+        else switch (card.exercise_type) {
+          case "word_train":
+            if (!d.target_sentence_en) errors.push(`card[${i}] word_train: missing target_sentence_en`);
+            if (!Array.isArray(d.shuffled_words) || (d.shuffled_words as unknown[]).length === 0)
+              errors.push(`card[${i}] word_train: missing/empty shuffled_words array`);
+            if (!d.hint_vi) errors.push(`card[${i}] word_train: missing hint_vi`);
+            break;
+          case "spot_imposter":
+            if (!d.sentence_en) errors.push(`card[${i}] spot_imposter: missing sentence_en`);
+            if (!d.imposter_word) errors.push(`card[${i}] spot_imposter: missing imposter_word`);
+            if (!d.correct_word) errors.push(`card[${i}] spot_imposter: missing correct_word`);
+            if (!d.hint_vi) errors.push(`card[${i}] spot_imposter: missing hint_vi`);
+            break;
+          case "pig_says":
+            if (!d.prompt_vi) errors.push(`card[${i}] pig_says: missing prompt_vi`);
+            if (!d.target_en) errors.push(`card[${i}] pig_says: missing target_en`);
+            break;
+          case "caption_polaroid":
+            if (!d.image_emoji) errors.push(`card[${i}] caption_polaroid: missing image_emoji`);
+            if (!Array.isArray(d.starter_words))
+              errors.push(`card[${i}] caption_polaroid: missing starter_words array`);
+            if (!d.example_en) errors.push(`card[${i}] caption_polaroid: missing example_en`);
+            break;
+          case "sentence_remix":
+            if (!d.base_en) errors.push(`card[${i}] sentence_remix: missing base_en`);
+            if (!d.base_vi) errors.push(`card[${i}] sentence_remix: missing base_vi`);
+            if (!d.instruction_vi) errors.push(`card[${i}] sentence_remix: missing instruction_vi`);
+            if (!d.target_en) errors.push(`card[${i}] sentence_remix: missing target_en`);
+            if (!Array.isArray(d.hint_words)) errors.push(`card[${i}] sentence_remix: missing hint_words array`);
+            break;
+          case "two_truths":
+            if (!d.prompt_vi) errors.push(`card[${i}] two_truths: missing prompt_vi`);
+            if (!Array.isArray(d.starter_words)) errors.push(`card[${i}] two_truths: missing starter_words array`);
+            break;
+        }
+      }
+    }
   }
   return errors;
 }
@@ -149,8 +192,6 @@ export async function POST(req: NextRequest) {
       topic: page.topic,
       difficulty: page.difficulty,
       cards: page.cards,
-      title_zh: page.cards_zh != null ? page.title_zh : null,
-      cards_zh: page.cards_zh ?? null,
       generated_by: "routine",
       generation_meta: {
         ...(typeof page.generation_meta === "object" ? page.generation_meta : {}),
@@ -166,9 +207,6 @@ export async function POST(req: NextRequest) {
   }
 
   const pageId = inserted.id;
-
-  // Voice every word/sentence of both tracks now, so Heo's taps play stored audio
-  after(() => prepareLessonAudio(pageId));
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const approveUrl = `${appUrl}/m/notebook/approve/${pageId}`;
 
@@ -186,7 +224,6 @@ export async function POST(req: NextRequest) {
           `**${page.title_vi}** / ${page.title_en}\n` +
           `Topic: \`${page.topic}\` • Độ khó: ${page.difficulty}/3\n` +
           `${cardCount} thẻ` +
-          (page.cards_zh != null ? ` • 🇨🇳 ${page.title_zh}` : " • ⚠️ chưa có bản tiếng Trung") +
           (newVocab.length > 0 ? ` • Từ mới: _${newVocab.join(", ")}_` : "") +
           `\n\n[👀 Duyệt nhanh](${approveUrl})`,
         color: 0xf8b4c4,

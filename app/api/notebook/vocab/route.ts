@@ -1,20 +1,18 @@
 /**
  * /api/notebook/vocab
  *
- * GET  ?limit=<n>&since=<date>&lang=<en|zh>
+ * GET  ?limit=<n>&since=<date>
  *   Returns Heo's saved vocabulary words, newest first.
  *   Joins with daily_pages for source page title + topic.
  *   Returns [] gracefully if table doesn't exist yet.
  *
- * POST { word_en, word_vi, lang?, pinyin?, example_en?, example_vi?, pos?, source_page_id?, source_kind? }
- *   Upserts a vocabulary word (dedupes on (user, lang, word_en)).
- *   For lang="zh", word_en/example_en carry hanzi (column names predate the
- *   Chinese track). Returns { id }.
+ * POST { word_en, word_vi, example_en?, example_vi?, pos?, source_page_id?, source_kind? }
+ *   Upserts a vocabulary word (dedupes on lower(word_en) per user).
+ *   Returns { id }.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { parseLang } from "@/lib/notebook/lesson";
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +34,11 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "200"), 500);
     const since = url.searchParams.get("since");
-    const lang = parseLang(url.searchParams.get("lang"));
 
     let query = supabase
       .from("vocabulary")
       .select(
-        `id, word_en, word_vi, lang, pinyin, example_en, example_vi, pos,
+        `id, word_en, word_vi, example_en, example_vi, pos,
          source_page_id, source_kind, saved_at,
          last_reviewed_at, review_count, self_confidence,
          source_page:daily_pages(title_vi, topic)`
@@ -51,7 +48,6 @@ export async function GET(req: NextRequest) {
       .limit(limit);
 
     if (since) query = query.gte("saved_at", since);
-    if (lang) query = query.eq("lang", lang);
 
     const { data, error } = await query;
 
@@ -70,8 +66,6 @@ export async function GET(req: NextRequest) {
         id: row.id,
         word_en: row.word_en,
         word_vi: row.word_vi,
-        lang: row.lang ?? "en",
-        pinyin: row.pinyin,
         example_en: row.example_en,
         example_vi: row.example_vi,
         pos: row.pos,
@@ -110,8 +104,6 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}));
     const { word_en, word_vi, example_en, example_vi, pos } = body;
-    const lang = parseLang(body.lang) ?? "en";
-    const pinyin = lang === "zh" && typeof body.pinyin === "string" ? body.pinyin.trim() || null : null;
     const source_kind: string = SOURCE_KINDS.includes(body.source_kind)
       ? body.source_kind
       : "page";
@@ -124,14 +116,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "word_en and word_vi required" }, { status: 400 });
     }
 
-    // Upsert on (user_id, lang, word_en) — unique constraint in DB (migration 021)
+    // Upsert on (user_id, lower(word_en)) — unique index in DB
     const { data, error } = await supabase
       .from("vocabulary")
       .upsert(
         {
           user_id: heo.id,
-          lang,
-          pinyin,
           word_en: word_en.trim(),
           word_vi: word_vi.trim(),
           example_en: example_en?.trim() ?? null,
@@ -141,7 +131,7 @@ export async function POST(req: NextRequest) {
           source_kind,
           saved_at: new Date().toISOString(),
         },
-        { onConflict: "user_id,lang,word_en" }
+        { onConflict: "user_id,word_en" }
       )
       .select("id")
       .single();

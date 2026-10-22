@@ -5,21 +5,23 @@
  */
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
-import { sameToken, type LessonSpotImposter } from "@/lib/notebook/lesson";
-import type { LessonLang } from "@/types/notebook";
+import type { SpotImposterData } from "@/types/notebook";
 
 interface Props {
-  data: LessonSpotImposter;
-  lang: LessonLang;
+  data: SpotImposterData;
   onContinue: () => void;
 }
 
-export function SpotImposter({ data, lang, onContinue }: Props) {
-  const { tokens: words, imposter_word, correct_word, hint_vi } = data;
+export function SpotImposter({ data, onContinue }: Props) {
+  const { sentence_en, imposter_word, correct_word, hint_vi } = data;
+  const words = sentence_en.split(/\s+/);
 
   const [picked, setPicked] = useState<number | null>(null);
 
-  const isCorrect = picked !== null && sameToken(words[picked], imposter_word, lang);
+  const isCorrect =
+    picked !== null &&
+    words[picked].replace(/[^a-zA-Z]/g, "").toLowerCase() ===
+      imposter_word.replace(/[^a-zA-Z]/g, "").toLowerCase();
 
   function tap(idx: number) {
     if (picked !== null) return;
@@ -45,7 +47,8 @@ export function SpotImposter({ data, lang, onContinue }: Props) {
       {/* Sentence chips */}
       <div className="flex flex-wrap gap-2 justify-center">
         {words.map((word, i) => {
-          const isImposter = sameToken(word, imposter_word, lang);
+          const clean = word.replace(/[^a-zA-Z]/g, "").toLowerCase();
+          const isImposter = clean === imposter_word.replace(/[^a-zA-Z]/g, "").toLowerCase();
           const isPicked = picked === i;
 
           let bg = "white";

@@ -17,13 +17,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { DailyPage, LessonLang } from "@/types/notebook";
-import {
-  LANG_META,
-  langCompletedAt,
-  toLessonView,
-  type LessonWordCard,
-} from "@/lib/notebook/lesson";
+import type { DailyPage, WordCard as WordCardType } from "@/types/notebook";
+import { buildViMap } from "@/lib/notebook/vi-map";
 import { useRealtimeBroadcast } from "@/components/realtime/RealtimeProvider";
 import { CardErrorBoundary } from "./CardErrorBoundary";
 import { StoriesProgress } from "./StoriesProgress";
@@ -62,31 +57,20 @@ const cardVariants = {
 
 interface StoriesRendererProps {
   page: DailyPage;
-  /** Track to study. Falls back to English if the page has no Chinese track yet. */
-  lang?: LessonLang;
-  /** true when re-reading a track Heo already completed (no streak bump / vocab save) */
+  /** true when viewing an already-completed page from the scrapbook */
   isReview?: boolean;
 }
 
-export function StoriesRenderer({ page, lang: requestedLang = "en", isReview = false }: StoriesRendererProps) {
+export function StoriesRenderer({ page, isReview = false }: StoriesRendererProps) {
   const router = useRouter();
   const broadcast = useRealtimeBroadcast();
-  const view = toLessonView(page, requestedLang) ?? toLessonView(page, "en")!;
-  const lang = view.lang;
-  // English keeps the original key so lessons in progress before the Chinese
-  // track existed still resume.
-  const storageKey = lang === "en" ? `notebook_progress_${page.id}` : `notebook_progress_${page.id}_${lang}`;
-  const cards = view.cards;
+  const storageKey = `notebook_progress_${page.id}`;
+  const viMap = buildViMap(page);
+  const cards = page.cards;
   const total = cards.length;
-  const pageTitle = lang === "en" ? page.title_vi : `${page.title_vi} (${LANG_META[lang].name_vi})`;
 
   // Extract word cards once for CompletionCard vocab auto-save
-  const wordCards = cards.filter((c): c is LessonWordCard => c.type === "word");
-
-  // The other language, offered on the completion card if it's still to learn
-  const otherLang: LessonLang = lang === "en" ? "zh" : "en";
-  const otherLangAvailable =
-    toLessonView(page, otherLang) !== null && langCompletedAt(page, otherLang) === null;
+  const wordCards = cards.filter((c): c is WordCardType => c.type === "word");
 
   // ── Card state ─────────────────────────────────────────────────
   const [current, setCurrent] = useState(0);
@@ -148,9 +132,9 @@ export function StoriesRenderer({ page, lang: requestedLang = "en", isReview = f
     broadcast("heo:studying", {
       card_index: current,
       total,
-      page_title: pageTitle,
+      page_title: page.title_vi,
     });
-  }, [broadcast, current, total, pageTitle, isReview]);
+  }, [broadcast, current, total, page.title_vi, isReview]);
 
   // ── Navigation ────────────────────────────────────────────────
   const goTo = useCallback(
@@ -255,14 +239,14 @@ export function StoriesRenderer({ page, lang: requestedLang = "en", isReview = f
     // Blueprint §7: ping Masuri (rate-limited: max 1 per page per day).
     // Client-side guard via localStorage so we don't even hit the server on subsequent taps.
     const today = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
-    const lsKey = `toohardPinged_${page.id}_${lang}_${today}`;
+    const lsKey = `toohardPinged_${page.id}_${today}`;
     try {
       if (!localStorage.getItem(lsKey)) {
         localStorage.setItem(lsKey, "1");
         fetch("/api/notebook/too-hard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ page_id: page.id, card_index: current, lang }),
+          body: JSON.stringify({ page_id: page.id, card_index: current }),
         }).catch(() => {});
       }
     } catch {
@@ -277,13 +261,12 @@ export function StoriesRenderer({ page, lang: requestedLang = "en", isReview = f
       case "intro":
         return <IntroCard card={card} />;
       case "word":
-        return <WordCard card={card} lang={lang} />;
+        return <WordCard card={card} viMap={viMap} />;
       case "reading":
         return (
           <ReadingCard
             card={card}
-            lang={lang}
-            glossary={view.glossary}
+            viMap={viMap}
             sourcePageId={page.id}
             sourcePageTopic={page.topic}
             sourcePageTitleVi={page.title_vi}
@@ -291,7 +274,7 @@ export function StoriesRenderer({ page, lang: requestedLang = "en", isReview = f
         );
       case "exercise":
         return (
-          <ExerciseCard card={card} lang={lang} onSkip={handleSkip} onTooHard={handleTooHard} />
+          <ExerciseCard card={card} onSkip={handleSkip} onTooHard={handleTooHard} />
         );
       case "ask_prompt":
         return <AskPromptCard card={card} />;
@@ -301,11 +284,9 @@ export function StoriesRenderer({ page, lang: requestedLang = "en", isReview = f
             card={card}
             pageTitle={page.title_vi}
             pageId={page.id}
-            lang={lang}
             wordCards={wordCards}
             onReview={() => goTo(0, -1)}
             isReview={isReview}
-            otherLang={otherLangAvailable ? otherLang : undefined}
           />
         );
       default:

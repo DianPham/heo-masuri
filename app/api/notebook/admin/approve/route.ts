@@ -11,14 +11,12 @@
  *   }
  * }
  */
-import { NextRequest, NextResponse, after } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { prepareLessonAudio } from "@/lib/tts";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
@@ -68,9 +66,6 @@ export async function POST(req: NextRequest) {
     console.error("[admin/approve]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  // Masuri's edits may add new words/sentences — voice whatever isn't stored yet
-  if (edits?.cards) after(() => prepareLessonAudio(page_id));
 
   revalidatePath("/masuri/notebook");
   revalidatePath(`/m/notebook/approve/${page_id}`);

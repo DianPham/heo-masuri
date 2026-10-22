@@ -2,9 +2,6 @@
  * GET /api/notebook/routine/state
  * Returns Heo's current learning state for the Claude Code Routine.
  * Secured by CRON_SECRET — only called by the Routine runner.
- *
- * English fields keep their original names; Chinese-track context lives under
- * `zh` (see scripts/routine/ROUTINE_PROMPT.md).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
@@ -93,45 +90,23 @@ export async function GET(req: NextRequest) {
     (p) => p.status === "draft" || p.status === "approved"
   ).length;
 
-  // Last 7 published pages + ALL vocab + every Chinese track — run in parallel
-  const [lastPagesRes, allVocabRes, zhTracksRes, zhMissingRes] = await Promise.all([
+  // Last 7 published pages + ALL vocab — run in parallel
+  const [lastPagesRes, allVocabRes] = await Promise.all([
     supabase
       .from("daily_pages")
-      .select("id, title_vi, title_en, title_zh, topic, difficulty, scheduled_for")
+      .select("id, title_vi, title_en, topic, difficulty, scheduled_for")
       .eq("for_user", heoId)
       .eq("status", "published")
       .order("scheduled_for", { ascending: false })
       .limit(7),
     supabase
       .from("vocabulary")
-      .select("word_en, word_vi, lang, pinyin, pos, self_confidence, source_page_id, source_kind")
+      .select("word_en, word_vi, pos, self_confidence, source_page_id, source_kind")
       .eq("user_id", heoId)
       .order("saved_at", { ascending: false }),
-    supabase
-      .from("daily_pages")
-      .select("cards_zh")
-      .eq("for_user", heoId)
-      .neq("status", "archived")
-      .not("cards_zh", "is", null),
-    supabase
-      .from("daily_pages")
-      .select("id", { count: "exact", head: true })
-      .eq("for_user", heoId)
-      .neq("status", "archived")
-      .is("cards_zh", null),
   ]);
   const lastPages = lastPagesRes.data;
-  const vocabRows = allVocabRes.data ?? [];
-  const allVocab  = vocabRows.filter((w) => (w.lang ?? "en") === "en");
-  const zhVocab   = vocabRows.filter((w) => w.lang === "zh");
-
-  // Every hanzi headword already taught as a "new word" in some Chinese track.
-  const zhCourseWords = new Set<string>();
-  for (const row of zhTracksRes.data ?? []) {
-    for (const card of (row.cards_zh as Array<Record<string, unknown>>) ?? []) {
-      if (card?.type === "word" && typeof card.word_zh === "string") zhCourseWords.add(card.word_zh);
-    }
-  }
+  const allVocab  = allVocabRes.data ?? [];
 
   // Slice for the "recent context" view (last 30 with full details)
   const recentVocab = allVocab.slice(0, 30);
@@ -165,7 +140,7 @@ export async function GET(req: NextRequest) {
     // Also fetch the full lesson content so the routine can REVISE rather than rebuild.
     supabase
       .from("daily_pages")
-      .select("generation_meta, title_vi, title_en, title_zh, topic, difficulty, cards, cards_zh")
+      .select("generation_meta, title_vi, title_en, topic, difficulty, cards")
       .eq("for_user", heoId)
       .eq("status", "archived")
       .eq("scheduled_for", hintTargetDate)
@@ -199,8 +174,6 @@ export async function GET(req: NextRequest) {
         topic:      hintArchivedRes.data.topic,
         difficulty: hintArchivedRes.data.difficulty,
         cards:      hintArchivedRes.data.cards,
-        title_zh:   hintArchivedRes.data.title_zh ?? null,
-        cards_zh:   hintArchivedRes.data.cards_zh ?? null,
       }
     : null;
 
@@ -230,20 +203,6 @@ export async function GET(req: NextRequest) {
     all_known_words: allVocab.map((w) => w.word_en),
     low_confidence_vocab: lowConfidenceVocab,
     preferred_topics: preferredTopics,
-    // Chinese track context. Heo is a beginner in Chinese and may study any
-    // lesson's Chinese version in any order, so each one must stand alone.
-    zh: {
-      // Hanzi already introduced as new words in existing Chinese tracks —
-      // don't introduce these as "new" again (reuse them as support words).
-      course_words: [...zhCourseWords],
-      // Words Heo saved from Chinese lessons (headword = hanzi)
-      known_words: zhVocab.map((w) => w.word_en),
-      low_confidence_vocab: zhVocab
-        .filter((w) => w.self_confidence < 0)
-        .map((w) => ({ word_zh: w.word_en, pinyin: w.pinyin, word_vi: w.word_vi })),
-      // Older lessons still without a Chinese track (see ZH_BACKFILL_PROMPT.md)
-      backfill_remaining: zhMissingRes.count ?? 0,
-    },
     ...(masuriHint ? { "[MASURI_HINT]": masuriHint } : {}),
     // Full content of the archived lesson that was flagged for regen.
     // Present only when [MASURI_HINT] exists. Use this as the BASE to revise —

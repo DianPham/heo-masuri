@@ -20,8 +20,6 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Edge TTS uses a Node WebSocket client (ws) — keep it out of the bundle
-  serverExternalPackages: ["msedge-tts"],
   images: {
     remotePatterns: [
       {

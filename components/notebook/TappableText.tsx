@@ -1,9 +1,7 @@
 "use client";
 
 /**
- * TappableText — renders lesson text (English or Chinese) with each word tappable.
- * Chinese is segmented against the lesson glossary (see lib/notebook/lesson.ts),
- * so vocab words like 咖啡 are one tap target; other hanzi are tappable singly.
+ * TappableText — renders English text with each word tappable.
  *
  * Single tap  → VI translation bubble (2.5s auto-dismiss) + TTS + save button
  * Long press  → Ask Masuri sheet
@@ -22,15 +20,12 @@ import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useRef, useState } from "react";
 import { useTTS } from "@/hooks/useTTS";
 import { AskMasuriSheet } from "@/components/notebook/AskMasuriSheet";
-import { tapKey, tokenize, type GlossaryEntry } from "@/lib/notebook/lesson";
-import type { LessonLang } from "@/types/notebook";
 
 interface TappableTextProps {
-  /** Text to render, in `lang` */
+  /** English text to render */
   text: string;
-  lang: LessonLang;
-  /** Headword → Vietnamese meaning (+ pinyin for Chinese), from the lesson's word cards */
-  glossary?: Record<string, GlossaryEntry>;
+  /** Map of lowercase English word → Vietnamese translation */
+  viMap?: Record<string, string>;
   /** Words to visually highlight (from vocab_highlights) */
   highlights?: string[];
   className?: string;
@@ -45,15 +40,18 @@ interface TappableTextProps {
 interface Bubble {
   word: string;
   vi: string;
-  pinyin?: string;
   x: number;
   y: number;
 }
 
+/** Strip punctuation for lookup / TTS */
+function cleanWord(w: string): string {
+  return w.replace(/[^a-zA-Z''‑-]/g, "").toLowerCase();
+}
+
 export function TappableText({
   text,
-  lang,
-  glossary = {},
+  viMap = {},
   highlights = [],
   className = "",
   wordClassName = "",
@@ -61,7 +59,7 @@ export function TappableText({
   sourcePageTopic,
   sourcePageTitleVi,
 }: TappableTextProps) {
-  const { speak } = useTTS(lang);
+  const { speak } = useTTS();
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [askWord, setAskWord] = useState<string | null>(null);
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
@@ -74,7 +72,7 @@ export function TappableText({
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
-  const highlightSet = new Set(highlights.map((h) => tapKey(h, lang)));
+  const highlightSet = new Set(highlights.map((h) => h.toLowerCase()));
 
   const clearBubble = useCallback(() => {
     if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
@@ -86,7 +84,7 @@ export function TappableText({
     touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     touchTimer.current = setTimeout(() => {
       touchTimer.current = null;
-      const clean = tapKey(rawWord, lang);
+      const clean = cleanWord(rawWord);
       if (!clean) return;
       suppressNextClick.current = true;
       clearBubble();
@@ -114,7 +112,7 @@ export function TappableText({
   function handleContextMenu(e: React.MouseEvent, rawWord: string) {
     e.preventDefault();
     e.stopPropagation();
-    const clean = tapKey(rawWord, lang);
+    const clean = cleanWord(rawWord);
     if (!clean) return;
     suppressNextClick.current = true;
     clearBubble();
@@ -129,27 +127,26 @@ export function TappableText({
       suppressNextClick.current = false;
       return;
     }
-    const clean = tapKey(rawWord, lang);
+    const clean = cleanWord(rawWord);
     if (!clean) return;
 
     speak(clean);
 
-    const entry = glossary[clean];
-    if (entry) {
+    const vi = viMap[clean];
+    if (vi) {
       clearBubble();
-      // Keep the whole bubble (max 200px + padding) on screen
-      const x = Math.max(
-        8,
-        Math.min(e.clientX, (typeof window !== "undefined" ? window.innerWidth : 400) - 232)
+      const x = Math.min(
+        e.clientX,
+        (typeof window !== "undefined" ? window.innerWidth : 400) - 168
       );
       const y = e.clientY;
-      setBubble({ word: clean, vi: entry.vi, pinyin: entry.pinyin, x, y });
+      setBubble({ word: clean, vi, x, y });
       bubbleTimer.current = setTimeout(clearBubble, 3000);
     }
   }
 
   // ── Save word to vocab ─────────────────────────────────────────
-  async function handleSave(word: string, vi: string, pinyin?: string) {
+  async function handleSave(word: string, vi: string) {
     if (savedWords.has(word) || savingWord === word) return;
     setSavingWord(word);
     try {
@@ -159,8 +156,6 @@ export function TappableText({
         body: JSON.stringify({
           word_en: word,
           word_vi: vi,
-          lang,
-          pinyin,
           source_page_id: sourcePageId,
           source_page_topic: sourcePageTopic,
           source_page_title_vi: sourcePageTitleVi,
@@ -172,15 +167,15 @@ export function TappableText({
     }
   }
 
-  const tokens = tokenize(text, lang, glossary);
+  const tokens = text.split(/(\s+)/);
 
   return (
     <>
       <span className={`leading-relaxed ${className}`} data-no-nav="true">
-        {tokens.map(({ text: token, tappable }, i) => {
-          if (!tappable) return <span key={i}>{token}</span>;
+        {tokens.map((token, i) => {
+          if (/^\s+$/.test(token)) return <span key={i}>{token}</span>;
 
-          const clean = tapKey(token, lang);
+          const clean = cleanWord(token);
           const isHighlighted = highlightSet.has(clean);
 
           return (
@@ -243,7 +238,6 @@ export function TappableText({
               <div className="flex-1 min-w-0">
                 <span className="text-rose-200 text-xs block leading-none mb-0.5">
                   {bubble.word}
-                  {bubble.pinyin && <span className="ml-1">· {bubble.pinyin}</span>}
                 </span>
                 <span className="leading-snug">{bubble.vi}</span>
               </div>
@@ -253,7 +247,7 @@ export function TappableText({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleSave(bubble.word, bubble.vi, bubble.pinyin);
+                  handleSave(bubble.word, bubble.vi);
                 }}
                 className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
                 style={{

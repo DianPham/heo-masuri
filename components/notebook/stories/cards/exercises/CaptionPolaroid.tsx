@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * CaptionPolaroid — write a creative caption (English or Chinese) for an emoji scene.
+ * CaptionPolaroid — write a creative English caption for an emoji scene.
  * No right/wrong answer — purely creative. Starter word chips help.
  * If image_url is provided by the Routine, it shows as a real photo.
  * Falls back to image_emoji if image_url is absent or fails to load.
@@ -9,24 +9,24 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import Image from "next/image";
-import { LANG_META, appendChip, type LessonCaptionPolaroid } from "@/lib/notebook/lesson";
-import type { LessonLang } from "@/types/notebook";
+import type { CaptionPolaroidData } from "@/types/notebook";
 
 interface Props {
-  data: LessonCaptionPolaroid;
-  lang: LessonLang;
+  data: CaptionPolaroidData;
   onContinue: () => void;
 }
 
-export function CaptionPolaroid({ data, lang, onContinue }: Props) {
-  const { image_emoji, image_url, starter_words, example, example_pinyin } = data;
-  const langName = LANG_META[lang].name_vi;
+export function CaptionPolaroid({ data, onContinue }: Props) {
+  const { image_emoji, image_url, starter_words, example_en } = data;
   const [caption, setCaption] = useState("");
   const [shared, setShared] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   function insertWord(w: string) {
-    setCaption((prev) => appendChip(prev, w, lang));
+    setCaption((prev) => {
+      const trimmed = prev.trimEnd();
+      return trimmed ? `${trimmed} ${w}` : w;
+    });
   }
 
   function handleShare() {
@@ -95,7 +95,7 @@ export function CaptionPolaroid({ data, lang, onContinue }: Props) {
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder={lang === "zh" ? "Viết chú thích tiếng Trung (chữ Hán hay pinyin đều được)..." : `Viết chú thích ${langName}...`}
+            placeholder="Viết chú thích tiếng Anh..."
             rows={3}
             className="w-full rounded-2xl border border-rose-200 px-4 py-3 text-sm text-ink placeholder:text-rose-300 outline-none focus:border-rose-400 resize-none"
             style={{ fontFamily: "var(--font-body)" }}
@@ -103,8 +103,7 @@ export function CaptionPolaroid({ data, lang, onContinue }: Props) {
 
           {/* Example */}
           <p className="text-xs text-ink-soft text-center italic">
-            Ví dụ: &ldquo;{example}&rdquo;
-            {example_pinyin && <span className="block not-italic text-rose-400 mt-0.5">{example_pinyin}</span>}
+            Ví dụ: &ldquo;{example_en}&rdquo;
           </p>
 
           <div className="mt-auto">
@@ -139,7 +138,7 @@ export function CaptionPolaroid({ data, lang, onContinue }: Props) {
             </div>
 
             <p className="text-sm text-ink-soft text-center">
-              Hay quá! Heo viết {langName} giỏi ghê 💕
+              Hay quá! Heo viết tiếng Anh giỏi ghê 💕
             </p>
 
             <button
