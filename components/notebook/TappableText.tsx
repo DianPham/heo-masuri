@@ -22,7 +22,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useRef, useState } from "react";
 import { useTTS } from "@/hooks/useTTS";
 import { AskMasuriSheet } from "@/components/notebook/AskMasuriSheet";
-import { glossaryKey, tokenize, type GlossaryEntry } from "@/lib/notebook/lesson";
+import { tapKey, tokenize, type GlossaryEntry } from "@/lib/notebook/lesson";
 import type { LessonLang } from "@/types/notebook";
 
 interface TappableTextProps {
@@ -50,12 +50,6 @@ interface Bubble {
   y: number;
 }
 
-/** Strip punctuation for lookup / TTS */
-function cleanWord(w: string, lang: LessonLang): string {
-  if (lang === "zh") return glossaryKey(w, "zh");
-  return w.replace(/[^a-zA-Z''‑-]/g, "").toLowerCase();
-}
-
 export function TappableText({
   text,
   lang,
@@ -80,7 +74,7 @@ export function TappableText({
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
-  const highlightSet = new Set(highlights.map((h) => cleanWord(h, lang)));
+  const highlightSet = new Set(highlights.map((h) => tapKey(h, lang)));
 
   const clearBubble = useCallback(() => {
     if (bubbleTimer.current) clearTimeout(bubbleTimer.current);
@@ -92,7 +86,7 @@ export function TappableText({
     touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     touchTimer.current = setTimeout(() => {
       touchTimer.current = null;
-      const clean = cleanWord(rawWord, lang);
+      const clean = tapKey(rawWord, lang);
       if (!clean) return;
       suppressNextClick.current = true;
       clearBubble();
@@ -120,7 +114,7 @@ export function TappableText({
   function handleContextMenu(e: React.MouseEvent, rawWord: string) {
     e.preventDefault();
     e.stopPropagation();
-    const clean = cleanWord(rawWord, lang);
+    const clean = tapKey(rawWord, lang);
     if (!clean) return;
     suppressNextClick.current = true;
     clearBubble();
@@ -135,7 +129,7 @@ export function TappableText({
       suppressNextClick.current = false;
       return;
     }
-    const clean = cleanWord(rawWord, lang);
+    const clean = tapKey(rawWord, lang);
     if (!clean) return;
 
     speak(clean);
@@ -186,7 +180,7 @@ export function TappableText({
         {tokens.map(({ text: token, tappable }, i) => {
           if (!tappable) return <span key={i}>{token}</span>;
 
-          const clean = cleanWord(token, lang);
+          const clean = tapKey(token, lang);
           const isHighlighted = highlightSet.has(clean);
 
           return (

@@ -8,8 +8,12 @@ other language stays open — from the home tile, the completion card, or the
 scrapbook (polaroids show 🇬🇧 ✓ / 🇨🇳 Học).
 
 Pronunciation now comes from Google Cloud Text-to-Speech (Chirp 3 HD voices),
-cached in Supabase Storage so each phrase is synthesized once. Without a key
-the app falls back to the browser voice, so nothing breaks before it's set.
+stored in Supabase Storage. Audio is built **when a lesson arrives** (routine
+draft, Chinese backfill, Masuri's edits, and again at publish as a safety net),
+so Heo's taps only play stored files. Old lessons are voiced by the Chinese
+backfill (it voices both tracks) or by `POST /api/notebook/routine/audio`
+(CRON_SECRET; `GET` shows ready/missing counts). Without a key the app falls
+back to the browser voice, so nothing breaks before it's set.
 
 ## Rollout order (staging first, then prod)
 

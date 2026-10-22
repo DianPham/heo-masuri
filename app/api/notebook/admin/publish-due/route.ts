@@ -9,12 +9,14 @@
  *
  * Secured by CRON_SECRET header.
  */
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendWebhook } from "@/lib/discord";
+import { prepareLessonAudio } from "@/lib/tts";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function todayVN(): string {
   return new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
@@ -109,6 +111,8 @@ async function handle(req: NextRequest) {
   }
 
   published.push(page.id);
+  // Safety net: voice anything the draft-time pass missed before Heo opens it
+  after(() => prepareLessonAudio(page.id));
   if (page.status === "draft") {
     unapproved.push(page.title_vi);
   }

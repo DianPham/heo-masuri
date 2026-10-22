@@ -389,6 +389,15 @@ export function glossaryKey(word: string, lang: LessonLang): string {
   return lang === "zh" ? word.replace(ZH_IGNORABLE, "") : word.toLowerCase();
 }
 
+/**
+ * What a tapped word is looked up and spoken as. Shared by the client
+ * (TappableText) and server audio pre-generation so both name the same clip.
+ */
+export function tapKey(w: string, lang: LessonLang): string {
+  if (lang === "zh") return glossaryKey(w, "zh");
+  return w.replace(/[^a-zA-Z''‑-]/g, "").toLowerCase();
+}
+
 function normalizeEn(s: string): string {
   return s.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ");
 }
@@ -488,4 +497,42 @@ export function tokenize(text: string, lang: LessonLang, glossary: Record<string
     i += Array.from(match).length;
   }
   return out;
+}
+
+// ── Audio clips ───────────────────────────────────────────────
+export type SpeechClip = { lang: LessonLang; text: string };
+
+/**
+ * Every phrase the lesson UI can speak, for both tracks — word cards (word +
+ * example), each tappable word of the reading card, and the vocab saved at
+ * the end (replayed from the vocab book). The server pre-generates these when
+ * a lesson arrives, so a tap only ever plays a stored file.
+ * Texts are trimmed exactly as the client trims them before calling /api/tts.
+ */
+export function lessonSpeechClips(page: DailyPage): SpeechClip[] {
+  const seen = new Set<string>();
+  const clips: SpeechClip[] = [];
+  const add = (lang: LessonLang, text: string | undefined) => {
+    const t = text?.trim();
+    if (!t || seen.has(`${lang}\n${t}`)) return;
+    seen.add(`${lang}\n${t}`);
+    clips.push({ lang, text: t });
+  };
+  for (const lang of availableLangs(page)) {
+    const view = toLessonView(page, lang);
+    if (!view) continue;
+    for (const card of view.cards) {
+      if (card.type === "word") {
+        add(lang, card.word);
+        add(lang, card.example);
+      } else if (card.type === "reading") {
+        for (const s of card.sentences)
+          for (const tok of tokenize(s.text, lang, view.glossary))
+            if (tok.tappable) add(lang, tapKey(tok.text, lang));
+      } else if (card.type === "completion") {
+        for (const w of card.vocab_to_save) add(lang, w);
+      }
+    }
+  }
+  return clips;
 }

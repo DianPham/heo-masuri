@@ -14,12 +14,14 @@
  *   Validates and saves one lesson's Chinese track. Refuses to replace an
  *   existing track unless overwrite=true.
  */
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { validateZhCards } from "@/lib/notebook/validate-lesson";
+import { prepareLessonAudio } from "@/lib/tts";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function authorized(req: NextRequest): boolean {
   const secret = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -134,6 +136,9 @@ export async function POST(req: NextRequest) {
     console.error("[zh-backfill POST]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Voice the new Chinese track (and any English clips still missing)
+  after(() => prepareLessonAudio(page.id));
 
   revalidatePath("/heo/notebook");
   revalidatePath("/heo/notebook/scrapbook");

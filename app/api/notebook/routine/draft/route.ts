@@ -7,14 +7,17 @@
  * Body: the full page JSON — English track in `cards`, optional Chinese track
  * in `title_zh` + `cards_zh` (see scripts/routine/ROUTINE_PROMPT.md).
  */
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
 import { sendWebhook } from "@/lib/discord";
 import { validateEnCards, validateZhCards } from "@/lib/notebook/validate-lesson";
+import { prepareLessonAudio } from "@/lib/tts";
 
 export const dynamic = "force-dynamic";
+// Room for voicing the lesson after the response (see after() below)
+export const maxDuration = 60;
 
 function validate(page: Record<string, unknown>): string[] {
   const errors: string[] = [];
@@ -163,6 +166,9 @@ export async function POST(req: NextRequest) {
   }
 
   const pageId = inserted.id;
+
+  // Voice every word/sentence of both tracks now, so Heo's taps play stored audio
+  after(() => prepareLessonAudio(pageId));
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const approveUrl = `${appUrl}/m/notebook/approve/${pageId}`;
 
