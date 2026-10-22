@@ -6,15 +6,8 @@
  * Blueprint §8 / CP5.
  */
 import { InfoTip } from "@/components/notebook/InfoTip";
-import type { ExerciseCard as ExerciseCardType } from "@/types/notebook";
-import type {
-  WordTrainData,
-  SpotImposterData,
-  PigSaysData,
-  CaptionPolaroidData,
-  SentenceRemixData,
-  TwoTruthsData,
-} from "@/types/notebook";
+import type { LessonExerciseCard } from "@/lib/notebook/lesson";
+import type { LessonLang } from "@/types/notebook";
 import { WordTrain } from "./exercises/WordTrain";
 import { SpotImposter } from "./exercises/SpotImposter";
 import { PigSays } from "./exercises/PigSays";
@@ -32,28 +25,30 @@ const EXERCISE_LABELS: Record<string, string> = {
 };
 
 interface ExerciseCardProps {
-  card: ExerciseCardType;
+  card: LessonExerciseCard;
+  lang: LessonLang;
   onSkip: () => void;
   onTooHard: () => void;
 }
 
-export function ExerciseCard({ card, onSkip, onTooHard }: ExerciseCardProps) {
-  const label = EXERCISE_LABELS[card.exercise_type] ?? card.exercise_type;
+export function ExerciseCard({ card, lang, onSkip, onTooHard }: ExerciseCardProps) {
+  const { exercise } = card;
+  const label = EXERCISE_LABELS[exercise.exercise_type] ?? exercise.exercise_type;
 
   function renderExercise() {
-    switch (card.exercise_type) {
+    switch (exercise.exercise_type) {
       case "word_train":
-        return <WordTrain data={card.data as WordTrainData} onContinue={onSkip} />;
+        return <WordTrain data={exercise} lang={lang} onContinue={onSkip} />;
       case "spot_imposter":
-        return <SpotImposter data={card.data as SpotImposterData} onContinue={onSkip} />;
+        return <SpotImposter data={exercise} lang={lang} onContinue={onSkip} />;
       case "pig_says":
-        return <PigSays data={card.data as PigSaysData} onContinue={onSkip} />;
+        return <PigSays data={exercise} lang={lang} onContinue={onSkip} />;
       case "caption_polaroid":
-        return <CaptionPolaroid data={card.data as CaptionPolaroidData} onContinue={onSkip} />;
+        return <CaptionPolaroid data={exercise} lang={lang} onContinue={onSkip} />;
       case "sentence_remix":
-        return <SentenceRemix data={card.data as SentenceRemixData} onContinue={onSkip} />;
+        return <SentenceRemix data={exercise} lang={lang} onContinue={onSkip} />;
       case "two_truths":
-        return <TwoTruths data={card.data as TwoTruthsData} onContinue={onSkip} />;
+        return <TwoTruths data={exercise} lang={lang} onContinue={onSkip} />;
       default:
         return null;
     }

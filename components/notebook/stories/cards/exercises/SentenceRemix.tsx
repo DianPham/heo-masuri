@@ -2,35 +2,30 @@
 
 /**
  * SentenceRemix — given a base sentence and an instruction, write a new version.
- * Hint word chips help. Lenient answer checking.
+ * Hint word chips help. Lenient answer checking (Chinese: hanzi or pinyin).
  */
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
-import type { SentenceRemixData } from "@/types/notebook";
-
-function normalize(s: string) {
-  return s.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ");
-}
+import { answerMatches, appendChip, type LessonSentenceRemix } from "@/lib/notebook/lesson";
+import type { LessonLang } from "@/types/notebook";
 
 interface Props {
-  data: SentenceRemixData;
+  data: LessonSentenceRemix;
+  lang: LessonLang;
   onContinue: () => void;
 }
 
-export function SentenceRemix({ data, onContinue }: Props) {
-  const { base_en, base_vi, instruction_vi, target_en, hint_words } = data;
+export function SentenceRemix({ data, lang, onContinue }: Props) {
+  const { base, base_pinyin, base_vi, instruction_vi, target, target_pinyin, hint_words } = data;
   const [answer, setAnswer] = useState("");
   const [phase, setPhase] = useState<"input" | "correct" | "wrong">("input");
 
   function insertWord(w: string) {
-    setAnswer((prev) => {
-      const trimmed = prev.trimEnd();
-      return trimmed ? `${trimmed} ${w}` : w;
-    });
+    setAnswer((prev) => appendChip(prev, w, lang));
   }
 
   function check() {
-    if (normalize(answer) === normalize(target_en)) {
+    if (answerMatches(answer, target, lang, target_pinyin)) {
       setPhase("correct");
     } else {
       setPhase("wrong");
@@ -45,7 +40,8 @@ export function SentenceRemix({ data, onContinue }: Props) {
         style={{ backgroundColor: "rgba(255,201,213,0.15)", border: "1px solid rgba(255,201,213,0.35)" }}
       >
         <p className="text-xs text-rose-400 font-semibold mb-1">Câu gốc</p>
-        <p className="text-base font-semibold text-ink">&ldquo;{base_en}&rdquo;</p>
+        <p className="text-base font-semibold text-ink">&ldquo;{base}&rdquo;</p>
+        {base_pinyin && <p className="text-xs text-rose-500 mt-0.5">{base_pinyin}</p>}
         <p className="text-xs text-ink-soft mt-0.5 italic">{base_vi}</p>
       </div>
 
@@ -86,7 +82,7 @@ export function SentenceRemix({ data, onContinue }: Props) {
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         disabled={phase !== "input"}
-        placeholder="Viết câu mới ở đây..."
+        placeholder={lang === "zh" ? "Viết câu mới (chữ Hán hay pinyin)..." : "Viết câu mới ở đây..."}
         rows={2}
         className="w-full rounded-2xl border border-rose-200 px-4 py-3 text-sm text-ink placeholder:text-rose-300 outline-none focus:border-rose-400 resize-none"
         style={{ fontFamily: "var(--font-body)" }}
@@ -111,7 +107,8 @@ export function SentenceRemix({ data, onContinue }: Props) {
             ) : (
               <>
                 <p className="text-xs text-rose-400 font-semibold mb-1">Câu đúng là:</p>
-                <p className="text-sm text-ink italic">&ldquo;{target_en}&rdquo;</p>
+                <p className="text-sm text-ink italic">&ldquo;{target}&rdquo;</p>
+                {target_pinyin && <p className="text-xs text-rose-500 mt-0.5">{target_pinyin}</p>}
               </>
             )}
           </motion.div>

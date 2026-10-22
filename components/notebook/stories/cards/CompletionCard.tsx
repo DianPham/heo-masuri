@@ -6,15 +6,18 @@ import { useRouter } from "next/navigation";
 import { Pig } from "@/components/theme/Pig";
 import { Sticker } from "@/components/notebook/Sticker";
 import { InfoTip } from "@/components/notebook/InfoTip";
-import type { CompletionCard as CompletionCardType, WordCard } from "@/types/notebook";
+import { LANG_META, glossaryKey, type LessonWordCard } from "@/lib/notebook/lesson";
+import type { CompletionCard as CompletionCardType, LessonLang } from "@/types/notebook";
 
 interface CompletionCardProps {
   card: CompletionCardType;
   pageTitle: string;
   pageId: string;
-  wordCards: WordCard[];          // word cards from the same page — used to look up translations
+  lang: LessonLang;               // track just finished — recorded per language
+  wordCards: LessonWordCard[];    // word cards from the same track — used to look up translations
   onReview: () => void;           // navigate back to card 0 (re-read mode)
   isReview?: boolean;             // true when in scrapbook re-read — skip streak bump + vocab save
+  otherLang?: LessonLang;         // the page's other language, if Heo hasn't learned it yet
 }
 
 interface StreakResult {
@@ -23,7 +26,7 @@ interface StreakResult {
   already_counted: boolean;
 }
 
-export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, isReview = false }: CompletionCardProps) {
+export function CompletionCard({ card, pageTitle, pageId, lang, wordCards, onReview, isReview = false, otherLang }: CompletionCardProps) {
   const router = useRouter();
   const [streak, setStreak] = useState<StreakResult | null>(null);
   const vocabSaved = useRef(false);
@@ -44,7 +47,7 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
           const res = await fetch("/api/notebook/page/complete", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ page_id: pageId }),
+            body: JSON.stringify({ page_id: pageId, lang }),
             keepalive: true,
           });
           if (res.ok) return;
@@ -74,22 +77,24 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
     if (vocabSaved.current || card.vocab_to_save.length === 0) return;
     vocabSaved.current = true;
 
-    // Build word lookup map from page's word cards
-    const wordMap = new Map<string, WordCard>();
+    // Build word lookup map from the track's word cards
+    const wordMap = new Map<string, LessonWordCard>();
     for (const wc of wordCards) {
-      wordMap.set(wc.word_en.toLowerCase(), wc);
+      wordMap.set(glossaryKey(wc.word, lang), wc);
     }
 
     // Fire one POST per word (upsert — safe to replay)
-    for (const wordEn of card.vocab_to_save) {
-      const wc = wordMap.get(wordEn.toLowerCase());
+    for (const word of card.vocab_to_save) {
+      const wc = wordMap.get(glossaryKey(word, lang));
       fetch("/api/notebook/vocab", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          word_en: wordEn,
+          word_en: word,
           word_vi: wc?.word_vi ?? "",
-          example_en: wc?.example_en ?? undefined,
+          lang,
+          pinyin: wc?.pinyin ?? undefined,
+          example_en: wc?.example ?? undefined,
           example_vi: wc?.example_vi ?? undefined,
           pos: wc?.pos ?? undefined,
           source_page_id: pageId,
@@ -129,7 +134,7 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
           animate={{ opacity: 1 }}
           transition={{ delay: 0.35 }}
         >
-          {pageTitle} — {isReview ? "trang này Heo đã hoàn thành rồi" : "xong rồi nè"}
+          {pageTitle} ({LANG_META[lang].flag} {LANG_META[lang].name_vi}) — {isReview ? "trang này Heo đã hoàn thành rồi" : "xong rồi nè"}
         </motion.p>
       </motion.div>
 
@@ -216,6 +221,18 @@ export function CompletionCard({ card, pageTitle, pageId, wordCards, onReview, i
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
       >
+        {/* Same lesson in the other language — Heo can pick it up now or later */}
+        {otherLang && (
+          <button
+            type="button"
+            data-no-nav="true"
+            onClick={() => { router.refresh(); router.push(`/heo/notebook/scrapbook/${pageId}?lang=${otherLang}`); }}
+            className="w-full py-3 rounded-2xl text-sm font-semibold text-white"
+            style={{ background: "linear-gradient(135deg, #D14D6F, #E97A95)", boxShadow: "0 4px 12px rgba(209,77,111,0.35)" }}
+          >
+            Học bài này bằng {LANG_META[otherLang].name_vi} {LANG_META[otherLang].flag}
+          </button>
+        )}
         {/* Blueprint §7: first button — review this page */}
         <button
           type="button"

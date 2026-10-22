@@ -9,19 +9,17 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { Pig } from "@/components/theme/Pig";
-import type { WordTrainData } from "@/types/notebook";
-
-function normalize(s: string) {
-  return s.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ");
-}
+import { answerMatches, joinTokens, type LessonWordTrain } from "@/lib/notebook/lesson";
+import type { LessonLang } from "@/types/notebook";
 
 interface Props {
-  data: WordTrainData;
+  data: LessonWordTrain;
+  lang: LessonLang;
   onContinue: () => void;
 }
 
-export function WordTrain({ data, onContinue }: Props) {
-  const { target_sentence_en, shuffled_words, hint_vi } = data;
+export function WordTrain({ data, lang, onContinue }: Props) {
+  const { target, target_pinyin, shuffled_words, hint_vi } = data;
 
   const [answer, setAnswer] = useState<number[]>([]);
   // "input" | "retry" (1st wrong — nudge only) | "wrong" (2nd wrong — show answer) | "correct"
@@ -46,8 +44,8 @@ export function WordTrain({ data, onContinue }: Props) {
   }
 
   function check() {
-    const built = answer.map((i) => shuffled_words[i]).join(" ");
-    if (normalize(built) === normalize(target_sentence_en)) {
+    const built = joinTokens(answer.map((i) => shuffled_words[i]), lang);
+    if (answerMatches(built, target, lang)) {
       setPhase("correct");
     } else {
       const next = wrongCount + 1;
@@ -131,6 +129,9 @@ export function WordTrain({ data, onContinue }: Props) {
             <p className="text-sm font-bold text-green-700 text-center mb-2">
               Đúng rồi! Heo giỏi ghê 🌸
             </p>
+            {target_pinyin && (
+              <p className="text-xs text-rose-500 text-center -mt-1 mb-1">{target_pinyin}</p>
+            )}
             {/* Train track */}
             <div className="relative h-14 flex items-end overflow-hidden">
               <div
@@ -189,7 +190,8 @@ export function WordTrain({ data, onContinue }: Props) {
             style={{ backgroundColor: "rgba(233,122,149,0.12)", border: "1px solid rgba(233,122,149,0.3)" }}
           >
             <p className="text-xs text-rose-400 font-semibold mb-1">Câu đúng là:</p>
-            <p className="text-sm font-semibold text-ink italic">&ldquo;{target_sentence_en}&rdquo;</p>
+            <p className="text-sm font-semibold text-ink italic">&ldquo;{target}&rdquo;</p>
+            {target_pinyin && <p className="text-xs text-rose-500 mt-0.5">{target_pinyin}</p>}
           </motion.div>
         )}
       </AnimatePresence>
