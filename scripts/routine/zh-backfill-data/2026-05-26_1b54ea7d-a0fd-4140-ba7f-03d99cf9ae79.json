@@ -1,0 +1,132 @@
+{
+  "page_id": "1b54ea7d-a0fd-4140-ba7f-03d99cf9ae79",
+  "title_zh": "可爱的小动物",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Những người bạn nhỏ bốn chân 🇨🇳",
+      "subtitle_vi": "Chó con và mèo con bằng tiếng Trung — dễ thương không chịu được 🐾",
+      "pig_pose": "cheering"
+    },
+    {
+      "type": "word",
+      "word_zh": "小狗",
+      "pinyin": "xiǎogǒu",
+      "word_vi": "chó con",
+      "example_zh": "小狗很可爱。",
+      "example_pinyin": "Xiǎogǒu hěn kě'ài.",
+      "example_vi": "Chó con dễ thương lắm.",
+      "pos": "noun",
+      "image_emoji": "🐶"
+    },
+    {
+      "type": "word",
+      "word_zh": "小猫",
+      "pinyin": "xiǎomāo",
+      "word_vi": "mèo con",
+      "example_zh": "小猫喜欢睡觉。",
+      "example_pinyin": "Xiǎomāo xǐhuan shuìjiào.",
+      "example_vi": "Mèo con thích ngủ lắm.",
+      "pos": "noun",
+      "image_emoji": "🐱"
+    },
+    {
+      "type": "word",
+      "word_zh": "可爱",
+      "pinyin": "kě'ài",
+      "word_vi": "dễ thương",
+      "han_viet": "khả ái",
+      "example_zh": "小猫真可爱！",
+      "example_pinyin": "Xiǎomāo zhēn kě'ài!",
+      "example_vi": "Mèo con dễ thương quá!",
+      "pos": "adjective",
+      "image_emoji": "🥰"
+    },
+    {
+      "type": "word",
+      "word_zh": "朋友",
+      "pinyin": "péngyou",
+      "word_vi": "bạn bè",
+      "han_viet": "bằng hữu",
+      "example_zh": "小狗是我的好朋友。",
+      "example_pinyin": "Xiǎogǒu shì wǒ de hǎo péngyou.",
+      "example_vi": "Chó con là bạn thân của Heo.",
+      "pos": "noun",
+      "image_emoji": "🤝"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Hôm nay Heo gặp ai nè?",
+      "sentences_zh": [
+        "今天我看见一只小狗。",
+        "它很可爱。",
+        "还有一只小猫在睡觉。",
+        "它们是好朋友！"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān wǒ kànjiàn yì zhī xiǎogǒu.",
+        "Tā hěn kě'ài.",
+        "Hái yǒu yì zhī xiǎomāo zài shuìjiào.",
+        "Tāmen shì hǎo péngyou!"
+      ],
+      "sentences_vi": [
+        "Hôm nay Heo thấy một chú chó con.",
+        "Nó dễ thương lắm.",
+        "Còn có một chú mèo con đang ngủ nữa.",
+        "Hai bé là bạn thân của nhau đó!"
+      ],
+      "vocab_highlights": [
+        "小狗",
+        "可爱",
+        "小猫",
+        "朋友"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "这只小狗很可爱。",
+        "target_sentence_pinyin": "Zhè zhī xiǎogǒu hěn kě'ài.",
+        "shuffled_words": [
+          "可爱",
+          "这只",
+          "很",
+          "小狗"
+        ],
+        "hint_vi": "Chú chó con này dễ thương lắm."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "🐶",
+        "image_url": "https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=600&q=80",
+        "starter_words": [
+          "我",
+          "小狗",
+          "朋友"
+        ],
+        "example_zh": "我想和小狗做朋友。",
+        "example_pinyin": "Wǒ xiǎng hé xiǎogǒu zuò péngyou."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Heo thích 小狗 (xiǎogǒu) hay 小猫 (xiǎomāo) hơn? Kể Masuri nghe nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "小狗",
+        "小猫",
+        "可爱",
+        "朋友"
+      ],
+      "sticker_kind": "pig_mini"
+    }
+  ]
+}

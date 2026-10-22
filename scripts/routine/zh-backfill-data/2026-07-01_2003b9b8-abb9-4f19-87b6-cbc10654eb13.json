@@ -1,0 +1,143 @@
+{
+  "page_id": "2003b9b8-abb9-4f19-87b6-cbc10654eb13",
+  "title_zh": "准备出发！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo chuẩn bị đi du lịch! 🇨🇳",
+      "subtitle_vi": "Hôm nay Heo học tiếng Trung về chuyến đi: khách sạn, bản đồ, vali nè 🧳",
+      "pig_pose": "cheering"
+    },
+    {
+      "type": "word",
+      "word_zh": "酒店",
+      "pinyin": "jiǔdiàn",
+      "word_vi": "khách sạn",
+      "example_zh": "这家酒店很舒服。",
+      "example_pinyin": "Zhè jiā jiǔdiàn hěn shūfu.",
+      "example_vi": "Khách sạn này thoải mái lắm.",
+      "pos": "noun",
+      "image_emoji": "🏨"
+    },
+    {
+      "type": "word",
+      "word_zh": "地图",
+      "pinyin": "dìtú",
+      "word_vi": "bản đồ",
+      "han_viet": "địa đồ",
+      "example_zh": "我看一下地图。",
+      "example_pinyin": "Wǒ kàn yíxià dìtú.",
+      "example_vi": "Heo xem bản đồ một chút.",
+      "pos": "noun",
+      "image_emoji": "🗺️"
+    },
+    {
+      "type": "word",
+      "word_zh": "到",
+      "pinyin": "dào",
+      "word_vi": "đến (nơi)",
+      "example_zh": "我明天早上到。",
+      "example_pinyin": "Wǒ míngtiān zǎoshang dào.",
+      "example_vi": "Sáng mai Heo sẽ đến nơi.",
+      "pos": "verb",
+      "image_emoji": "✈️"
+    },
+    {
+      "type": "word",
+      "word_zh": "行李箱",
+      "pinyin": "xínglixiāng",
+      "word_vi": "vali",
+      "han_viet": "hành lý tương",
+      "example_zh": "我有一个小行李箱。",
+      "example_pinyin": "Wǒ yǒu yí ge xiǎo xínglixiāng.",
+      "example_vi": "Heo có một chiếc vali nhỏ.",
+      "pos": "noun",
+      "image_emoji": "🧳"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Sẵn sàng lên đường",
+      "sentences_zh": [
+        "行李箱准备好了，好兴奋！",
+        "早上，我到酒店了。",
+        "我看看地图，准备出发！"
+      ],
+      "sentences_pinyin": [
+        "Xínglixiāng zhǔnbèi hǎo le, hǎo xīngfèn!",
+        "Zǎoshang, wǒ dào jiǔdiàn le.",
+        "Wǒ kànkan dìtú, zhǔnbèi chūfā!"
+      ],
+      "sentences_vi": [
+        "Vali chuẩn bị xong rồi, Heo hào hứng quá!",
+        "Buổi sáng, Heo đã đến khách sạn.",
+        "Heo xem bản đồ một chút — sẵn sàng xuất phát thôi!"
+      ],
+      "vocab_highlights": [
+        "行李箱",
+        "到",
+        "酒店",
+        "地图"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我到酒店了。",
+        "target_sentence_pinyin": "Wǒ dào jiǔdiàn le.",
+        "shuffled_words": [
+          "酒店",
+          "了",
+          "我",
+          "到"
+        ],
+        "hint_vi": "Heo đến khách sạn rồi."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "还",
+          "不",
+          "到",
+          "酒店"
+        ],
+        "imposter_word": "不",
+        "correct_word": "没",
+        "hint_vi": "Câu này muốn nói “Heo vẫn chưa đến khách sạn”. Có một chữ kì kì nè — “chưa (đến)” thì tiếng Trung dùng 没 (méi) đó 🧳"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "“Vali rất nhỏ” 🧳 — nói bằng tiếng Trung nha (gợi ý: “rất” là 很 hěn, “nhỏ” là 小 xiǎo)",
+        "target_zh": "行李箱很小",
+        "target_pinyin": "Xínglixiāng hěn xiǎo",
+        "hints": {
+          "noun": "行李箱"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Mẹo nhớ: 行李 đọc Hán Việt là “hành lý”, thêm 箱 (cái thùng) là thành 行李箱 — chiếc vali 🧳 Có chữ nào khó thì hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "酒店",
+        "地图",
+        "到",
+        "行李箱"
+      ],
+      "sticker_kind": "sun"
+    }
+  ]
+}

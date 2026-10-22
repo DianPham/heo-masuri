@@ -1,0 +1,133 @@
+{
+  "page_id": "c5b71c6a-32d2-45d2-ab56-4885bf05a7b3",
+  "title_zh": "安静的下午",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Buổi chiều nhẹ nhàng 🌤️",
+      "subtitle_vi": "Hôm nay Heo học nói về một buổi chiều thư giãn bằng tiếng Trung nha 😌",
+      "pig_pose": "neutral"
+    },
+    {
+      "type": "word",
+      "word_zh": "休息",
+      "pinyin": "xiūxi",
+      "word_vi": "nghỉ ngơi",
+      "han_viet": "hưu tức",
+      "example_zh": "我喜欢在家休息。",
+      "example_pinyin": "Wǒ xǐhuan zài jiā xiūxi.",
+      "example_vi": "Heo thích nghỉ ngơi ở nhà.",
+      "pos": "verb",
+      "image_emoji": "😌"
+    },
+    {
+      "type": "word",
+      "word_zh": "下午",
+      "pinyin": "xiàwǔ",
+      "word_vi": "buổi chiều",
+      "example_zh": "今天下午天气很好。",
+      "example_pinyin": "Jīntiān xiàwǔ tiānqì hěn hǎo.",
+      "example_vi": "Chiều nay trời đẹp quá.",
+      "pos": "noun",
+      "image_emoji": "🌤️"
+    },
+    {
+      "type": "word",
+      "word_zh": "安静",
+      "pinyin": "ānjìng",
+      "word_vi": "yên tĩnh",
+      "han_viet": "an tĩnh",
+      "example_zh": "我喜欢安静的下午。",
+      "example_pinyin": "Wǒ xǐhuan ānjìng de xiàwǔ.",
+      "example_vi": "Heo thích những buổi chiều yên tĩnh.",
+      "pos": "adjective",
+      "image_emoji": "🤫"
+    },
+    {
+      "type": "word",
+      "word_zh": "午觉",
+      "pinyin": "wǔjiào",
+      "word_vi": "giấc ngủ trưa (睡午觉 = ngủ trưa)",
+      "example_zh": "吃完午饭，我睡个午觉。",
+      "example_pinyin": "Chīwán wǔfàn, wǒ shuì ge wǔjiào.",
+      "example_vi": "Ăn trưa xong, Heo ngủ một giấc trưa.",
+      "pos": "noun",
+      "image_emoji": "😴"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Buổi chiều bên cửa sổ",
+      "sentences_zh": [
+        "每天下午，我都坐在窗边。",
+        "房间里很安静，也很舒服。",
+        "我喜欢在这里休息。",
+        "然后，我睡个午觉。"
+      ],
+      "sentences_pinyin": [
+        "Měitiān xiàwǔ, wǒ dōu zuò zài chuāngbiān.",
+        "Fángjiān lǐ hěn ānjìng, yě hěn shūfu.",
+        "Wǒ xǐhuan zài zhèlǐ xiūxi.",
+        "Ránhòu, wǒ shuì ge wǔjiào."
+      ],
+      "sentences_vi": [
+        "Buổi chiều nào Heo cũng ngồi cạnh cửa sổ.",
+        "Căn phòng yên tĩnh và thoải mái.",
+        "Heo thích nghỉ ngơi ở đây.",
+        "Rồi Heo ngủ một giấc trưa."
+      ],
+      "vocab_highlights": [
+        "下午",
+        "安静",
+        "休息",
+        "午觉"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我想睡个午觉。",
+        "target_sentence_pinyin": "Wǒ xiǎng shuì ge wǔjiào.",
+        "shuffled_words": [
+          "午觉",
+          "想",
+          "我",
+          "个",
+          "睡"
+        ],
+        "hint_vi": "Heo muốn ngủ một giấc trưa."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "今天",
+          "下午",
+          "是",
+          "安静"
+        ],
+        "imposter_word": "是",
+        "correct_word": "很",
+        "hint_vi": "Có một từ kì kì trong câu này... Gợi ý: muốn nói “rất yên tĩnh” thì trước 安静 dùng từ nào nhỉ? 🤫"
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có từ nào khó không? Hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "休息",
+        "下午",
+        "安静",
+        "午觉"
+      ],
+      "sticker_kind": "cloud"
+    }
+  ]
+}

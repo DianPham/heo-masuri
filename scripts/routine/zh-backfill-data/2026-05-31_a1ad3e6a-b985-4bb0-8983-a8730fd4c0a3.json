@@ -1,0 +1,130 @@
+{
+  "page_id": "a1ad3e6a-b985-4bb0-8983-a8730fd4c0a3",
+  "title_zh": "Heo的心情",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo có nhiều cảm xúc lắm! 💭",
+      "subtitle_vi": "Hôm nay Heo học cách diễn tả cảm xúc bằng tiếng Trung nha 🇨🇳",
+      "pig_pose": "thinking"
+    },
+    {
+      "type": "word",
+      "word_zh": "平静",
+      "pinyin": "píngjìng",
+      "word_vi": "bình tĩnh / nhẹ nhàng",
+      "han_viet": "bình tĩnh",
+      "example_zh": "看书的时候，我很平静。",
+      "example_pinyin": "Kàn shū de shíhou, wǒ hěn píngjìng.",
+      "example_vi": "Lúc đọc sách, Heo thấy bình tĩnh lắm.",
+      "pos": "adjective",
+      "image_emoji": "🧘"
+    },
+    {
+      "type": "word",
+      "word_zh": "紧张",
+      "pinyin": "jǐnzhāng",
+      "word_vi": "hồi hộp / lo lắng",
+      "example_zh": "旅行前，我有点儿紧张。",
+      "example_pinyin": "Lǚxíng qián, wǒ yǒudiǎnr jǐnzhāng.",
+      "example_vi": "Trước chuyến đi, Heo hơi hồi hộp.",
+      "pos": "adjective",
+      "image_emoji": "😬"
+    },
+    {
+      "type": "word",
+      "word_zh": "自豪",
+      "pinyin": "zìháo",
+      "word_vi": "tự hào",
+      "han_viet": "tự hào",
+      "example_zh": "今天我很自豪！",
+      "example_pinyin": "Jīntiān wǒ hěn zìháo!",
+      "example_vi": "Hôm nay Heo thấy tự hào lắm!",
+      "pos": "adjective",
+      "image_emoji": "🌟"
+    },
+    {
+      "type": "word",
+      "word_zh": "惊喜",
+      "pinyin": "jīngxǐ",
+      "word_vi": "bất ngờ (vui) / ngạc nhiên",
+      "example_zh": "看到礼物，我很惊喜！",
+      "example_pinyin": "Kàndào lǐwù, wǒ hěn jīngxǐ!",
+      "example_vi": "Thấy món quà, Heo bất ngờ và vui lắm!",
+      "pos": "adjective",
+      "image_emoji": "😲"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một ngày nhiều cảm xúc",
+      "sentences_zh": [
+        "早上，我很平静，也很开心。",
+        "旅行前，我总是有点儿紧张。",
+        "我学会了一个新词！",
+        "我很惊喜，也很自豪！"
+      ],
+      "sentences_pinyin": [
+        "Zǎoshang, wǒ hěn píngjìng, yě hěn kāixīn.",
+        "Lǚxíng qián, wǒ zǒngshì yǒudiǎnr jǐnzhāng.",
+        "Wǒ xuéhuì le yí ge xīn cí!",
+        "Wǒ hěn jīngxǐ, yě hěn zìháo!"
+      ],
+      "sentences_vi": [
+        "Buổi sáng, Heo thấy bình tĩnh và vui.",
+        "Trước chuyến đi, Heo lúc nào cũng hơi hồi hộp một chút.",
+        "Heo vừa học được một từ mới!",
+        "Heo vừa bất ngờ vừa tự hào!"
+      ],
+      "vocab_highlights": [
+        "平静",
+        "紧张",
+        "惊喜",
+        "自豪"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "看书的时候，我很平静。",
+        "target_sentence_pinyin": "Kàn shū de shíhou, wǒ hěn píngjìng.",
+        "shuffled_words": [
+          "平静",
+          "的时候",
+          "我",
+          "看书",
+          "很"
+        ],
+        "hint_vi": "Lúc đọc sách, Heo thấy bình tĩnh lắm."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo rất tự hào",
+        "target_zh": "我很自豪",
+        "target_pinyin": "Wǒ hěn zìháo",
+        "hints": {
+          "noun": "自豪"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có cảm xúc nào Heo muốn học thêm không? Hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "平静",
+        "紧张",
+        "自豪",
+        "惊喜"
+      ],
+      "sticker_kind": "sparkle"
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "page_id": "837982ce-fe6e-4e1d-85bc-042be9ecd218",
+  "title_zh": "多多练习！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Giờ luyện tập của Heo 🇨🇳",
+      "subtitle_vi": "Mở vở ra nào! Hôm nay Heo học cách nói “luyện tập”, “nghiêm túc”, “khó” và “dễ” bằng tiếng Trung nha ✏️",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "练习",
+      "pinyin": "liànxí",
+      "word_vi": "luyện tập",
+      "han_viet": "luyện tập",
+      "example_zh": "我每天练习中文。",
+      "example_pinyin": "Wǒ měitiān liànxí Zhōngwén.",
+      "example_vi": "Ngày nào Heo cũng luyện tiếng Trung.",
+      "pos": "verb",
+      "image_emoji": "📝"
+    },
+    {
+      "type": "word",
+      "word_zh": "认真",
+      "pinyin": "rènzhēn",
+      "word_vi": "nghiêm túc / cẩn thận (làm kỹ)",
+      "example_zh": "我学习很认真。",
+      "example_pinyin": "Wǒ xuéxí hěn rènzhēn.",
+      "example_vi": "Heo học bài rất nghiêm túc.",
+      "pos": "adjective",
+      "image_emoji": "🎯"
+    },
+    {
+      "type": "word",
+      "word_zh": "难",
+      "pinyin": "nán",
+      "word_vi": "khó",
+      "han_viet": "nan",
+      "example_zh": "中文有点儿难。",
+      "example_pinyin": "Zhōngwén yǒudiǎnr nán.",
+      "example_vi": "Tiếng Trung hơi khó một chút.",
+      "pos": "adjective",
+      "image_emoji": "🤔"
+    },
+    {
+      "type": "word",
+      "word_zh": "容易",
+      "pinyin": "róngyì",
+      "word_vi": "dễ",
+      "han_viet": "dung dị",
+      "example_zh": "这个字很容易。",
+      "example_pinyin": "Zhège zì hěn róngyì.",
+      "example_vi": "Chữ này dễ lắm.",
+      "pos": "adjective",
+      "image_emoji": "👌"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Heo ngồi học bài",
+      "sentences_zh": [
+        "今天我在房间里学习。",
+        "我打开本子，用铅笔写字。",
+        "有的字很难，有的字很容易。",
+        "我认真练习了，我真棒！"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān wǒ zài fángjiān lǐ xuéxí.",
+        "Wǒ dǎkāi běnzi, yòng qiānbǐ xiě zì.",
+        "Yǒude zì hěn nán, yǒude zì hěn róngyì.",
+        "Wǒ rènzhēn liànxí le, wǒ zhēn bàng!"
+      ],
+      "sentences_vi": [
+        "Hôm nay Heo học bài trong phòng.",
+        "Heo mở quyển vở ra, viết chữ bằng bút chì.",
+        "Có chữ thì khó, có chữ thì dễ.",
+        "Heo đã luyện tập nghiêm túc — Heo giỏi quá!"
+      ],
+      "vocab_highlights": [
+        "难",
+        "容易",
+        "认真",
+        "练习"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我每天都认真练习。",
+        "target_sentence_pinyin": "Wǒ měitiān dōu rènzhēn liànxí.",
+        "shuffled_words": [
+          "练习",
+          "认真",
+          "我",
+          "每天",
+          "都"
+        ],
+        "hint_vi": "Ngày nào Heo cũng luyện tập nghiêm túc."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "这个",
+          "字",
+          "是",
+          "容易"
+        ],
+        "imposter_word": "是",
+        "correct_word": "很",
+        "hint_vi": "Câu này muốn nói “Chữ này dễ lắm”. Có một chữ kì kì, Heo tìm xem nào! Mẹo nhỏ: trước tính từ như 容易, tiếng Trung hay dùng 很 nha ✏️"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo rất nghiêm túc",
+        "target_zh": "我很认真",
+        "target_pinyin": "Wǒ hěn rènzhēn",
+        "hints": {
+          "noun": "认真"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Chữ nào khó, chữ nào dễ nhỉ? Hỏi Masuri xíu nha 💕 Hoặc khoe với Masuri: “我每天练习！” (Wǒ měitiān liànxí!)"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "练习",
+        "认真",
+        "难",
+        "容易"
+      ],
+      "sticker_kind": "pencil"
+    }
+  ]
+}

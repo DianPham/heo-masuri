@@ -1,0 +1,147 @@
+{
+  "page_id": "b1b42107-0a0c-47ae-9ed5-e4893ba52011",
+  "title_zh": "Heo最喜欢的颜色",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Hôm nay học màu sắc xinh xắn! 🎨",
+      "subtitle_vi": "Xanh baby blue, tím lavender... nói bằng tiếng Trung thế nào nhỉ? Xinh ghê luôn!",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "颜色",
+      "pinyin": "yánsè",
+      "word_vi": "màu sắc",
+      "example_zh": "这个颜色很漂亮！",
+      "example_pinyin": "Zhège yánsè hěn piàoliang!",
+      "example_vi": "Màu này đẹp quá!",
+      "pos": "noun",
+      "image_emoji": "🎨"
+    },
+    {
+      "type": "word",
+      "word_zh": "浅蓝色",
+      "pinyin": "qiǎnlánsè",
+      "word_vi": "xanh dương nhạt (baby blue)",
+      "han_viet": "thiển lam sắc",
+      "example_zh": "她的裙子是浅蓝色的。",
+      "example_pinyin": "Tā de qúnzi shì qiǎnlánsè de.",
+      "example_vi": "Chiếc váy của cô ấy màu xanh baby blue.",
+      "pos": "noun",
+      "image_emoji": "🩵"
+    },
+    {
+      "type": "word",
+      "word_zh": "紫色",
+      "pinyin": "zǐsè",
+      "word_vi": "màu tím (浅紫色 = tím nhạt, kiểu lavender)",
+      "example_zh": "浅紫色很好看。",
+      "example_pinyin": "Qiǎnzǐsè hěn hǎokàn.",
+      "example_vi": "Màu tím nhạt (lavender) đẹp lắm.",
+      "pos": "noun",
+      "image_emoji": "💜"
+    },
+    {
+      "type": "word",
+      "word_zh": "最",
+      "pinyin": "zuì",
+      "word_vi": "nhất (thích nhất)",
+      "han_viet": "tối",
+      "example_zh": "你最喜欢什么颜色？",
+      "example_pinyin": "Nǐ zuì xǐhuan shénme yánsè?",
+      "example_vi": "Masuri thích màu gì nhất?",
+      "pos": "adverb",
+      "image_emoji": "⭐"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Những màu Heo thích",
+      "sentences_zh": [
+        "我很喜欢浅颜色。",
+        "我最喜欢的颜色是浅蓝色。",
+        "浅紫色也很漂亮！"
+      ],
+      "sentences_pinyin": [
+        "Wǒ hěn xǐhuan qiǎn yánsè.",
+        "Wǒ zuì xǐhuan de yánsè shì qiǎnlánsè.",
+        "Qiǎnzǐsè yě hěn piàoliang!"
+      ],
+      "sentences_vi": [
+        "Heo rất thích những màu nhạt kiểu pastel.",
+        "Màu Heo thích nhất là xanh baby blue.",
+        "Tím lavender cũng xinh lắm!"
+      ],
+      "vocab_highlights": [
+        "颜色",
+        "最",
+        "浅蓝色",
+        "紫色"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我最喜欢浅蓝色。",
+        "target_sentence_pinyin": "Wǒ zuì xǐhuan qiǎnlánsè.",
+        "shuffled_words": [
+          "浅蓝色",
+          "喜欢",
+          "我",
+          "最"
+        ],
+        "hint_vi": "Baby blue là màu Heo thích nhất."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "💜",
+        "image_url": "https://images.unsplash.com/photo-1528756514091-dee5ecaa3278?w=600&q=80",
+        "starter_words": [
+          "我",
+          "喜欢",
+          "紫色"
+        ],
+        "example_zh": "我也很喜欢紫色。",
+        "example_pinyin": "Wǒ yě hěn xǐhuan zǐsè."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "不",
+          "有",
+          "紫色",
+          "的",
+          "裙子"
+        ],
+        "imposter_word": "不",
+        "correct_word": "没",
+        "hint_vi": "Có một từ kì kì trong câu này... Gợi ý: muốn nói “không có” thì tiếng Trung có cách nói riêng đó 🧐"
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri: Masuri thích màu gì nhất? Thử hỏi bằng tiếng Trung: 你最喜欢什么颜色？ (Nǐ zuì xǐhuan shénme yánsè?) 🎨"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "颜色",
+        "浅蓝色",
+        "紫色",
+        "最"
+      ],
+      "sticker_kind": "flower_rose"
+    }
+  ]
+}

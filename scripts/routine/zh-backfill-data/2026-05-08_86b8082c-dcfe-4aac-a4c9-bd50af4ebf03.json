@@ -1,0 +1,133 @@
+{
+  "page_id": "86b8082c-dcfe-4aac-a4c9-bd50af4ebf03",
+  "title_zh": "我的一天",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Ngày thường của Heo ☀️",
+      "subtitle_vi": "Heo kể về một ngày bình thường bằng tiếng Trung nha!",
+      "pig_pose": "neutral"
+    },
+    {
+      "type": "word",
+      "word_zh": "起床",
+      "pinyin": "qǐchuáng",
+      "word_vi": "thức dậy",
+      "example_zh": "我每天七点起床。",
+      "example_pinyin": "Wǒ měitiān qī diǎn qǐchuáng.",
+      "example_vi": "Mỗi ngày Heo thức dậy lúc bảy giờ.",
+      "pos": "verb",
+      "image_emoji": "⏰"
+    },
+    {
+      "type": "word",
+      "word_zh": "吃",
+      "pinyin": "chī",
+      "word_vi": "ăn",
+      "example_zh": "你吃饭了吗？",
+      "example_pinyin": "Nǐ chīfàn le ma?",
+      "example_vi": "Ăn cơm chưa? (Người Trung Quốc cũng hỏi thăm nhau như vậy, giống người Việt đó!)",
+      "pos": "verb",
+      "image_emoji": "🍚"
+    },
+    {
+      "type": "word",
+      "word_zh": "午饭",
+      "pinyin": "wǔfàn",
+      "word_vi": "bữa trưa",
+      "example_zh": "我十二点吃午饭。",
+      "example_pinyin": "Wǒ shí'èr diǎn chī wǔfàn.",
+      "example_vi": "Heo ăn trưa lúc mười hai giờ.",
+      "pos": "noun",
+      "image_emoji": "🍱"
+    },
+    {
+      "type": "word",
+      "word_zh": "晚上",
+      "pinyin": "wǎnshang",
+      "word_vi": "buổi tối",
+      "example_zh": "晚上我看书。",
+      "example_pinyin": "Wǎnshang wǒ kàn shū.",
+      "example_vi": "Buổi tối Heo đọc sách.",
+      "pos": "noun",
+      "image_emoji": "🌇"
+    },
+    {
+      "type": "word",
+      "word_zh": "睡觉",
+      "pinyin": "shuìjiào",
+      "word_vi": "ngủ / đi ngủ",
+      "example_zh": "我想睡觉了。",
+      "example_pinyin": "Wǒ xiǎng shuìjiào le.",
+      "example_vi": "Heo muốn đi ngủ rồi.",
+      "pos": "verb",
+      "image_emoji": "😴"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Ngày của Heo",
+      "sentences_zh": [
+        "我早上七点起床。",
+        "我喝一杯咖啡。",
+        "中午我吃午饭，很好吃。",
+        "晚上我有点儿累。",
+        "睡觉前，我给Masuri打电话。",
+        "我很开心！"
+      ],
+      "sentences_pinyin": [
+        "Wǒ zǎoshang qī diǎn qǐchuáng.",
+        "Wǒ hē yì bēi kāfēi.",
+        "Zhōngwǔ wǒ chī wǔfàn, hěn hǎochī.",
+        "Wǎnshang wǒ yǒudiǎnr lèi.",
+        "Shuìjiào qián, wǒ gěi Masuri dǎ diànhuà.",
+        "Wǒ hěn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Heo thức dậy lúc bảy giờ sáng.",
+        "Heo uống một ly cà phê.",
+        "Buổi trưa Heo ăn cơm trưa, ngon lắm.",
+        "Buổi tối Heo hơi mệt một chút.",
+        "Trước khi ngủ, Heo gọi điện cho Masuri.",
+        "Heo vui lắm!"
+      ],
+      "vocab_highlights": [
+        "起床",
+        "吃",
+        "午饭",
+        "晚上",
+        "睡觉"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": false,
+      "data": {
+        "target_sentence_zh": "我想吃午饭。",
+        "target_sentence_pinyin": "Wǒ xiǎng chī wǔfàn.",
+        "shuffled_words": [
+          "午饭",
+          "想",
+          "我",
+          "吃"
+        ],
+        "hint_vi": "Heo muốn ăn trưa."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri: buổi tối Masuri thường làm gì? Thử hỏi bằng tiếng Trung: 你晚上一般做什么？ (Nǐ wǎnshang yìbān zuò shénme?) 🌙"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "起床",
+        "吃",
+        "午饭",
+        "晚上",
+        "睡觉"
+      ],
+      "sticker_kind": "star_filled"
+    }
+  ]
+}

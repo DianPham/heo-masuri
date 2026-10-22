@@ -1,0 +1,146 @@
+{
+  "page_id": "c6e56a01-389b-403c-8c7f-34d920bfce63",
+  "title_zh": "开心的早上",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo ơi, dậy thôi! ☀️",
+      "subtitle_vi": "Hôm nay Heo học nói về buổi sáng ngọt ngào bằng tiếng Trung nha 🇨🇳",
+      "pig_pose": "sparkle"
+    },
+    {
+      "type": "word",
+      "word_zh": "早饭",
+      "pinyin": "zǎofàn",
+      "word_vi": "bữa sáng",
+      "example_zh": "我很喜欢吃早饭。",
+      "example_pinyin": "Wǒ hěn xǐhuan chī zǎofàn.",
+      "example_vi": "Heo rất thích ăn bữa sáng.",
+      "pos": "noun",
+      "image_emoji": "🍳"
+    },
+    {
+      "type": "word",
+      "word_zh": "镜子",
+      "pinyin": "jìngzi",
+      "word_vi": "cái gương",
+      "example_zh": "我每天早上照镜子。",
+      "example_pinyin": "Wǒ měitiān zǎoshang zhào jìngzi.",
+      "example_vi": "Sáng nào Heo cũng soi gương.",
+      "pos": "noun",
+      "image_emoji": "🪞"
+    },
+    {
+      "type": "word",
+      "word_zh": "刷牙",
+      "pinyin": "shuāyá",
+      "word_vi": "đánh răng",
+      "example_zh": "我去刷牙啦！",
+      "example_pinyin": "Wǒ qù shuāyá la!",
+      "example_vi": "Heo đi đánh răng đây!",
+      "pos": "verb",
+      "image_emoji": "🪥"
+    },
+    {
+      "type": "word",
+      "word_zh": "漂亮",
+      "pinyin": "piàoliang",
+      "word_vi": "đẹp / xinh",
+      "example_zh": "我今天很漂亮！",
+      "example_pinyin": "Wǒ jīntiān hěn piàoliang!",
+      "example_vi": "Hôm nay Heo xinh quá!",
+      "pos": "adjective",
+      "image_emoji": "💖"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Buổi sáng của Heo",
+      "sentences_zh": [
+        "早上起床，我照镜子。",
+        "我刷牙，然后吃早饭。",
+        "早饭真好吃！",
+        "今天我很漂亮，也很开心！"
+      ],
+      "sentences_pinyin": [
+        "Zǎoshang qǐchuáng, wǒ zhào jìngzi.",
+        "Wǒ shuāyá, ránhòu chī zǎofàn.",
+        "Zǎofàn zhēn hǎochī!",
+        "Jīntiān wǒ hěn piàoliang, yě hěn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Sáng thức dậy, Heo soi gương.",
+        "Heo đánh răng, sau đó ăn sáng.",
+        "Bữa sáng ngon quá!",
+        "Hôm nay Heo xinh lắm, mà cũng vui lắm!"
+      ],
+      "vocab_highlights": [
+        "镜子",
+        "刷牙",
+        "早饭",
+        "漂亮"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我刷牙，然后吃早饭。",
+        "target_sentence_pinyin": "Wǒ shuāyá, ránhòu chī zǎofàn.",
+        "shuffled_words": [
+          "吃",
+          "然后",
+          "早饭",
+          "我",
+          "刷牙"
+        ],
+        "hint_vi": "Heo đánh răng, sau đó ăn sáng."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "今天",
+          "是",
+          "漂亮"
+        ],
+        "imposter_word": "是",
+        "correct_word": "很",
+        "hint_vi": "Có một từ kì kì trong câu này... Gợi ý: muốn khen “Heo xinh” thì trước 漂亮 tiếng Trung dùng từ nào nhỉ? 🪞"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "🍳",
+        "starter_words": [
+          "我",
+          "吃",
+          "早饭"
+        ],
+        "example_zh": "我每天早上吃早饭。",
+        "example_pinyin": "Wǒ měitiān zǎoshang chī zǎofàn."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có từ nào khó không? Hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "早饭",
+        "镜子",
+        "刷牙",
+        "漂亮"
+      ],
+      "sticker_kind": "sun"
+    }
+  ]
+}

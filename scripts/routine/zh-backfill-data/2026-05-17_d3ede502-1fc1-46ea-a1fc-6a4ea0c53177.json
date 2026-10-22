@@ -1,0 +1,128 @@
+{
+  "page_id": "d3ede502-1fc1-46ea-a1fc-6a4ea0c53177",
+  "title_zh": "今天心情怎么样？",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Chào Heo! Hôm nay Heo học về cảm xúc nhé 🐷",
+      "subtitle_vi": "Chỉ vài từ tiếng Trung thôi — dễ lắm! 🇨🇳",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "高兴",
+      "pinyin": "gāoxìng",
+      "word_vi": "vui mừng (khi gặp ai / nghe tin vui)",
+      "han_viet": "cao hứng",
+      "example_zh": "见到Masuri，我很高兴！",
+      "example_pinyin": "Jiàndào Masuri, wǒ hěn gāoxìng!",
+      "example_vi": "Gặp Masuri, Heo vui mừng lắm!",
+      "pos": "adjective",
+      "image_emoji": "😊"
+    },
+    {
+      "type": "word",
+      "word_zh": "难过",
+      "pinyin": "nánguò",
+      "word_vi": "buồn",
+      "example_zh": "我有点儿难过。",
+      "example_pinyin": "Wǒ yǒudiǎnr nánguò.",
+      "example_vi": "Heo hơi buồn một chút.",
+      "pos": "adjective",
+      "image_emoji": "😢"
+    },
+    {
+      "type": "word",
+      "word_zh": "下班",
+      "pinyin": "xiàbān",
+      "word_vi": "tan làm",
+      "example_zh": "下班以后，我很累。",
+      "example_pinyin": "Xiàbān yǐhòu, wǒ hěn lèi.",
+      "example_vi": "Tan làm xong, Heo mệt lắm.",
+      "pos": "verb",
+      "image_emoji": "🌆"
+    },
+    {
+      "type": "word",
+      "word_zh": "周末",
+      "pinyin": "zhōumò",
+      "word_vi": "cuối tuần",
+      "example_zh": "周末快到了，我很兴奋！",
+      "example_pinyin": "Zhōumò kuài dào le, wǒ hěn xīngfèn!",
+      "example_vi": "Sắp tới cuối tuần rồi, Heo hào hứng lắm!",
+      "pos": "noun",
+      "image_emoji": "🤩"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Cảm xúc của Heo",
+      "sentences_zh": [
+        "今天我很高兴。",
+        "下班以后，我有点儿累。",
+        "我很想Masuri，有点儿难过。",
+        "周末到了，我很兴奋！"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān wǒ hěn gāoxìng.",
+        "Xiàbān yǐhòu, wǒ yǒudiǎnr lèi.",
+        "Wǒ hěn xiǎng Masuri, yǒudiǎnr nánguò.",
+        "Zhōumò dào le, wǒ hěn xīngfèn!"
+      ],
+      "sentences_vi": [
+        "Hôm nay Heo rất vui.",
+        "Tan làm xong, Heo hơi mệt một chút.",
+        "Heo nhớ Masuri quá, hơi buồn một chút.",
+        "Cuối tuần tới rồi, Heo hào hứng lắm!"
+      ],
+      "vocab_highlights": [
+        "高兴",
+        "下班",
+        "难过",
+        "周末"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "你下班了吗？",
+        "target_sentence_pinyin": "Nǐ xiàbān le ma?",
+        "shuffled_words": [
+          "了",
+          "下班",
+          "吗",
+          "你"
+        ],
+        "hint_vi": "Heo hỏi Masuri: Masuri tan làm chưa?"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo rất vui! 😊 (gợi ý: dùng từ 高兴 gāoxìng nha)",
+        "target_zh": "我很高兴",
+        "target_pinyin": "Wǒ hěn gāoxìng",
+        "hints": {
+          "noun": "高兴"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hôm nay Heo cảm thấy thế nào? Kể cho Masuri nghe bằng tiếng Trung nha 💕 Ví dụ: “我今天很高兴！” (Wǒ jīntiān hěn gāoxìng!)"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "高兴",
+        "难过",
+        "下班",
+        "周末"
+      ],
+      "sticker_kind": "flower_rose"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "page_id": "6f1a9ca8-8a9d-4792-bc07-d0688fa7c007",
+  "title_zh": "Heo的新宠物",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Thú cưng mới của Heo 🇨🇳",
+      "subtitle_vi": "Hôm nay Heo học tiếng Trung về thú cưng nha — có mèo con, cún con và cá nhỏ dễ thương lắm! 🐾",
+      "pig_pose": "cheering"
+    },
+    {
+      "type": "word",
+      "word_zh": "宠物",
+      "pinyin": "chǒngwù",
+      "word_vi": "thú cưng",
+      "han_viet": "sủng vật",
+      "example_zh": "我有新宠物了！",
+      "example_pinyin": "Wǒ yǒu xīn chǒngwù le!",
+      "example_vi": "Heo có thú cưng mới rồi!",
+      "pos": "noun",
+      "image_emoji": "🐾"
+    },
+    {
+      "type": "word",
+      "word_zh": "养",
+      "pinyin": "yǎng",
+      "word_vi": "nuôi",
+      "han_viet": "dưỡng",
+      "example_zh": "我想养一只猫。",
+      "example_pinyin": "Wǒ xiǎng yǎng yì zhī māo.",
+      "example_vi": "Heo muốn nuôi một con mèo.",
+      "pos": "verb",
+      "image_emoji": "🏠"
+    },
+    {
+      "type": "word",
+      "word_zh": "鱼",
+      "pinyin": "yú",
+      "word_vi": "con cá",
+      "han_viet": "ngư",
+      "example_zh": "小鱼在水里游。",
+      "example_pinyin": "Xiǎo yú zài shuǐ lǐ yóu.",
+      "example_vi": "Chú cá nhỏ bơi trong nước.",
+      "pos": "noun",
+      "image_emoji": "🐟"
+    },
+    {
+      "type": "word",
+      "word_zh": "尾巴",
+      "pinyin": "wěiba",
+      "word_vi": "cái đuôi",
+      "example_zh": "小狗摇尾巴。",
+      "example_pinyin": "Xiǎogǒu yáo wěiba.",
+      "example_vi": "Chú cún vẫy đuôi.",
+      "pos": "noun",
+      "image_emoji": "🐕"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Bé mèo của Heo",
+      "sentences_zh": [
+        "我养了一只小猫。",
+        "它是我的新宠物。",
+        "小猫喜欢和小狗玩。",
+        "每天早上，它摇着尾巴看小鱼。"
+      ],
+      "sentences_pinyin": [
+        "Wǒ yǎng le yì zhī xiǎomāo.",
+        "Tā shì wǒ de xīn chǒngwù.",
+        "Xiǎomāo xǐhuan hé xiǎogǒu wán.",
+        "Měitiān zǎoshang, tā yáo zhe wěiba kàn xiǎo yú."
+      ],
+      "sentences_vi": [
+        "Heo mới nuôi một chú mèo con.",
+        "Bé là thú cưng mới của Heo.",
+        "Mèo con thích chơi với chú cún.",
+        "Mỗi buổi sáng, bé vẫy đuôi ngắm chú cá nhỏ."
+      ],
+      "vocab_highlights": [
+        "养",
+        "宠物",
+        "尾巴",
+        "鱼"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "小猫喜欢和小狗玩。",
+        "target_sentence_pinyin": "Xiǎomāo xǐhuan hé xiǎogǒu wán.",
+        "shuffled_words": [
+          "玩",
+          "小狗",
+          "喜欢",
+          "小猫",
+          "和"
+        ],
+        "hint_vi": "Mèo con thích chơi với chú cún."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "以前",
+          "我",
+          "不",
+          "有",
+          "宠物"
+        ],
+        "imposter_word": "不",
+        "correct_word": "没",
+        "hint_vi": "Câu này muốn nói “Trước đây Heo chưa có thú cưng”. Có một chữ kì kì, Heo tìm xem nào! Mẹo nhỏ: “không có” trong tiếng Trung là 没有 nha 🐾"
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Heo muốn nuôi con gì nhỉ? Kể cho Masuri nghe nhé, thử nói bằng tiếng Trung: “我想养……” (Wǒ xiǎng yǎng…) 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "宠物",
+        "养",
+        "鱼",
+        "尾巴"
+      ],
+      "sticker_kind": "pig_mini"
+    }
+  ]
+}

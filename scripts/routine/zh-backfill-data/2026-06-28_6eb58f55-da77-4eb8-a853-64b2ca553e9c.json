@@ -1,0 +1,149 @@
+{
+  "page_id": "6eb58f55-da77-4eb8-a853-64b2ca553e9c",
+  "title_zh": "Heo的各种心情",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo có đủ loại cảm xúc! 💕",
+      "subtitle_vi": "Hôm nay Heo học nói về cảm xúc bằng tiếng Trung nha 🌈",
+      "pig_pose": "thinking"
+    },
+    {
+      "type": "word",
+      "word_zh": "感谢",
+      "pinyin": "gǎnxiè",
+      "word_vi": "biết ơn / cảm ơn",
+      "han_viet": "cảm tạ",
+      "example_zh": "我很感谢Masuri。",
+      "example_pinyin": "Wǒ hěn gǎnxiè Masuri.",
+      "example_vi": "Heo rất biết ơn Masuri.",
+      "pos": "verb",
+      "image_emoji": "🙏"
+    },
+    {
+      "type": "word",
+      "word_zh": "快乐",
+      "pinyin": "kuàilè",
+      "word_vi": "vui vẻ, hạnh phúc (hay dùng trong lời chúc: 生日快乐 = chúc mừng sinh nhật)",
+      "example_zh": "祝你周末快乐！",
+      "example_pinyin": "Zhù nǐ zhōumò kuàilè!",
+      "example_vi": "Chúc Masuri cuối tuần vui vẻ!",
+      "pos": "adjective",
+      "image_emoji": "😄"
+    },
+    {
+      "type": "word",
+      "word_zh": "无聊",
+      "pinyin": "wúliáo",
+      "word_vi": "chán / buồn chán",
+      "example_zh": "今天下雨，我很无聊。",
+      "example_pinyin": "Jīntiān xiàyǔ, wǒ hěn wúliáo.",
+      "example_vi": "Hôm nay trời mưa, Heo thấy chán quá.",
+      "pos": "adjective",
+      "image_emoji": "😑"
+    },
+    {
+      "type": "word",
+      "word_zh": "幸运",
+      "pinyin": "xìngyùn",
+      "word_vi": "may mắn",
+      "han_viet": "hạnh vận",
+      "example_zh": "我每天都觉得很幸运。",
+      "example_pinyin": "Wǒ měitiān dōu juéde hěn xìngyùn.",
+      "example_vi": "Ngày nào Heo cũng cảm thấy may mắn.",
+      "pos": "adjective",
+      "image_emoji": "🍀"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Cảm xúc mỗi ngày của Heo",
+      "sentences_zh": [
+        "每天早上，我都很快乐。",
+        "我很幸运，也感谢每一天。",
+        "下雨天，我有点儿无聊。",
+        "但是很快，我又笑了！",
+        "Masuri，你呢？"
+      ],
+      "sentences_pinyin": [
+        "Měitiān zǎoshang, wǒ dōu hěn kuàilè.",
+        "Wǒ hěn xìngyùn, yě gǎnxiè měi yì tiān.",
+        "Xiàyǔ tiān, wǒ yǒudiǎnr wúliáo.",
+        "Dànshì hěn kuài, wǒ yòu xiào le!",
+        "Masuri, nǐ ne?"
+      ],
+      "sentences_vi": [
+        "Buổi sáng nào Heo cũng thấy vui vẻ, hạnh phúc.",
+        "Heo thật may mắn, và biết ơn từng ngày.",
+        "Những ngày mưa, Heo hơi chán một chút.",
+        "Nhưng chẳng mấy chốc, Heo lại mỉm cười!",
+        "Còn Masuri thì sao?"
+      ],
+      "vocab_highlights": [
+        "快乐",
+        "幸运",
+        "感谢",
+        "无聊"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我们都很快乐。",
+        "target_sentence_pinyin": "Wǒmen dōu hěn kuàilè.",
+        "shuffled_words": [
+          "快乐",
+          "都",
+          "我们",
+          "很"
+        ],
+        "hint_vi": "Heo và Masuri đều rất hạnh phúc."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "很",
+          "幸运",
+          "你",
+          "吗"
+        ],
+        "imposter_word": "吗",
+        "correct_word": "呢",
+        "hint_vi": "Có một từ kì kì... Heo để ý xem! Gợi ý: muốn hỏi lại “Còn Masuri thì sao?” thì tiếng Trung dùng một từ khác đó 💭"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo muốn nói: “Heo rất chán!” Nói bằng tiếng Trung nha 😑",
+        "target_zh": "我很无聊",
+        "target_pinyin": "Wǒ hěn wúliáo",
+        "hints": {
+          "noun": "无聊"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có từ nào khó không? Hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "感谢",
+        "快乐",
+        "无聊",
+        "幸运"
+      ],
+      "sticker_kind": "flower_rose"
+    }
+  ]
+}

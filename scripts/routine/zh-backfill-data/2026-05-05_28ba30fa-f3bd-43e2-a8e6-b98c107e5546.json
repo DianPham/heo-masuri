@@ -1,0 +1,145 @@
+{
+  "page_id": "28ba30fa-f3bd-43e2-a8e6-b98c107e5546",
+  "title_zh": "你今天感觉怎么样？",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Cảm xúc hôm nay 🇨🇳",
+      "subtitle_vi": "Hôm nay Heo cảm thấy thế nào? Nói bằng tiếng Trung nha 💭",
+      "pig_pose": "thinking"
+    },
+    {
+      "type": "word",
+      "word_zh": "开心",
+      "pinyin": "kāixīn",
+      "word_vi": "vui (vui trong lòng, hay dùng khi nói chuyện)",
+      "han_viet": "khai tâm",
+      "example_zh": "我今天很开心！",
+      "example_pinyin": "Wǒ jīntiān hěn kāixīn!",
+      "example_vi": "Hôm nay Heo vui lắm!",
+      "pos": "adjective",
+      "image_emoji": "😊"
+    },
+    {
+      "type": "word",
+      "word_zh": "累",
+      "pinyin": "lèi",
+      "word_vi": "mệt",
+      "example_zh": "我有点儿累。",
+      "example_pinyin": "Wǒ yǒudiǎnr lèi.",
+      "example_vi": "Heo hơi mệt một chút.",
+      "pos": "adjective",
+      "image_emoji": "😴"
+    },
+    {
+      "type": "word",
+      "word_zh": "放松",
+      "pinyin": "fàngsōng",
+      "word_vi": "thư giãn / thả lỏng",
+      "example_zh": "我想放松一下。",
+      "example_pinyin": "Wǒ xiǎng fàngsōng yíxià.",
+      "example_vi": "Heo muốn thư giãn một chút.",
+      "pos": "verb",
+      "image_emoji": "🍃"
+    },
+    {
+      "type": "word",
+      "word_zh": "兴奋",
+      "pinyin": "xīngfèn",
+      "word_vi": "hào hứng / phấn khích",
+      "han_viet": "hưng phấn",
+      "example_zh": "要去旅行了，我很兴奋！",
+      "example_pinyin": "Yào qù lǚxíng le, wǒ hěn xīngfèn!",
+      "example_vi": "Sắp đi du lịch rồi, Heo hào hứng lắm! (要……了 = sắp … rồi)",
+      "pos": "adjective",
+      "image_emoji": "✨"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một ngày của Heo",
+      "sentences_zh": [
+        "今天我很开心。",
+        "工作很多，我有点儿累。",
+        "现在我很放松。",
+        "和Masuri聊天，我很兴奋！"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān wǒ hěn kāixīn.",
+        "Gōngzuò hěn duō, wǒ yǒudiǎnr lèi.",
+        "Xiànzài wǒ hěn fàngsōng.",
+        "Hé Masuri liáotiān, wǒ hěn xīngfèn!"
+      ],
+      "sentences_vi": [
+        "Hôm nay Heo rất vui.",
+        "Nhiều việc quá, Heo hơi mệt một chút.",
+        "Bây giờ Heo thấy thư giãn rồi.",
+        "Nói chuyện với Masuri, Heo hào hứng lắm!"
+      ],
+      "vocab_highlights": [
+        "开心",
+        "累",
+        "放松",
+        "兴奋"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我想放松一下。",
+        "target_sentence_pinyin": "Wǒ xiǎng fàngsōng yíxià.",
+        "shuffled_words": [
+          "放松",
+          "一下",
+          "我",
+          "想"
+        ],
+        "hint_vi": "Heo muốn thư giãn một chút."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "今天",
+          "是",
+          "累"
+        ],
+        "imposter_word": "是",
+        "correct_word": "很",
+        "hint_vi": "Trước tính từ như 累, tiếng Trung thường dùng 很 — từ nào đang lạc vào câu nhỉ? 🔍"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo rất hào hứng ✨",
+        "target_zh": "我很兴奋",
+        "target_pinyin": "Wǒ hěn xīngfèn",
+        "hints": {
+          "noun": "兴奋"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri bằng tiếng Trung: “你累吗？” — hôm nay Masuri có mệt không? Khi nào Masuri thấy 放松 nhất? 💭"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "开心",
+        "累",
+        "放松",
+        "兴奋"
+      ],
+      "sticker_kind": "sparkle"
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "page_id": "897306fd-5f18-4a49-be79-cc43d8a74c5c",
+  "title_zh": "早上好！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Chào buổi sáng! 🇨🇳",
+      "subtitle_vi": "Hôm nay Heo học chào hỏi bằng tiếng Trung nhé 🌸",
+      "pig_pose": "waving"
+    },
+    {
+      "type": "word",
+      "word_zh": "你好",
+      "pinyin": "nǐ hǎo",
+      "word_vi": "xin chào",
+      "example_zh": "你好！我是Heo。",
+      "example_pinyin": "Nǐ hǎo! Wǒ shì Heo.",
+      "example_vi": "Xin chào! Heo đây nè.",
+      "pos": "phrase",
+      "image_emoji": "👋"
+    },
+    {
+      "type": "word",
+      "word_zh": "早上",
+      "pinyin": "zǎoshang",
+      "word_vi": "buổi sáng",
+      "example_zh": "早上好！你今天怎么样？",
+      "example_pinyin": "Zǎoshang hǎo! Nǐ jīntiān zěnmeyàng?",
+      "example_vi": "Chào buổi sáng! Hôm nay Masuri thế nào?",
+      "pos": "noun",
+      "image_emoji": "🌅"
+    },
+    {
+      "type": "word",
+      "word_zh": "今天",
+      "pinyin": "jīntiān",
+      "word_vi": "hôm nay",
+      "example_zh": "今天天气很好。",
+      "example_pinyin": "Jīntiān tiānqì hěn hǎo.",
+      "example_vi": "Hôm nay trời đẹp quá.",
+      "pos": "noun",
+      "image_emoji": "📅"
+    },
+    {
+      "type": "word",
+      "word_zh": "新",
+      "pinyin": "xīn",
+      "word_vi": "mới",
+      "han_viet": "tân",
+      "example_zh": "新的一天开始了！",
+      "example_pinyin": "Xīn de yì tiān kāishǐ le!",
+      "example_vi": "Một ngày mới bắt đầu rồi!",
+      "pos": "adjective",
+      "image_emoji": "🌱"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Heo chào Masuri",
+      "sentences_zh": [
+        "早上好，Masuri！",
+        "今天是新的一天。",
+        "见到你很高兴！"
+      ],
+      "sentences_pinyin": [
+        "Zǎoshang hǎo, Masuri!",
+        "Jīntiān shì xīn de yì tiān.",
+        "Jiàndào nǐ hěn gāoxìng!"
+      ],
+      "sentences_vi": [
+        "Chào buổi sáng, Masuri!",
+        "Hôm nay là một ngày mới.",
+        "Gặp được Masuri, Heo vui lắm!"
+      ],
+      "vocab_highlights": [
+        "早上",
+        "今天",
+        "新"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "今天是新的一天。",
+        "target_sentence_pinyin": "Jīntiān shì xīn de yì tiān.",
+        "shuffled_words": [
+          "新的",
+          "一天",
+          "今天",
+          "是"
+        ],
+        "hint_vi": "Hôm nay là một ngày mới."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Chào buổi sáng! 🌅",
+        "target_zh": "早上好",
+        "target_pinyin": "Zǎoshang hǎo",
+        "hints": {
+          "noun": "早上"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri: buổi sáng của Masuri thường bắt đầu thế nào? Nhớ chào “早上好” trước nha 🌸"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "你好",
+        "早上",
+        "今天",
+        "新"
+      ],
+      "sticker_kind": "star_filled"
+    }
+  ]
+}

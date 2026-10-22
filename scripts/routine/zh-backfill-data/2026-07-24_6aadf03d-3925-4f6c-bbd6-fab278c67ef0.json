@@ -1,0 +1,131 @@
+{
+  "page_id": "6aadf03d-3925-4f6c-bbd6-fab278c67ef0",
+  "title_zh": "Heo在花园里玩",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo chơi trong vườn 🇨🇳",
+      "subtitle_vi": "Hôm nay Heo ra vườn gặp chú vịt và chú rùa chậm rì — cùng học tiếng Trung nha 🌼",
+      "pig_pose": "sparkle"
+    },
+    {
+      "type": "word",
+      "word_zh": "鸭子",
+      "pinyin": "yāzi",
+      "word_vi": "con vịt",
+      "example_zh": "花园里有一只鸭子。",
+      "example_pinyin": "Huāyuán lǐ yǒu yì zhī yāzi.",
+      "example_vi": "Trong vườn có một con vịt.",
+      "pos": "noun",
+      "image_emoji": "🦆"
+    },
+    {
+      "type": "word",
+      "word_zh": "叫",
+      "pinyin": "jiào",
+      "word_vi": "kêu (tiếng con vật); gọi, tên là",
+      "example_zh": "鸭子嘎嘎叫。",
+      "example_pinyin": "Yāzi gāgā jiào.",
+      "example_vi": "Con vịt kêu cạp cạp.",
+      "pos": "verb",
+      "image_emoji": "💬"
+    },
+    {
+      "type": "word",
+      "word_zh": "乌龟",
+      "pinyin": "wūguī",
+      "word_vi": "con rùa",
+      "han_viet": "ô quy",
+      "example_zh": "树下面有一只乌龟。",
+      "example_pinyin": "Shù xiàmian yǒu yì zhī wūguī.",
+      "example_vi": "Dưới gốc cây có một con rùa.",
+      "pos": "noun",
+      "image_emoji": "🐢"
+    },
+    {
+      "type": "word",
+      "word_zh": "慢",
+      "pinyin": "màn",
+      "word_vi": "chậm",
+      "example_zh": "乌龟真慢！",
+      "example_pinyin": "Wūguī zhēn màn!",
+      "example_vi": "Con rùa chậm quá!",
+      "pos": "adjective",
+      "image_emoji": "🐌"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một ngày nắng trong vườn",
+      "sentences_zh": [
+        "今天是晴天，我在花园里玩。",
+        "树旁边有一只鸭子。",
+        "它看见我就嘎嘎叫！",
+        "有一只乌龟在树下面休息。",
+        "它很慢，但是很开心！"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān shì qíngtiān, wǒ zài huāyuán lǐ wán.",
+        "Shù pángbiān yǒu yì zhī yāzi.",
+        "Tā kànjiàn wǒ jiù gāgā jiào!",
+        "Yǒu yì zhī wūguī zài shù xiàmian xiūxi.",
+        "Tā hěn màn, dànshì hěn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Hôm nay trời nắng, Heo chơi trong vườn.",
+        "Bên cạnh cái cây có một con vịt.",
+        "Thấy Heo là nó kêu cạp cạp!",
+        "Có một chú rùa đang nghỉ dưới gốc cây.",
+        "Chú rùa chậm rì, nhưng vui lắm!"
+      ],
+      "vocab_highlights": [
+        "鸭子",
+        "叫",
+        "乌龟",
+        "慢"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "鸭子嘎嘎叫。",
+        "target_sentence_pinyin": "Yāzi gāgā jiào.",
+        "shuffled_words": [
+          "叫",
+          "鸭子",
+          "嘎嘎"
+        ],
+        "hint_vi": "Con vịt kêu cạp cạp."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Con rùa rất chậm",
+        "target_zh": "乌龟很慢",
+        "target_pinyin": "Wūguī hěn màn",
+        "hints": {
+          "noun": "乌龟",
+          "verb": "慢"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Heo thích chú vịt hay chú rùa hơn? Kể cho Masuri nghe nhé 💕 Thử nói: “我喜欢乌龟！” (Wǒ xǐhuan wūguī!)"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "鸭子",
+        "叫",
+        "乌龟",
+        "慢"
+      ],
+      "sticker_kind": "flower_daisy"
+    }
+  ]
+}

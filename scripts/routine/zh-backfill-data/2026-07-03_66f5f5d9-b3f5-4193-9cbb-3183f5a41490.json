@@ -1,0 +1,130 @@
+{
+  "page_id": "66f5f5d9-b3f5-4193-9cbb-3183f5a41490",
+  "title_zh": "学习时间到！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Giờ học của Heo! 🇨🇳",
+      "subtitle_vi": "Hôm nay Heo học tiếng Trung về bút chì, bàn học và bài tập nha ✏️",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "铅笔",
+      "pinyin": "qiānbǐ",
+      "word_vi": "bút chì",
+      "example_zh": "我有一支新铅笔。",
+      "example_pinyin": "Wǒ yǒu yì zhī xīn qiānbǐ.",
+      "example_vi": "Heo có một cây bút chì mới.",
+      "pos": "noun",
+      "image_emoji": "✏️"
+    },
+    {
+      "type": "word",
+      "word_zh": "书桌",
+      "pinyin": "shūzhuō",
+      "word_vi": "bàn học",
+      "example_zh": "我坐在书桌前。",
+      "example_pinyin": "Wǒ zuò zài shūzhuō qián.",
+      "example_vi": "Heo ngồi vào bàn học.",
+      "pos": "noun",
+      "image_emoji": "🪑"
+    },
+    {
+      "type": "word",
+      "word_zh": "作业",
+      "pinyin": "zuòyè",
+      "word_vi": "bài tập về nhà",
+      "example_zh": "晚上我做作业。",
+      "example_pinyin": "Wǎnshang wǒ zuò zuòyè.",
+      "example_vi": "Buổi tối Heo làm bài tập về nhà.",
+      "pos": "noun",
+      "image_emoji": "📓"
+    },
+    {
+      "type": "word",
+      "word_zh": "专心",
+      "pinyin": "zhuānxīn",
+      "word_vi": "tập trung",
+      "han_viet": "chuyên tâm",
+      "example_zh": "学习的时候，我很专心。",
+      "example_pinyin": "Xuéxí de shíhou, wǒ hěn zhuānxīn.",
+      "example_vi": "Khi học bài, Heo rất tập trung.",
+      "pos": "adjective",
+      "image_emoji": "🎯"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một buổi học của Heo",
+      "sentences_zh": [
+        "每天早上，我坐在书桌前。",
+        "我拿起铅笔，打开本子。",
+        "我很专心，作业做完了！"
+      ],
+      "sentences_pinyin": [
+        "Měitiān zǎoshang, wǒ zuò zài shūzhuō qián.",
+        "Wǒ náqǐ qiānbǐ, dǎkāi běnzi.",
+        "Wǒ hěn zhuānxīn, zuòyè zuòwán le!"
+      ],
+      "sentences_vi": [
+        "Buổi sáng nào Heo cũng ngồi vào bàn học.",
+        "Heo cầm bút chì lên và mở quyển vở ra.",
+        "Heo rất tập trung, làm xong bài tập rồi!"
+      ],
+      "vocab_highlights": [
+        "书桌",
+        "铅笔",
+        "专心",
+        "作业"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我拿起一支铅笔。",
+        "target_sentence_pinyin": "Wǒ náqǐ yì zhī qiānbǐ.",
+        "shuffled_words": [
+          "铅笔",
+          "拿起",
+          "我",
+          "一支"
+        ],
+        "hint_vi": "Heo cầm một cây bút chì lên."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "有",
+          "一",
+          "个",
+          "新",
+          "铅笔"
+        ],
+        "imposter_word": "个",
+        "correct_word": "支",
+        "hint_vi": "Nhớ thẻ 铅笔 nha — “một cây bút chì” dùng lượng từ nào nhỉ? ✏️"
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có chữ nào khó không? Hỏi Masuri nha 💕 Hoặc khoe với Masuri: “我很专心！” (Wǒ hěn zhuānxīn!) ✏️"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "铅笔",
+        "书桌",
+        "作业",
+        "专心"
+      ],
+      "sticker_kind": "pencil"
+    }
+  ]
+}

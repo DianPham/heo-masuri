@@ -1,0 +1,157 @@
+{
+  "page_id": "0646875b-3f88-4232-8527-ff0b0f3a2a0c",
+  "title_zh": "零食时间！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Giờ ăn vặt của Heo! 🇨🇳",
+      "subtitle_vi": "Hôm nay học vài từ tiếng Trung về đồ ăn ngon nha 🍡",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "零食",
+      "pinyin": "língshí",
+      "word_vi": "đồ ăn vặt",
+      "example_zh": "下午我喜欢吃零食。",
+      "example_pinyin": "Xiàwǔ wǒ xǐhuan chī língshí.",
+      "example_vi": "Heo thích ăn vặt buổi chiều lắm.",
+      "pos": "noun",
+      "image_emoji": "🍡"
+    },
+    {
+      "type": "word",
+      "word_zh": "甜",
+      "pinyin": "tián",
+      "word_vi": "ngọt",
+      "example_zh": "这个蛋糕很甜。",
+      "example_pinyin": "Zhège dàngāo hěn tián.",
+      "example_vi": "Cái bánh này ngọt lắm.",
+      "pos": "adjective",
+      "image_emoji": "🍰"
+    },
+    {
+      "type": "word",
+      "word_zh": "水果",
+      "pinyin": "shuǐguǒ",
+      "word_vi": "trái cây",
+      "example_zh": "我每天都吃水果。",
+      "example_pinyin": "Wǒ měitiān dōu chī shuǐguǒ.",
+      "example_vi": "Ngày nào Heo cũng ăn trái cây.",
+      "pos": "noun",
+      "image_emoji": "🍎"
+    },
+    {
+      "type": "word",
+      "word_zh": "新鲜",
+      "pinyin": "xīnxiān",
+      "word_vi": "tươi",
+      "example_zh": "我喜欢新鲜的水果。",
+      "example_pinyin": "Wǒ xǐhuan xīnxiān de shuǐguǒ.",
+      "example_vi": "Heo thích trái cây tươi.",
+      "pos": "adjective",
+      "image_emoji": "🍓"
+    },
+    {
+      "type": "word",
+      "word_zh": "碗",
+      "pinyin": "wǎn",
+      "word_vi": "cái chén / cái tô",
+      "example_zh": "我喝了一大碗汤。",
+      "example_pinyin": "Wǒ hē le yí dà wǎn tāng.",
+      "example_vi": "Heo ăn hết một tô canh thật to.",
+      "pos": "noun",
+      "image_emoji": "🍲"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Giờ ăn vặt buổi chiều",
+      "sentences_zh": [
+        "下午我饿了，就去商店买零食。",
+        "零食很甜，也很好吃！",
+        "我还买了新鲜的水果。",
+        "碗里都是水果，我很开心！"
+      ],
+      "sentences_pinyin": [
+        "Xiàwǔ wǒ è le, jiù qù shāngdiàn mǎi língshí.",
+        "Língshí hěn tián, yě hěn hǎochī!",
+        "Wǒ hái mǎi le xīnxiān de shuǐguǒ.",
+        "Wǎn lǐ dōu shì shuǐguǒ, wǒ hěn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Buổi chiều Heo thấy đói, nên ra cửa hàng mua đồ ăn vặt.",
+        "Món ăn vặt vừa ngọt vừa ngon!",
+        "Heo còn mua cả trái cây tươi nữa.",
+        "Chén đầy ắp trái cây, Heo vui lắm!"
+      ],
+      "vocab_highlights": [
+        "零食",
+        "甜",
+        "新鲜",
+        "水果",
+        "碗"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "这个零食很甜。",
+        "target_sentence_pinyin": "Zhège língshí hěn tián.",
+        "shuffled_words": [
+          "甜",
+          "零食",
+          "这个",
+          "很"
+        ],
+        "hint_vi": "Món ăn vặt này rất ngọt."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "🍓",
+        "image_url": "https://images.unsplash.com/photo-1482508809494-03688cd42e7e?w=600&q=80",
+        "starter_words": [
+          "碗",
+          "新鲜",
+          "水果"
+        ],
+        "example_zh": "一碗新鲜的水果。",
+        "example_pinyin": "Yì wǎn xīnxiān de shuǐguǒ."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Trái cây rất tươi!",
+        "target_zh": "水果很新鲜",
+        "target_pinyin": "Shuǐguǒ hěn xīnxiān",
+        "hints": {
+          "verb": "新鲜",
+          "noun": "水果"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Heo thích món ăn vặt nào nhất? Kể Masuri nghe nha — hoặc thử nói: “我喜欢水果！” (Wǒ xǐhuan shuǐguǒ!) 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "零食",
+        "甜",
+        "水果",
+        "新鲜",
+        "碗"
+      ],
+      "sticker_kind": "flower_daisy"
+    }
+  ]
+}

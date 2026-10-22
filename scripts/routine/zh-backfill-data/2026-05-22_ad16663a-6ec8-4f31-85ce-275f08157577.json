@@ -1,0 +1,161 @@
+{
+  "page_id": "ad16663a-6ec8-4f31-85ce-275f08157577",
+  "title_zh": "去买东西吧！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Hôm nay Heo đi mua sắm! 🇨🇳",
+      "subtitle_vi": "Cùng học từ về mua sắm bằng tiếng Trung nào 🛍️",
+      "pig_pose": "cheering"
+    },
+    {
+      "type": "word",
+      "word_zh": "去",
+      "pinyin": "qù",
+      "word_vi": "đi",
+      "example_zh": "我们去买东西吧！",
+      "example_pinyin": "Wǒmen qù mǎi dōngxi ba!",
+      "example_vi": "Heo với Masuri cùng đi mua sắm nha!",
+      "pos": "verb",
+      "image_emoji": "🚶‍♀️"
+    },
+    {
+      "type": "word",
+      "word_zh": "买",
+      "pinyin": "mǎi",
+      "word_vi": "mua",
+      "example_zh": "我想买一个新包。",
+      "example_pinyin": "Wǒ xiǎng mǎi yí ge xīn bāo.",
+      "example_vi": "Heo muốn mua một cái túi mới.",
+      "pos": "verb",
+      "image_emoji": "🛍️"
+    },
+    {
+      "type": "word",
+      "word_zh": "商店",
+      "pinyin": "shāngdiàn",
+      "word_vi": "cửa hàng",
+      "example_zh": "今天我去商店。",
+      "example_pinyin": "Jīntiān wǒ qù shāngdiàn.",
+      "example_vi": "Hôm nay Heo đi cửa hàng.",
+      "pos": "noun",
+      "image_emoji": "🏪"
+    },
+    {
+      "type": "word",
+      "word_zh": "多少钱",
+      "pinyin": "duōshao qián",
+      "word_vi": "bao nhiêu tiền (hỏi giá)",
+      "example_zh": "这个多少钱？",
+      "example_pinyin": "Zhège duōshao qián?",
+      "example_vi": "Cái này bao nhiêu tiền vậy?",
+      "pos": "phrase",
+      "image_emoji": "🏷️"
+    },
+    {
+      "type": "word",
+      "word_zh": "便宜",
+      "pinyin": "piányi",
+      "word_vi": "rẻ",
+      "example_zh": "这个包真便宜！",
+      "example_pinyin": "Zhège bāo zhēn piányi!",
+      "example_vi": "Cái túi này rẻ quá!",
+      "pos": "adjective",
+      "image_emoji": "😄"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Heo đi mua sắm",
+      "sentences_zh": [
+        "今天Heo去商店。",
+        "她想买一个新包。",
+        "“这个包多少钱？”",
+        "哇，真便宜！"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān Heo qù shāngdiàn.",
+        "Tā xiǎng mǎi yí ge xīn bāo.",
+        "“Zhège bāo duōshao qián?”",
+        "Wā, zhēn piányi!"
+      ],
+      "sentences_vi": [
+        "Hôm nay Heo đi cửa hàng.",
+        "Heo muốn mua một cái túi mới.",
+        "“Cái túi này bao nhiêu tiền vậy?”",
+        "Oa, rẻ quá!"
+      ],
+      "vocab_highlights": [
+        "去",
+        "商店",
+        "买",
+        "多少钱",
+        "便宜"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我想买一个新包。",
+        "target_sentence_pinyin": "Wǒ xiǎng mǎi yí ge xīn bāo.",
+        "shuffled_words": [
+          "买",
+          "新",
+          "我",
+          "包",
+          "一个",
+          "想"
+        ],
+        "hint_vi": "Heo muốn mua một cái túi mới."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "这个",
+          "包",
+          "是",
+          "便宜"
+        ],
+        "imposter_word": "是",
+        "correct_word": "很",
+        "hint_vi": "Có một từ kì kì... Gợi ý: 便宜 là tính từ 🤔"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "🛍️",
+        "image_url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80",
+        "starter_words": [
+          "我",
+          "想",
+          "买"
+        ],
+        "example_zh": "我想买一个新包。",
+        "example_pinyin": "Wǒ xiǎng mǎi yí ge xīn bāo."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Rủ Masuri đi mua sắm bằng tiếng Trung nha: “我们去买东西吧！” (Wǒmen qù mǎi dōngxi ba!) 🛍️"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "去",
+        "买",
+        "商店",
+        "多少钱",
+        "便宜"
+      ],
+      "sticker_kind": "star_filled"
+    }
+  ]
+}

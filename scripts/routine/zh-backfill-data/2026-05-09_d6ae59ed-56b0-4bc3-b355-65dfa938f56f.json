@@ -1,0 +1,114 @@
+{
+  "page_id": "d6ae59ed-56b0-4bc3-b355-65dfa938f56f",
+  "title_zh": "今天天气怎么样？",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Thời tiết hôm nay 🌤",
+      "subtitle_vi": "Học nói về thời tiết bằng tiếng Trung nha Heo!",
+      "pig_pose": "thinking"
+    },
+    {
+      "type": "word",
+      "word_zh": "天气",
+      "pinyin": "tiānqì",
+      "word_vi": "thời tiết",
+      "han_viet": "thiên khí",
+      "example_zh": "今天天气怎么样？",
+      "example_pinyin": "Jīntiān tiānqì zěnmeyàng?",
+      "example_vi": "Hôm nay thời tiết thế nào?",
+      "pos": "noun",
+      "image_emoji": "🌤️"
+    },
+    {
+      "type": "word",
+      "word_zh": "晴天",
+      "pinyin": "qíngtiān",
+      "word_vi": "trời nắng",
+      "example_zh": "今天是晴天，很暖和。",
+      "example_pinyin": "Jīntiān shì qíngtiān, hěn nuǎnhuo.",
+      "example_vi": "Hôm nay trời nắng và ấm áp.",
+      "pos": "noun",
+      "image_emoji": "☀️"
+    },
+    {
+      "type": "word",
+      "word_zh": "下雨",
+      "pinyin": "xiàyǔ",
+      "word_vi": "trời mưa / mưa",
+      "example_zh": "外面在下雨。",
+      "example_pinyin": "Wàimian zài xiàyǔ.",
+      "example_vi": "Bên ngoài trời đang mưa.",
+      "pos": "verb",
+      "image_emoji": "🌧️"
+    },
+    {
+      "type": "word",
+      "word_zh": "凉快",
+      "pinyin": "liángkuai",
+      "word_vi": "mát mẻ",
+      "example_zh": "晚上的风很凉快！",
+      "example_pinyin": "Wǎnshang de fēng hěn liángkuai!",
+      "example_vi": "Gió buổi tối mát mẻ quá!",
+      "pos": "adjective",
+      "image_emoji": "💨"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Tin nhắn cho Masuri",
+      "sentences_zh": [
+        "今天是晴天，天气很好。",
+        "我坐在窗边喝咖啡。",
+        "风很凉快，我很放松。",
+        "我希望Masuri也在这儿。"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān shì qíngtiān, tiānqì hěn hǎo.",
+        "Wǒ zuò zài chuāngbiān hē kāfēi.",
+        "Fēng hěn liángkuai, wǒ hěn fàngsōng.",
+        "Wǒ xīwàng Masuri yě zài zhèr."
+      ],
+      "sentences_vi": [
+        "Hôm nay trời nắng, thời tiết đẹp lắm.",
+        "Heo ngồi bên cửa sổ uống cà phê.",
+        "Gió mát mẻ, Heo thấy thư giãn quá.",
+        "Ước gì Masuri cũng ở đây cùng Heo."
+      ],
+      "vocab_highlights": [
+        "天气",
+        "晴天",
+        "凉快"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": false,
+      "data": {
+        "image_emoji": "🌧☕",
+        "starter_words": [
+          "下雨",
+          "我",
+          "喝",
+          "咖啡"
+        ],
+        "example_zh": "下雨了，我在喝咖啡。",
+        "example_pinyin": "Xiàyǔ le, wǒ zài hē kāfēi."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri: Masuri thích thời tiết nào nhất? Thử hỏi bằng tiếng Trung: 你最喜欢什么天气？ (Nǐ zuì xǐhuan shénme tiānqì?) 🌦"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "天气",
+        "晴天",
+        "下雨",
+        "凉快"
+      ],
+      "sticker_kind": "sparkle"
+    }
+  ]
+}
