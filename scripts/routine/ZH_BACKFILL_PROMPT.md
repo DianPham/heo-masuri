@@ -5,6 +5,9 @@ Chinese track existed, so Heo can learn any past lesson in Chinese from her
 scrapbook. Works through the deployed app's API — no database access needed.
 
 **Needs:** `NEXT_PUBLIC_APP_URL` and `CRON_SECRET` (same as the daily routine).
+If `CRON_SECRET` is not set because the environment stores it as a *network
+secret* for the app's host, the proxy adds the `Authorization` header itself —
+drop the `-H "Authorization: Bearer $CRON_SECRET"` lines below.
 **Schedule:** hourly (or run by hand) until `remaining` is 0, then disable.
 Each run converts up to 3 lessons, oldest first, so the Chinese course builds up
 from the simplest lessons.

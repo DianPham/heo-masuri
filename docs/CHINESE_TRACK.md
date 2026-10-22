@@ -20,7 +20,10 @@ the app falls back to the browser voice, so nothing breaks before it's set.
      key becomes `(user_id, lang, word_en)`. Backfills `completed_en_at`.
    - `supabase/migrations/022_tts_cache_bucket.sql` — private `tts` bucket.
 2. **Env (Vercel):** `GOOGLE_TTS_API_KEY` (API key restricted to Cloud
-   Text-to-Speech). Optional `GOOGLE_TTS_VOICE_EN` / `GOOGLE_TTS_VOICE_ZH`.
+   Text-to-Speech, billing linked on the Google project) — type **Secret**, in
+   both Vercel projects: `heo-masuri-staging` (its Production = the staging
+   site) and `heo-masuri`. Redeploy after adding. Optional
+   `GOOGLE_TTS_VOICE_EN` / `GOOGLE_TTS_VOICE_ZH`.
 3. **Deploy** (merge to `staging`, verify, then `main`).
 4. **Daily routine:** update the routine's prompt to the new
    `scripts/routine/ROUTINE_PROMPT.md` — new lessons then arrive with both
@@ -30,6 +33,12 @@ the app falls back to the browser voice, so nothing breaks before it's set.
    hourly routine with the same `NEXT_PUBLIC_APP_URL` + `CRON_SECRET`, or a
    Claude Code session that has those two values and network access to the app.
    Progress: `GET /api/notebook/routine/zh-backfill` → `remaining`.
+   Staging and production are separate databases — backfill each one.
+
+If you ever rotate `CRON_SECRET`, update every caller in the same sitting:
+Vercel (+ redeploy), the cron-job.org pinger header
+(docs/PHASE2_CRON_PINGER.md), the lesson routine's cloud environment, and
+any Claude environment used for the backfill.
 
 ## Verify
 

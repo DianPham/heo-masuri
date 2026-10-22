@@ -34,10 +34,11 @@ async function synthesize(text: string, voice: string): Promise<Buffer> {
   // Voice names start with their language code: "cmn-CN-Chirp3-HD-Aoede" → "cmn-CN"
   const languageCode = voice.split("-").slice(0, 2).join("-");
   const res = await fetch(
-    `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`,
+    "https://texttospeech.googleapis.com/v1/text:synthesize",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // Key in a header rather than ?key= so it never lands in URL logs
+      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": process.env.GOOGLE_TTS_API_KEY ?? "" },
       body: JSON.stringify({
         input: { text },
         voice: { languageCode, name: voice },
