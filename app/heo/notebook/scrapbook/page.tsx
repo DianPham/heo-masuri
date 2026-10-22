@@ -2,6 +2,8 @@
  * /heo/notebook/scrapbook — Scrapbook history
  * Blueprint §8: polaroid grid of completed pages, washi tape, stickers.
  * Month-sectioned after 30 entries.
+ * Each polaroid shows which languages the lesson was learned in; lessons with
+ * an unlearned Chinese track are where Heo "learns the other one later".
  */
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -63,6 +65,9 @@ interface CompletedPage {
   topic: string;
   completed_at: string;
   scheduled_for: string;
+  enDone: boolean;
+  /** null = no Chinese track yet */
+  zhDone: boolean | null;
 }
 
 async function fetchCompletedPages(): Promise<CompletedPage[]> {
@@ -77,7 +82,9 @@ async function fetchCompletedPages(): Promise<CompletedPage[]> {
 
     const { data } = await supabase
       .from("daily_pages")
-      .select("id, title_vi, topic, completed_at, scheduled_for")
+      // title_zh is written together with cards_zh, so it marks "has a Chinese
+      // track" without pulling every lesson's card JSON.
+      .select("id, title_vi, topic, completed_at, scheduled_for, title_zh, completed_en_at, completed_zh_at")
       .eq("for_user", heo.id)
       .not("completed_at", "is", null)
       .order("completed_at", { ascending: false });
@@ -88,6 +95,8 @@ async function fetchCompletedPages(): Promise<CompletedPage[]> {
       topic: (p.topic as string) ?? "daily",
       completed_at: p.completed_at as string,
       scheduled_for: p.scheduled_for as string,
+      enDone: Boolean(p.completed_en_at),
+      zhDone: p.title_zh ? Boolean(p.completed_zh_at) : null,
     }));
   } catch {
     return [];
@@ -132,6 +141,7 @@ export default async function ScrapbookPage() {
   // Group into months if many pages; otherwise flat
   const useMonthGroups = pages.length >= 30;
   const groups = useMonthGroups ? groupByMonth(pages) : [{ label: "", pages }];
+  const zhToLearn = pages.filter((p) => p.zhDone === false).length;
 
   return (
     <div style={PAPER_BG} className="min-h-dvh pb-10">
@@ -149,6 +159,14 @@ export default async function ScrapbookPage() {
         <p className="text-center text-sm text-ink-soft mt-1">
           {pages.length} trang đã hoàn thành 🌸
         </p>
+        {zhToLearn > 0 && (
+          <p
+            className="mx-auto mt-3 w-fit px-4 py-1.5 rounded-full text-xs font-semibold"
+            style={{ backgroundColor: "#FFF1D6", color: "#B45309", border: "1px solid rgba(232,150,42,0.35)" }}
+          >
+            🇨🇳 {zhToLearn} bài có thể học thêm bằng tiếng Trung
+          </p>
+        )}
       </div>
 
       {/* ── Polaroid grid ─────────────────────────────────── */}
@@ -211,6 +229,7 @@ export default async function ScrapbookPage() {
                         >
                           {formatHandwritten(page.completed_at)}
                         </p>
+                        <LangBadges enDone={page.enDone} zhDone={page.zhDone} />
                       </div>
 
                       {/* Corner stickers */}
@@ -235,6 +254,27 @@ export default async function ScrapbookPage() {
         <Sticker type="moon" size={22} />
         <Sticker type="flower_daisy" size={22} />
       </div>
+    </div>
+  );
+}
+
+// ── Language badges ───────────────────────────────────────────
+function LangBadges({ enDone, zhDone }: { enDone: boolean; zhDone: boolean | null }) {
+  const pill = "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none";
+  return (
+    <div className="flex flex-wrap gap-1 mt-1.5">
+      {enDone && (
+        <span className={pill} style={{ backgroundColor: "#E8F5E9", color: "#2E7D32" }}>🇬🇧 ✓</span>
+      )}
+      {zhDone === true && (
+        <span className={pill} style={{ backgroundColor: "#E8F5E9", color: "#2E7D32" }}>🇨🇳 ✓</span>
+      )}
+      {zhDone === false && (
+        <span className={pill} style={{ backgroundColor: "#FFF1D6", color: "#B45309" }}>🇨🇳 Học</span>
+      )}
+      {!enDone && zhDone !== null && (
+        <span className={pill} style={{ backgroundColor: "#FFE4EA", color: "#C2185B" }}>🇬🇧 Học</span>
+      )}
     </div>
   );
 }

@@ -7,14 +7,16 @@
  */
 import { motion } from "motion/react";
 import { useState, useMemo } from "react";
-import type { TwoTruthsData } from "@/types/notebook";
+import { LANG_META, appendChip, type LessonTwoTruths } from "@/lib/notebook/lesson";
+import type { LessonLang } from "@/types/notebook";
 
 interface Props {
-  data: TwoTruthsData;
+  data: LessonTwoTruths;
+  lang: LessonLang;
   onContinue: () => void;
 }
 
-export function TwoTruths({ data, onContinue }: Props) {
+export function TwoTruths({ data, lang, onContinue }: Props) {
   const { prompt_vi, starter_words } = data;
 
   const [truth1, setTruth1] = useState("");
@@ -42,10 +44,7 @@ export function TwoTruths({ data, onContinue }: Props) {
       activeField === "t2" ? setTruth2 :
       activeField === "lie" ? setLie : null;
     if (!setter) return;
-    setter((prev) => {
-      const trimmed = prev.trimEnd();
-      return trimmed ? `${trimmed} ${w}` : w;
-    });
+    setter((prev) => appendChip(prev, w, lang));
   }
 
   const canSubmit = truth1.trim() && truth2.trim() && lie.trim();
@@ -156,7 +155,7 @@ export function TwoTruths({ data, onContinue }: Props) {
             onChange={(e) => set(e.target.value)}
             onFocus={() => setActiveField(id)}
             onBlur={() => setActiveField(null)}
-            placeholder="Viết tiếng Anh..."
+            placeholder={`Viết ${LANG_META[lang].name_vi}...`}
             className="w-full rounded-2xl border border-rose-200 px-4 py-3 text-sm text-ink placeholder:text-rose-300 outline-none focus:border-rose-400"
             style={{ fontFamily: "var(--font-body)" }}
           />

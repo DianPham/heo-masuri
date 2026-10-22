@@ -1,26 +1,36 @@
 /**
- * /heo/notebook/scrapbook/[id] — Re-read a completed page.
+ * /heo/notebook/scrapbook/[id] — Open a past lesson in either language.
  * Blueprint §8: "same Stories renderer, but completion state already filled."
- * No streak bump. No vocab re-save.
+ *
+ * ?lang=en|zh picks the track:
+ *   - a track Heo already completed → re-read (no streak bump, no vocab re-save)
+ *   - a track she hasn't done yet (e.g. the Chinese version of an old English
+ *     lesson) → studied for real, so completion + vocab are recorded
+ * Without ?lang, a lesson with a Chinese track shows the language picker.
  */
 import { createServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { StoriesRenderer } from "@/components/notebook/stories/StoriesRenderer";
-import type { DailyPage } from "@/types/notebook";
+import { LanguagePicker } from "@/components/notebook/LanguagePicker";
+import { LANG_META, hasZhTrack, langCompletedAt, pageFromRow, parseLang } from "@/lib/notebook/lesson";
 
-export const revalidate = 3600; // completed pages don't change
+// Per-language completion changes as Heo studies — always read fresh.
+export const dynamic = "force-dynamic";
 
 export default async function ScrapbookDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const { id } = await params;
+  const requested = parseLang((await searchParams).lang);
 
   const supabase = createServerClient();
 
-  // Verify it belongs to Heo and is completed
+  // Verify it belongs to Heo and has been published to her
   const { data: heo } = await supabase
     .from("users")
     .select("id")
@@ -30,31 +40,39 @@ export default async function ScrapbookDetailPage({
 
   const { data: row, error } = await supabase
     .from("daily_pages")
-    .select("id, title_vi, title_en, topic, difficulty, cards, scheduled_for, completed_at")
+    .select("*")
     .eq("id", id)
     .eq("for_user", heo.id)
-    .not("completed_at", "is", null)
+    .eq("status", "published")
     .single();
 
   if (error || !row) return notFound();
 
-  const page: DailyPage = {
-    id: row.id as string,
-    title_vi: row.title_vi as string,
-    title_en: row.title_en as string,
-    topic: row.topic as string,
-    difficulty: row.difficulty as 1 | 2 | 3 | 4 | 5,
-    cards: row.cards as DailyPage["cards"],
-    scheduled_for: row.scheduled_for as string,
-    completed_at: row.completed_at as string,
-  };
+  const page = pageFromRow(row);
 
-  const completedDate = new Date(row.completed_at as string).toLocaleDateString("vi-VN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Ho_Chi_Minh",
-  });
+  if (!requested && hasZhTrack(page)) {
+    return (
+      <LanguagePicker
+        page={page}
+        hrefFor={(l) => `/heo/notebook/scrapbook/${page.id}?lang=${l}`}
+        backHref="/heo/notebook/scrapbook"
+        backLabel="← Sổ lưu niệm"
+      />
+    );
+  }
+
+  const lang = requested === "zh" && hasZhTrack(page) ? "zh" : "en";
+  const completedAt = langCompletedAt(page, lang);
+  const isReview = completedAt !== null;
+
+  const completedDate = completedAt
+    ? new Date(completedAt).toLocaleDateString("vi-VN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "Asia/Ho_Chi_Minh",
+      })
+    : null;
 
   return (
     <div className="relative min-h-dvh">
@@ -69,18 +87,19 @@ export default async function ScrapbookDetailPage({
         </Link>
       </div>
 
-      {/* Completed banner */}
+      {/* Status banner: done in this language, or learning it now */}
       <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[55] pointer-events-none">
         <div
           className="px-4 py-1.5 rounded-full text-xs font-semibold text-rose-600 whitespace-nowrap"
           style={{ backgroundColor: "rgba(255,201,213,0.85)", backdropFilter: "blur(8px)" }}
         >
-          ✅ Hoàn thành {completedDate}
+          {completedDate
+            ? `✅ ${LANG_META[lang].flag} Hoàn thành ${completedDate}`
+            : `${LANG_META[lang].flag} Đang học bằng ${LANG_META[lang].name_vi}`}
         </div>
       </div>
 
-      {/* Stories renderer in review mode (no streak bump, no vocab re-save) */}
-      <StoriesRenderer page={page} isReview />
+      <StoriesRenderer key={lang} page={page} lang={lang} isReview={isReview} />
     </div>
   );
 }
