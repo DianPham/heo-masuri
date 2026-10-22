@@ -4,8 +4,8 @@
  * See lib/tts.ts. Soft-gated to Heo/Masuri — every uncached call costs money.
  *
  * Supports Range requests: iOS Safari won't play <audio> from a server that
- * ignores them. 503 when no TTS key is configured — the client then falls
- * back to the browser's built-in voice.
+ * ignores them. 503 when the TTS provider isn't configured (Google without a
+ * key) — the client then falls back to the browser's built-in voice.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";

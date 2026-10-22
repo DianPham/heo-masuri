@@ -7,13 +7,19 @@ the lesson for the day (streak, carry-over and publish-due unchanged), and the
 other language stays open — from the home tile, the completion card, or the
 scrapbook (polaroids show 🇬🇧 ✓ / 🇨🇳 Học).
 
-Pronunciation now comes from Google Cloud Text-to-Speech (Chirp 3 HD voices),
-stored in Supabase Storage. Audio is built **when a lesson arrives** (routine
+Pronunciation now comes from Microsoft Edge's free neural voices (Ava for
+English, Xiaoxiao for Mandarin; no key) — or Google Cloud TTS with
+`TTS_PROVIDER=google` — stored in Supabase Storage. Audio is built **when a lesson arrives** (routine
 draft, Chinese backfill, Masuri's edits, and again at publish as a safety net),
 so Heo's taps only play stored files. Old lessons are voiced by the Chinese
 backfill (it voices both tracks) or by `POST /api/notebook/routine/audio`
 (CRON_SECRET; `GET` shows ready/missing counts). Without a key the app falls
-back to the browser voice, so nothing breaks before it's set.
+back to the browser voice (only possible with Google and no key).
+
+The Edge voices are an unofficial service. If new audio starts failing
+(`[tts] pre-generate failed … Edge TTS failed` in Vercel logs), update the
+`msedge-tts` package (it tracks Microsoft's token changes) and redeploy;
+already-stored audio keeps playing meanwhile.
 
 ## Rollout order (staging first, then prod)
 
@@ -27,11 +33,11 @@ back to the browser voice, so nothing breaks before it's set.
    - **After** the new code is live in that environment, run
      `supabase/migrations/023_drop_legacy_vocab_unique.sql` (drops the old
      `(user_id, word_en)` constraint the old code relied on).
-2. **Env (Vercel):** `GOOGLE_TTS_API_KEY` (API key restricted to Cloud
-   Text-to-Speech, billing linked on the Google project) — type **Secret**, in
-   both Vercel projects: `heo-masuri-staging` (its Production = the staging
-   site) and `heo-masuri`. Redeploy after adding. Optional
-   `GOOGLE_TTS_VOICE_EN` / `GOOGLE_TTS_VOICE_ZH`.
+2. **Env (Vercel):** nothing needed for the default Edge voices. Optional:
+   `TTS_VOICE_EN` / `TTS_VOICE_ZH`; or `TTS_PROVIDER=google` +
+   `GOOGLE_TTS_API_KEY` (type **Secret**) in both Vercel projects
+   (`heo-masuri-staging`, whose Production is the staging site, and
+   `heo-masuri`), then redeploy.
 3. **Deploy** (merge to `staging`, verify, then `main`).
 4. **Daily routine:** update the routine's prompt to the new
    `scripts/routine/ROUTINE_PROMPT.md` — new lessons then arrive with both

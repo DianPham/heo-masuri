@@ -1,12 +1,13 @@
 /**
- * Server-side text-to-speech via Google Cloud Text-to-Speech (Chirp 3 HD
- * voices — natural English and Mandarin), cached in Supabase Storage so each
- * phrase is synthesized once and replayed for free.
+ * Server-side text-to-speech, stored in Supabase Storage so each phrase is
+ * synthesized once and replayed for free.
  *
- * Env:
- *   GOOGLE_TTS_API_KEY   — API key restricted to the Cloud Text-to-Speech API
- *   GOOGLE_TTS_VOICE_EN  — optional, default en-US-Chirp3-HD-Aoede
- *   GOOGLE_TTS_VOICE_ZH  — optional, default cmn-CN-Chirp3-HD-Aoede
+ * Providers (TTS_PROVIDER):
+ *   edge   (default) — Microsoft Edge "Read Aloud" neural voices via msedge-tts.
+ *          Free, no key. Unofficial: if Microsoft changes the service, bump
+ *          msedge-tts; stored audio keeps playing meanwhile.
+ *   google — Google Cloud Text-to-Speech (Chirp 3 HD); needs GOOGLE_TTS_API_KEY.
+ * Voices: TTS_VOICE_EN / TTS_VOICE_ZH override the provider defaults below.
  *
  * Audio is synthesized at natural speed; the client slows playback for
  * learners (pitch-preserving playbackRate), so one cached file serves any pace.
@@ -17,26 +18,67 @@
  * /api/tts still synthesizes on a miss as a safety net.
  */
 import { createHash } from "crypto";
+import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { createServerClient } from "@/lib/supabase/server";
 import { lessonSpeechClips, pageFromRow } from "@/lib/notebook/lesson";
 import type { LessonLang } from "@/types/notebook";
 
 const BUCKET = "tts";
 
-const DEFAULT_VOICES: Record<LessonLang, string> = {
-  en: "en-US-Chirp3-HD-Aoede",
-  zh: "cmn-CN-Chirp3-HD-Aoede",
+type Provider = "edge" | "google";
+
+const DEFAULT_VOICES: Record<Provider, Record<LessonLang, string>> = {
+  edge: { en: "en-US-AvaNeural", zh: "zh-CN-XiaoxiaoNeural" },
+  google: { en: "en-US-Chirp3-HD-Aoede", zh: "cmn-CN-Chirp3-HD-Aoede" },
 };
 
+function provider(): Provider {
+  return process.env.TTS_PROVIDER === "google" ? "google" : "edge";
+}
+
 export function ttsConfigured(): boolean {
-  return Boolean(process.env.GOOGLE_TTS_API_KEY);
+  return provider() === "edge" || Boolean(process.env.GOOGLE_TTS_API_KEY);
 }
 
 function voiceFor(lang: LessonLang): string {
-  return (lang === "zh" ? process.env.GOOGLE_TTS_VOICE_ZH : process.env.GOOGLE_TTS_VOICE_EN) || DEFAULT_VOICES[lang];
+  return (lang === "zh" ? process.env.TTS_VOICE_ZH : process.env.TTS_VOICE_EN) || DEFAULT_VOICES[provider()][lang];
 }
 
-async function synthesize(text: string, voice: string): Promise<Buffer> {
+function synthesize(text: string, voice: string): Promise<Buffer> {
+  return provider() === "google" ? synthesizeGoogle(text, voice) : synthesizeEdge(text, voice);
+}
+
+const escapeXml = (s: string) =>
+  s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[c]!);
+
+/** One Edge synthesis over its own WebSocket; retried once (the service is flaky). */
+async function synthesizeEdge(text: string, voice: string, attempt = 1): Promise<Buffer> {
+  // Honour HTTPS_PROXY where one is required (not on Vercel).
+  const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+  const tts = new MsEdgeTTS({
+    connectionTimeoutMs: 10_000,
+    synthesisTimeoutMs: 20_000,
+    ...(proxy ? { agent: new HttpsProxyAgent(proxy) } : {}),
+  });
+  try {
+    await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+    // msedge-tts drops the text into SSML as-is, so escape it
+    const { audioStream } = tts.toStream(escapeXml(text));
+    const chunks: Buffer[] = [];
+    for await (const chunk of audioStream) chunks.push(Buffer.from(chunk));
+    const audio = Buffer.concat(chunks);
+    if (audio.length === 0) throw new Error("Edge TTS returned no audio");
+    return audio;
+  } catch (err) {
+    if (attempt < 2) return synthesizeEdge(text, voice, attempt + 1);
+    throw new Error(`Edge TTS failed: ${err instanceof Error ? err.message : String(err)}`);
+  } finally {
+    tts.close();
+  }
+}
+
+async function synthesizeGoogle(text: string, voice: string): Promise<Buffer> {
   // Voice names start with their language code: "cmn-CN-Chirp3-HD-Aoede" → "cmn-CN"
   const languageCode = voice.split("-").slice(0, 2).join("-");
   const res = await fetch(
