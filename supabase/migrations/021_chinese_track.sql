@@ -1,8 +1,8 @@
 -- ============================================================
 -- Heo & Masuri — Chinese (Mandarin) track for daily lessons
 -- Run in the Supabase SQL editor (staging first, then prod),
--- BEFORE deploying the code that reads these columns.
--- Safe to run multiple times (all changes are guarded).
+-- BEFORE deploying the code that reads these columns. Additive only, so the
+-- currently deployed code keeps working. Safe to run multiple times.
 --
 -- Model: every daily page can be studied in English (`cards`, the
 -- original track) or Chinese (`cards_zh`). Heo picks one to start;
@@ -45,7 +45,9 @@ exception when duplicate_object then
 end $$;
 
 -- Uniqueness is now per language: (user_id, lang, word_en).
-alter table public.vocabulary drop constraint if exists vocabulary_user_word_unique;
+-- The old (user_id, word_en) constraint stays for now: the code deployed
+-- before this release upserts against it. Drop it with 023 once the new code
+-- is live in this environment.
 do $$ begin
   alter table public.vocabulary
     add constraint vocabulary_user_lang_word_unique unique (user_id, lang, word_en);

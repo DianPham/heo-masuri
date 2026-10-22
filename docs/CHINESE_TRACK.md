@@ -19,6 +19,10 @@ the app falls back to the browser voice, so nothing breaks before it's set.
      `completed_en_at`, `completed_zh_at`; vocabulary `lang` + `pinyin`, unique
      key becomes `(user_id, lang, word_en)`. Backfills `completed_en_at`.
    - `supabase/migrations/022_tts_cache_bucket.sql` — private `tts` bucket.
+   - Both are additive: the currently deployed code keeps working after them.
+   - **After** the new code is live in that environment, run
+     `supabase/migrations/023_drop_legacy_vocab_unique.sql` (drops the old
+     `(user_id, word_en)` constraint the old code relied on).
 2. **Env (Vercel):** `GOOGLE_TTS_API_KEY` (API key restricted to Cloud
    Text-to-Speech, billing linked on the Google project) — type **Secret**, in
    both Vercel projects: `heo-masuri-staging` (its Production = the staging
