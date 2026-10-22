@@ -52,7 +52,12 @@ function synthesize(text: string, voice: string): Promise<Buffer> {
 const escapeXml = (s: string) =>
   s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[c]!);
 
-/** One Edge synthesis over its own WebSocket; retried once (the service is flaky). */
+const EDGE_ATTEMPTS = 3;
+
+/**
+ * One Edge synthesis over its own WebSocket. The service throttles bursts, so
+ * a failure is retried with a growing pause (0.5s, then 1.5s).
+ */
 async function synthesizeEdge(text: string, voice: string, attempt = 1): Promise<Buffer> {
   // Honour HTTPS_PROXY where one is required (not on Vercel).
   const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -71,7 +76,11 @@ async function synthesizeEdge(text: string, voice: string, attempt = 1): Promise
     if (audio.length === 0) throw new Error("Edge TTS returned no audio");
     return audio;
   } catch (err) {
-    if (attempt < 2) return synthesizeEdge(text, voice, attempt + 1);
+    tts.close();
+    if (attempt < EDGE_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, attempt === 1 ? 500 : 1500));
+      return synthesizeEdge(text, voice, attempt + 1);
+    }
     throw new Error(`Edge TTS failed: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     tts.close();
@@ -147,9 +156,18 @@ export async function getSpeech(text: string, lang: LessonLang): Promise<Buffer>
   return audio;
 }
 
-export type AudioStats = { clips: number; generated: number; stored: number; failed: number };
+export type AudioStats = {
+  clips: number;
+  generated: number;
+  stored: number;
+  failed: number;
+  /** For diagnosis without server logs: a few failing texts and distinct errors */
+  failed_texts?: string[];
+  errors?: string[];
+};
 
-const PREGEN_CONCURRENCY = 6;
+// Edge throttles parallel connections from one server; Google doesn't mind.
+const pregenConcurrency = () => (provider() === "edge" ? 2 : 6);
 
 /**
  * Make sure every clip of a lesson (both tracks) is in storage. Clips already
@@ -183,11 +201,14 @@ export async function prepareLessonAudio(pageId: string): Promise<AudioStats | n
           stats.generated++;
         } catch (err) {
           stats.failed++;
-          console.warn(`[tts] pre-generate failed (${lang}) "${text.slice(0, 40)}":`, err instanceof Error ? err.message : err);
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(`[tts] pre-generate failed (${lang}) "${text.slice(0, 40)}":`, msg);
+          if ((stats.failed_texts ??= []).length < 5) stats.failed_texts.push(`${lang}:${text.slice(0, 40)}`);
+          if (!(stats.errors ??= []).includes(msg) && stats.errors.length < 3) stats.errors.push(msg.slice(0, 200));
         }
       }
     };
-    await Promise.all(Array.from({ length: PREGEN_CONCURRENCY }, worker));
+    await Promise.all(Array.from({ length: pregenConcurrency() }, worker));
 
     // A run where every clip failed means the service is down — don't count
     // it. Otherwise a clip that keeps failing (e.g. text the voice rejects)

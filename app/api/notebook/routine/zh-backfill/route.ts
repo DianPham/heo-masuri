@@ -4,7 +4,7 @@
  * Driven by the Claude Code Routine (scripts/routine/ZH_BACKFILL_PROMPT.md).
  * Secured by CRON_SECRET.
  *
- * GET  ?limit=<n, default 3, max 10>
+ * GET  ?limit=<n, default 3, max 100>
  *   The oldest non-archived lessons still missing a Chinese track (oldest first,
  *   so the Chinese course builds up from the simplest lessons), with their
  *   English track to adapt, plus `course_words` — hanzi already taught as new
@@ -36,7 +36,7 @@ async function heoId(supabase: ReturnType<typeof createServerClient>): Promise<s
 export async function GET(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const limit = Math.min(Math.max(parseInt(new URL(req.url).searchParams.get("limit") ?? "3") || 3, 1), 10);
+  const limit = Math.min(Math.max(parseInt(new URL(req.url).searchParams.get("limit") ?? "3") || 3, 1), 100);
   const supabase = createServerClient();
   const heo = await heoId(supabase);
   if (!heo) return NextResponse.json({ error: "Heo not found" }, { status: 500 });
