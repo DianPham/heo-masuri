@@ -3,45 +3,64 @@
 import { motion } from "motion/react";
 import { useState } from "react";
 import { TappableText } from "@/components/notebook/TappableText";
-import type { ReadingCard as ReadingCardType } from "@/types/notebook";
+import type { GlossaryEntry, LessonReadingCard } from "@/lib/notebook/lesson";
+import type { LessonLang } from "@/types/notebook";
 
 interface ReadingCardProps {
-  card: ReadingCardType;
-  viMap: Record<string, string>;
+  card: LessonReadingCard;
+  lang: LessonLang;
+  glossary: Record<string, GlossaryEntry>;
   sourcePageId?: string;
   sourcePageTopic?: string;
   sourcePageTitleVi?: string;
 }
 
-export function ReadingCard({ card, viMap, sourcePageId, sourcePageTopic, sourcePageTitleVi }: ReadingCardProps) {
+export function ReadingCard({ card, lang, glossary, sourcePageId, sourcePageTopic, sourcePageTitleVi }: ReadingCardProps) {
   // Track which sentence's VI translation is shown
   const [revealedSentence, setRevealedSentence] = useState<number | null>(null);
+  // Pinyin is on by default — Heo is a beginner in Chinese
+  const [showPinyin, setShowPinyin] = useState(true);
+  const hasPinyin = card.sentences.some((s) => s.pinyin);
 
   return (
     <div className="flex flex-col h-full px-7 py-8 gap-6">
       {/* Header */}
-      {card.title_vi && (
-        <motion.h2
-          className="text-xl font-bold text-ink"
-          style={{ fontFamily: "var(--font-handwritten)", fontSize: 24 }}
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-        >
-          {card.title_vi}
-        </motion.h2>
+      {(card.title_vi || hasPinyin) && (
+        <div className="flex items-start justify-between gap-3">
+          {card.title_vi ? (
+            <motion.h2
+              className="text-xl font-bold text-ink"
+              style={{ fontFamily: "var(--font-handwritten)", fontSize: 24 }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+            >
+              {card.title_vi}
+            </motion.h2>
+          ) : <span />}
+          {hasPinyin && (
+            <button
+              type="button"
+              data-no-nav="true"
+              onClick={() => setShowPinyin((v) => !v)}
+              className="shrink-0 mt-1 px-3 py-1 rounded-full text-xs font-semibold text-rose-500 border border-rose-200 bg-white"
+            >
+              {showPinyin ? "Ẩn pinyin" : "Hiện pinyin"}
+            </button>
+          )}
+        </div>
       )}
 
       {/* Sentences */}
       <div className="flex-1 flex flex-col justify-center gap-5">
-        {card.sentences_en.map((sentEN, i) => (
+        {card.sentences.map((sentence, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 + i * 0.1 }}
           >
-            {/* English — tappable */}
+            {/* Target language — tappable */}
             <div
               className="rounded-2xl p-4"
               style={{
@@ -49,17 +68,23 @@ export function ReadingCard({ card, viMap, sourcePageId, sourcePageTopic, source
                 border: "1px solid rgba(255,201,213,0.4)",
               }}
             >
-              <p className="text-base text-ink leading-relaxed">
+              {/* div, not p: TappableText renders its bubble (a div) inline */}
+              <div className={`${lang === "zh" ? "text-xl" : "text-base"} text-ink leading-relaxed`}>
                 <TappableText
-                  text={sentEN}
-                  viMap={viMap}
+                  text={sentence.text}
+                  lang={lang}
+                  glossary={glossary}
                   highlights={card.vocab_highlights}
-                  wordClassName="text-base"
+                  wordClassName={lang === "zh" ? "text-xl" : "text-base"}
                   sourcePageId={sourcePageId}
                   sourcePageTopic={sourcePageTopic}
                   sourcePageTitleVi={sourcePageTitleVi}
                 />
-              </p>
+              </div>
+
+              {showPinyin && sentence.pinyin && (
+                <p className="mt-1 text-sm text-rose-500 leading-relaxed">{sentence.pinyin}</p>
+              )}
 
               {/* Show VI toggle */}
               <button
@@ -80,7 +105,7 @@ export function ReadingCard({ card, viMap, sourcePageId, sourcePageTopic, source
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                 >
-                  {card.sentences_vi[i]}
+                  {sentence.vi}
                 </motion.p>
               )}
             </div>

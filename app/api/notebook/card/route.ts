@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       .upsert(
         {
           user_id: heo.id,
+          lang: "en",
           word_en,
           word_vi,
           example_en: example_en || null,
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
           source_kind: "masuri_card",
           saved_at: now,
         },
-        { onConflict: "user_id,word_en" }
+        { onConflict: "user_id,lang,word_en" }
       );
 
     if (vocabErr) {

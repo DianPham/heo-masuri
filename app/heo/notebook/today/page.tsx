@@ -1,6 +1,9 @@
 /**
  * /heo/notebook/today — Daily Stories renderer.
  *
+ * ?lang=en|zh picks the track. Without it, a lesson that has a Chinese track
+ * shows the language picker first; English-only lessons open directly.
+ *
  * Resolves the active lesson directly from Supabase rather than self-fetching
  * /api/notebook/today (that round-trip was flaking on Vercel — when it failed
  * the page silently rendered TEST_PAGE, which made the Study button land on
@@ -13,8 +16,10 @@
 import Link from "next/link";
 import type { DailyPage } from "@/types/notebook";
 import { StoriesRenderer } from "@/components/notebook/stories/StoriesRenderer";
+import { LanguagePicker } from "@/components/notebook/LanguagePicker";
 import { Pig } from "@/components/theme/Pig";
 import { createServerClient } from "@/lib/supabase/server";
+import { hasZhTrack, langCompletedAt, pageFromRow, parseLang } from "@/lib/notebook/lesson";
 
 export const dynamic = "force-dynamic";
 
@@ -25,19 +30,6 @@ type Resolved = {
 
 function todayVN(): string {
   return new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
-}
-
-function toPage(row: Record<string, unknown>): DailyPage {
-  return {
-    id: row.id as string,
-    title_vi: row.title_vi as string,
-    title_en: row.title_en as string,
-    topic: row.topic as string,
-    difficulty: row.difficulty as 1 | 2 | 3 | 4 | 5,
-    cards: row.cards as DailyPage["cards"],
-    scheduled_for: row.scheduled_for as string,
-    completed_at: row.completed_at as string | null,
-  };
 }
 
 async function resolveTodayPage(): Promise<Resolved> {
@@ -56,7 +48,7 @@ async function resolveTodayPage(): Promise<Resolved> {
       .eq("status", "published")
       .maybeSingle();
 
-    if (todayRow) return { page: toPage(todayRow), carry_over: false };
+    if (todayRow) return { page: pageFromRow(todayRow), carry_over: false };
 
     const { data: carryRow } = await supabase
       .from("daily_pages")
@@ -69,7 +61,7 @@ async function resolveTodayPage(): Promise<Resolved> {
       .limit(1)
       .maybeSingle();
 
-    if (carryRow) return { page: toPage(carryRow), carry_over: true };
+    if (carryRow) return { page: pageFromRow(carryRow), carry_over: true };
     return { page: null, carry_over: false };
   } catch (err) {
     console.error("[/heo/notebook/today] resolve failed", err);
@@ -77,13 +69,33 @@ async function resolveTodayPage(): Promise<Resolved> {
   }
 }
 
-export default async function TodayPage() {
+export default async function TodayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
   const { page, carry_over } = await resolveTodayPage();
 
   // No lesson scheduled and nothing carried over → real empty state. Previously
   // this fell through to TEST_PAGE (the bundled Day 1 "Chào buổi sáng"), so
   // after Heo finished today's lesson and refreshed, Day 1 silently came back.
   if (!page) return <NoLessonToday />;
+
+  const requested = parseLang((await searchParams).lang);
+  if (!requested && hasZhTrack(page)) {
+    return (
+      <LanguagePicker
+        page={page}
+        hrefFor={(l) => `/heo/notebook/today?lang=${l}`}
+        backHref="/heo/notebook"
+        backLabel="← Quay lại sổ"
+      />
+    );
+  }
+  const lang = requested === "zh" && hasZhTrack(page) ? "zh" : "en";
+  // Re-opening a track she already finished is a re-read: no second streak
+  // bump or vocab re-save.
+  const isReview = langCompletedAt(page, lang) !== null;
 
   return (
     <div className="relative">
@@ -99,7 +111,7 @@ export default async function TodayPage() {
           </span>
         </div>
       )}
-      <StoriesRenderer page={page} />
+      <StoriesRenderer key={lang} page={page} lang={lang} isReview={isReview} />
     </div>
   );
 }

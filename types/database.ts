@@ -170,7 +170,10 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           cards: Json
+          cards_zh: Json | null
           completed_at: string | null
+          completed_en_at: string | null
+          completed_zh_at: string | null
           created_at: string | null
           difficulty: number
           for_user: string
@@ -182,13 +185,17 @@ export type Database = {
           status: string
           title_en: string
           title_vi: string
+          title_zh: string | null
           topic: string
         }
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
           cards?: Json
+          cards_zh?: Json | null
           completed_at?: string | null
+          completed_en_at?: string | null
+          completed_zh_at?: string | null
           created_at?: string | null
           difficulty: number
           for_user: string
@@ -200,13 +207,17 @@ export type Database = {
           status?: string
           title_en: string
           title_vi: string
+          title_zh?: string | null
           topic: string
         }
         Update: {
           approved_at?: string | null
           approved_by?: string | null
           cards?: Json
+          cards_zh?: Json | null
           completed_at?: string | null
+          completed_en_at?: string | null
+          completed_zh_at?: string | null
           created_at?: string | null
           difficulty?: number
           for_user?: string
@@ -218,6 +229,7 @@ export type Database = {
           status?: string
           title_en?: string
           title_vi?: string
+          title_zh?: string | null
           topic?: string
         }
         Relationships: [
@@ -815,7 +827,9 @@ export type Database = {
           example_en: string | null
           example_vi: string | null
           id: string
+          lang: string
           last_reviewed_at: string | null
+          pinyin: string | null
           pos: string | null
           review_count: number
           saved_at: string | null
@@ -830,7 +844,9 @@ export type Database = {
           example_en?: string | null
           example_vi?: string | null
           id?: string
+          lang?: string
           last_reviewed_at?: string | null
+          pinyin?: string | null
           pos?: string | null
           review_count?: number
           saved_at?: string | null
@@ -845,7 +861,9 @@ export type Database = {
           example_en?: string | null
           example_vi?: string | null
           id?: string
+          lang?: string
           last_reviewed_at?: string | null
+          pinyin?: string | null
           pos?: string | null
           review_count?: number
           saved_at?: string | null
