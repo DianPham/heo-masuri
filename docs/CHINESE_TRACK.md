@@ -54,31 +54,31 @@ Vercel (+ redeploy), the cron-job.org pinger header
 (docs/PHASE2_CRON_PINGER.md), the lesson routine's cloud environment, and
 any Claude environment used for the backfill.
 
-## Current status (2026-10-23)
+## Current status (2026-10-23) — live on production
 
-- **Staging:** migrations applied, code live (`staging` = this branch), verified
-  end-to-end in a browser (picker, Chinese lesson, Edge audio 200/206, vocab
-  saves with pinyin, completion, scrapbook badges). Test lesson: "How Do You
-  Feel Today?" (2026-10-23).
-- **Production:** migrations 021/022 **not yet applied**. The merge to `main`
-  was rolled back (`51ffef0`) within minutes because the new code needs them.
-- **Chinese tracks for all 31 production lessons** (25 completed, the
-  unfinished 2026-07-01 lesson, 5 queued drafts) are pre-written and reviewed
-  in `scripts/routine/zh-backfill-data/`.
+- **Production** (`heo-masuri`, Supabase `ohbnudmlylcocczzglia`): migrations
+  021, 022 and 023 applied; code live (`67fbcbb`). All 31 lessons have a
+  Chinese track (uploaded from `scripts/routine/zh-backfill-data/`) and are
+  fully voiced — 754 stored clips, 0 failed.
+- **Staging** (`heo-masuri-staging`, Supabase `icujnosqjnbimuihxlgr`): same,
+  plus one bilingual test lesson ("How Do You Feel Today?", 2026-10-23),
+  verified end to end in a browser.
 - **Why lessons stopped in July:** Heo never finished the 2026-07-01 lesson;
   publish-due holds new lessons until it's done, and the routine stops at 2
-  queued drafts (5 are waiting). Finishing that lesson — in either language —
-  restarts the daily flow.
+  queued drafts (5 are waiting, all now bilingual). Finishing that lesson — in
+  either language — restarts the daily flow.
+- **Still to do by hand:** point the daily lesson routine at the new
+  `scripts/routine/ROUTINE_PROMPT.md` so future lessons arrive with both
+  tracks. Until then new lessons are English-only; run the backfill
+  (`ZH_BACKFILL_PROMPT.md` or a session) to add Chinese.
 
-### Finish production
+### Autonomy setup (Claude cloud environment)
 
-1. Run `021_chinese_track.sql` and `022_tts_cache_bucket.sql` in the
-   **production** Supabase SQL editor (not `icujnosqjnbimuihxlgr`).
-2. Revert the revert on `main` (`git revert 51ffef0`) and push; wait for the
-   deploy; `GET /api/notebook/routine/zh-backfill` must return 200.
-3. `scripts/routine/upload_zh_backfill.sh https://heo-masuri.vercel.app`
-   (uploads every track, then voices every lesson until `missing=0`).
-4. Optional cleanup: `023_drop_legacy_vocab_unique.sql` on both projects.
+Network secrets (never visible to the session): CRON_SECRET for
+`heo-masuri.vercel.app` and `heo-masuri-staging.vercel.app`; a Vercel token
+for `api.vercel.com` (deploy status, logs, env, rollbacks); a Supabase access
+token for `api.supabase.com` (SQL via the Management API — account-wide
+access).
 
 ## Verify
 
