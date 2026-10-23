@@ -1,0 +1,146 @@
+{
+  "page_id": "ee5a6280-07db-49f4-be96-31b827896ba1",
+  "title_zh": "Heo的新朋友",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo có bạn mới! 🐰🐦",
+      "subtitle_vi": "Cùng học tiếng Trung về thỏ, chim và những chú thú nhỏ dễ thương nào 🐰🐦",
+      "pig_pose": "cheering"
+    },
+    {
+      "type": "word",
+      "word_zh": "小鸟",
+      "pinyin": "xiǎoniǎo",
+      "word_vi": "con chim nhỏ",
+      "example_zh": "窗户上有一只小鸟。",
+      "example_pinyin": "Chuānghu shàng yǒu yì zhī xiǎoniǎo.",
+      "example_vi": "Có một chú chim nhỏ đậu trên cửa sổ.",
+      "pos": "noun",
+      "image_emoji": "🐦"
+    },
+    {
+      "type": "word",
+      "word_zh": "兔子",
+      "pinyin": "tùzi",
+      "word_vi": "con thỏ",
+      "example_zh": "兔子的耳朵很长。",
+      "example_pinyin": "Tùzi de ěrduo hěn cháng.",
+      "example_vi": "Con thỏ có đôi tai thật dài.",
+      "pos": "noun",
+      "image_emoji": "🐰"
+    },
+    {
+      "type": "word",
+      "word_zh": "软",
+      "pinyin": "ruǎn",
+      "word_vi": "mềm / mềm mại",
+      "han_viet": "nhuyễn",
+      "example_zh": "小猫的毛很软。",
+      "example_pinyin": "Xiǎomāo de máo hěn ruǎn.",
+      "example_vi": "Bộ lông của mèo con rất mềm.",
+      "pos": "adjective",
+      "image_emoji": "🌸"
+    },
+    {
+      "type": "word",
+      "word_zh": "跳",
+      "pinyin": "tiào",
+      "word_vi": "nhảy",
+      "han_viet": "khiêu",
+      "example_zh": "兔子在花园里跳来跳去。",
+      "example_pinyin": "Tùzi zài huāyuán lǐ tiào lái tiào qù.",
+      "example_vi": "Con thỏ nhảy tưng tưng quanh vườn.",
+      "pos": "verb",
+      "image_emoji": "🌿"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Những chú thú nhỏ dễ thương",
+      "sentences_zh": [
+        "每天早上，小鸟都飞到窗户上。",
+        "兔子的毛很软。",
+        "小狗和兔子一起跳来跳去。"
+      ],
+      "sentences_pinyin": [
+        "Měitiān zǎoshang, xiǎoniǎo dōu fēi dào chuānghu shàng.",
+        "Tùzi de máo hěn ruǎn.",
+        "Xiǎogǒu hé tùzi yìqǐ tiào lái tiào qù."
+      ],
+      "sentences_vi": [
+        "Sáng nào chú chim nhỏ cũng bay đến đậu trên cửa sổ.",
+        "Bộ lông của thỏ mềm lắm.",
+        "Cún con và thỏ cùng nhau nhảy tưng tưng."
+      ],
+      "vocab_highlights": [
+        "小鸟",
+        "软",
+        "兔子",
+        "跳"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "小兔子的毛很软。",
+        "target_sentence_pinyin": "Xiǎo tùzi de máo hěn ruǎn.",
+        "shuffled_words": [
+          "很",
+          "毛",
+          "小兔子",
+          "软",
+          "的"
+        ],
+        "hint_vi": "Bộ lông của thỏ con rất mềm."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "窗户",
+          "上",
+          "有",
+          "一",
+          "个",
+          "小鸟"
+        ],
+        "imposter_word": "个",
+        "correct_word": "只",
+        "hint_vi": "Có một từ kì kì... Nhớ lại thẻ 小鸟 xem, “một chú chim” nói thế nào nhỉ? 🐦"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Thỏ biết nhảy! (biết = 会 huì)",
+        "target_zh": "兔子会跳",
+        "target_pinyin": "Tùzi huì tiào",
+        "hints": {
+          "verb": "跳",
+          "noun": "兔子"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Giữa thỏ và chim nhỏ, Heo thích con nào hơn? Kể Masuri nghe nha — hoặc thử nói: “我喜欢兔子！” (Wǒ xǐhuan tùzi!) 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "小鸟",
+        "兔子",
+        "软",
+        "跳"
+      ],
+      "sticker_kind": "bow_pink"
+    }
+  ]
+}

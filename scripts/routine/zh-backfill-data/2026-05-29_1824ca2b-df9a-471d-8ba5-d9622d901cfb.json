@@ -1,0 +1,132 @@
+{
+  "page_id": "1824ca2b-df9a-471d-8ba5-d9622d901cfb",
+  "title_zh": "出去走走吧！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo ra ngoài ngắm trời nào! 🇨🇳",
+      "subtitle_vi": "Hôm nay học về thiên nhiên bằng tiếng Trung nhé 🌿",
+      "pig_pose": "sparkle"
+    },
+    {
+      "type": "word",
+      "word_zh": "外面",
+      "pinyin": "wàimian",
+      "word_vi": "bên ngoài",
+      "example_zh": "外面天气很好。",
+      "example_pinyin": "Wàimian tiānqì hěn hǎo.",
+      "example_vi": "Bên ngoài trời đẹp lắm.",
+      "pos": "noun",
+      "image_emoji": "🏞️"
+    },
+    {
+      "type": "word",
+      "word_zh": "散步",
+      "pinyin": "sànbù",
+      "word_vi": "đi dạo / đi bộ",
+      "han_viet": "tản bộ",
+      "example_zh": "我每天早上散步。",
+      "example_pinyin": "Wǒ měitiān zǎoshang sànbù.",
+      "example_vi": "Buổi sáng nào Heo cũng đi dạo.",
+      "pos": "verb",
+      "image_emoji": "🚶"
+    },
+    {
+      "type": "word",
+      "word_zh": "太阳",
+      "pinyin": "tàiyáng",
+      "word_vi": "mặt trời",
+      "han_viet": "thái dương",
+      "example_zh": "今天太阳很好。",
+      "example_pinyin": "Jīntiān tàiyáng hěn hǎo.",
+      "example_vi": "Hôm nay trời nắng đẹp.",
+      "pos": "noun",
+      "image_emoji": "☀️"
+    },
+    {
+      "type": "word",
+      "word_zh": "空气",
+      "pinyin": "kōngqì",
+      "word_vi": "không khí",
+      "han_viet": "không khí",
+      "example_zh": "早上的空气很新鲜。",
+      "example_pinyin": "Zǎoshang de kōngqì hěn xīnxiān.",
+      "example_vi": "Không khí buổi sáng trong lành lắm.",
+      "pos": "noun",
+      "image_emoji": "🌿"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một ngày nắng đẹp",
+      "sentences_zh": [
+        "今天太阳很好。",
+        "Heo去外面散步。",
+        "外面的空气很新鲜。",
+        "下雨的时候，Heo在家休息。"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān tàiyáng hěn hǎo.",
+        "Heo qù wàimian sànbù.",
+        "Wàimian de kōngqì hěn xīnxiān.",
+        "Xiàyǔ de shíhou, Heo zài jiā xiūxi."
+      ],
+      "sentences_vi": [
+        "Hôm nay trời nắng đẹp.",
+        "Heo ra ngoài đi dạo.",
+        "Không khí bên ngoài trong lành lắm.",
+        "Khi trời mưa, Heo ở nhà nghỉ ngơi."
+      ],
+      "vocab_highlights": [
+        "太阳",
+        "外面",
+        "散步",
+        "空气"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我们去外面散步吧。",
+        "target_sentence_pinyin": "Wǒmen qù wàimian sànbù ba.",
+        "shuffled_words": [
+          "散步",
+          "我们",
+          "吧",
+          "去",
+          "外面"
+        ],
+        "hint_vi": "Heo với Masuri cùng ra ngoài đi dạo nha."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo ra ngoài đi dạo!",
+        "target_zh": "我去外面散步",
+        "target_pinyin": "Wǒ qù wàimian sànbù",
+        "hints": {
+          "verb": "散步",
+          "noun": "外面"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Heo thích trời nắng hay trời mưa hơn? Kể Masuri nghe nha — hoặc rủ Masuri bằng tiếng Trung: “我们去散步吧！” (Wǒmen qù sànbù ba!) 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "外面",
+        "散步",
+        "太阳",
+        "空气"
+      ],
+      "sticker_kind": "flower_daisy"
+    }
+  ]
+}

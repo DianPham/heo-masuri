@@ -1,0 +1,143 @@
+{
+  "page_id": "8577e5a3-e576-4ead-b971-7affb0f079cc",
+  "title_zh": "热汤和面包",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Bữa ăn ấm áp của Heo! 🇨🇳",
+      "subtitle_vi": "Hôm nay cùng Heo học tiếng Trung về canh nóng và bánh mì thơm phức nhé 🍲🍞",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "汤",
+      "pinyin": "tāng",
+      "word_vi": "canh / súp",
+      "example_zh": "这碗汤很香。",
+      "example_pinyin": "Zhè wǎn tāng hěn xiāng.",
+      "example_vi": "Chén canh này thơm quá.",
+      "pos": "noun",
+      "image_emoji": "🍲"
+    },
+    {
+      "type": "word",
+      "word_zh": "面包",
+      "pinyin": "miànbāo",
+      "word_vi": "bánh mì",
+      "example_zh": "早上我吃面包。",
+      "example_pinyin": "Zǎoshang wǒ chī miànbāo.",
+      "example_vi": "Buổi sáng Heo ăn bánh mì.",
+      "pos": "noun",
+      "image_emoji": "🍞"
+    },
+    {
+      "type": "word",
+      "word_zh": "热",
+      "pinyin": "rè",
+      "word_vi": "nóng / ấm nóng",
+      "han_viet": "nhiệt",
+      "example_zh": "我想喝热汤。",
+      "example_pinyin": "Wǒ xiǎng hē rè tāng.",
+      "example_vi": "Heo muốn ăn một chén canh nóng.",
+      "pos": "adjective",
+      "image_emoji": "♨️"
+    },
+    {
+      "type": "word",
+      "word_zh": "香",
+      "pinyin": "xiāng",
+      "word_vi": "thơm / thơm ngon",
+      "han_viet": "hương",
+      "example_zh": "面包很香！",
+      "example_pinyin": "Miànbāo hěn xiāng!",
+      "example_vi": "Bánh mì thơm ngon quá!",
+      "pos": "adjective",
+      "image_emoji": "😋"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Bữa ăn ấm áp",
+      "sentences_zh": [
+        "我饿了，就做了一碗热汤。",
+        "面包很新鲜，也很香。",
+        "喝完热汤，我很开心。"
+      ],
+      "sentences_pinyin": [
+        "Wǒ è le, jiù zuò le yì wǎn rè tāng.",
+        "Miànbāo hěn xīnxiān, yě hěn xiāng.",
+        "Hēwán rè tāng, wǒ hěn kāixīn."
+      ],
+      "sentences_vi": [
+        "Heo đói bụng nên nấu một chén canh nóng.",
+        "Bánh mì tươi, lại còn thơm ngon nữa.",
+        "Ăn chén canh nóng xong, Heo vui lắm."
+      ],
+      "vocab_highlights": [
+        "热",
+        "汤",
+        "面包",
+        "香"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "这个面包很香。",
+        "target_sentence_pinyin": "Zhège miànbāo hěn xiāng.",
+        "shuffled_words": [
+          "香",
+          "这个",
+          "很",
+          "面包"
+        ],
+        "hint_vi": "Cái bánh mì này thơm quá."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "“Canh rất nóng!” 🍲 — nói bằng tiếng Trung nha (gợi ý: “rất” là 很 hěn)",
+        "target_zh": "汤很热",
+        "target_pinyin": "Tāng hěn rè",
+        "hints": {
+          "noun": "汤"
+        }
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "🍞",
+        "image_url": "https://images.unsplash.com/photo-1708410262792-74d07c9f2581?w=600&q=80",
+        "starter_words": [
+          "热",
+          "汤",
+          "面包",
+          "香"
+        ],
+        "example_zh": "热汤和面包都很香。",
+        "example_pinyin": "Rè tāng hé miànbāo dōu hěn xiāng."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Mẹo nhỏ: người Trung “uống” canh — 喝汤 (hē tāng) 🍲 Có chữ nào khó thì hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "汤",
+        "面包",
+        "热",
+        "香"
+      ],
+      "sticker_kind": "coffee_cup"
+    }
+  ]
+}

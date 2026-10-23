@@ -1,0 +1,32 @@
+{
+  "page_id": "347a4f92-1163-4143-8854-e2d03acafef1",
+  "title_zh": "Heo和Masuri",
+  "cards_zh": [
+    { "type": "intro", "title_vi": "Heo và Masuri 🐷💕", "subtitle_vi": "Hôm nay Heo kể về Masuri bằng tiếng Trung nha! 🇨🇳", "pig_pose": "cheering" },
+    { "type": "word", "word_zh": "想", "pinyin": "xiǎng", "word_vi": "nhớ; muốn", "han_viet": "tưởng",
+      "example_zh": "我很想你。", "example_pinyin": "Wǒ hěn xiǎng nǐ.", "example_vi": "Heo nhớ Masuri nhiều lắm.",
+      "pos": "verb", "image_emoji": "💌" },
+    { "type": "word", "word_zh": "一起", "pinyin": "yìqǐ", "word_vi": "cùng nhau",
+      "example_zh": "我们一起学中文。", "example_pinyin": "Wǒmen yìqǐ xué Zhōngwén.", "example_vi": "Heo và Masuri cùng nhau học tiếng Trung.",
+      "pos": "adverb", "image_emoji": "🤝" },
+    { "type": "word", "word_zh": "见面", "pinyin": "jiànmiàn", "word_vi": "gặp nhau",
+      "example_zh": "我们快要见面了！", "example_pinyin": "Wǒmen kuàiyào jiànmiàn le!", "example_vi": "Heo và Masuri sắp được gặp nhau rồi!",
+      "pos": "verb", "image_emoji": "⏳" },
+    { "type": "word", "word_zh": "爱", "pinyin": "ài", "word_vi": "yêu", "han_viet": "ái",
+      "example_zh": "我爱你，Masuri！", "example_pinyin": "Wǒ ài nǐ, Masuri!", "example_vi": "Heo yêu Masuri!",
+      "pos": "verb", "image_emoji": "💕" },
+    { "type": "reading", "title_vi": "Thư gửi Masuri",
+      "sentences_zh": ["亲爱的Masuri：", "每天早上我都想你。", "和你一起聊天，我很开心。", "有你真好！", "我们快要见面了。我爱你！"],
+      "sentences_pinyin": ["Qīn'ài de Masuri:", "Měitiān zǎoshang wǒ dōu xiǎng nǐ.", "Hé nǐ yìqǐ liáotiān, wǒ hěn kāixīn.", "Yǒu nǐ zhēn hǎo!", "Wǒmen kuàiyào jiànmiàn le. Wǒ ài nǐ!"],
+      "sentences_vi": ["Masuri thân yêu,", "Sáng nào Heo cũng nhớ Masuri.", "Được trò chuyện cùng Masuri, Heo vui lắm.", "Có Masuri thật tuyệt!", "Heo và Masuri sắp gặp nhau rồi. Heo yêu Masuri!"],
+      "vocab_highlights": ["想", "一起", "见面", "爱"] },
+    { "type": "exercise", "exercise_type": "word_train", "can_skip": false,
+      "data": { "target_sentence_zh": "我们快要见面了。", "target_sentence_pinyin": "Wǒmen kuàiyào jiànmiàn le.",
+                "shuffled_words": ["见面", "我们", "了", "快要"], "hint_vi": "Heo và Masuri sắp gặp nhau rồi." } },
+    { "type": "exercise", "exercise_type": "pig_says", "can_skip": true,
+      "data": { "prompt_vi": "Heo muốn nói với Masuri: Heo yêu Masuri! 💕 (gợi ý: nói với Masuri thì dùng 你 nǐ)",
+                "target_zh": "我爱你", "target_pinyin": "Wǒ ài nǐ", "hints": { "verb": "爱", "noun": "你" } } },
+    { "type": "ask_prompt", "suggestion_vi": "Hỏi Masuri: Masuri có nhớ Heo không? Thử hỏi bằng tiếng Trung: “你想我吗？” (Nǐ xiǎng wǒ ma?) 🥺" },
+    { "type": "completion", "vocab_to_save": ["想", "一起", "见面", "爱"], "sticker_kind": "flower_rose" }
+  ]
+}

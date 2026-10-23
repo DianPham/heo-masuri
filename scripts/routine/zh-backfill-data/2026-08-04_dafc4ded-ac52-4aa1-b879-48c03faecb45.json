@@ -1,0 +1,129 @@
+{
+  "page_id": "dafc4ded-ac52-4aa1-b879-48c03faecb45",
+  "title_zh": "Heo写汉字",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo ngồi bàn học, viết chữ Hán! 🇨🇳",
+      "subtitle_vi": "Cùng Heo ngồi vào bàn học và tập viết chữ Hán nhé ✍️",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "坐",
+      "pinyin": "zuò",
+      "word_vi": "ngồi",
+      "han_viet": "tọa",
+      "example_zh": "小猫坐在书上。",
+      "example_pinyin": "Xiǎomāo zuò zài shū shàng.",
+      "example_vi": "Mèo con ngồi lên quyển sách.",
+      "pos": "verb",
+      "image_emoji": "🪑"
+    },
+    {
+      "type": "word",
+      "word_zh": "书",
+      "pinyin": "shū",
+      "word_vi": "sách",
+      "han_viet": "thư",
+      "example_zh": "我喜欢看书。",
+      "example_pinyin": "Wǒ xǐhuan kàn shū.",
+      "example_vi": "Heo thích đọc sách.",
+      "pos": "noun",
+      "image_emoji": "📖"
+    },
+    {
+      "type": "word",
+      "word_zh": "写",
+      "pinyin": "xiě",
+      "word_vi": "viết",
+      "example_zh": "我在写字。",
+      "example_pinyin": "Wǒ zài xiě zì.",
+      "example_vi": "Heo đang viết chữ.",
+      "pos": "verb",
+      "image_emoji": "✍️"
+    },
+    {
+      "type": "word",
+      "word_zh": "汉字",
+      "pinyin": "Hànzì",
+      "word_vi": "chữ Hán",
+      "han_viet": "Hán tự",
+      "example_zh": "我会写五个汉字！",
+      "example_pinyin": "Wǒ huì xiě wǔ ge Hànzì!",
+      "example_vi": "Heo biết viết năm chữ Hán đó!",
+      "pos": "noun",
+      "image_emoji": "🀄"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Heo tập viết chữ Hán",
+      "sentences_zh": [
+        "Masuri坐在我旁边。",
+        "我打开书，用新铅笔写汉字。",
+        "我会写汉字了，真开心！"
+      ],
+      "sentences_pinyin": [
+        "Masuri zuò zài wǒ pángbiān.",
+        "Wǒ dǎkāi shū, yòng xīn qiānbǐ xiě Hànzì.",
+        "Wǒ huì xiě Hànzì le, zhēn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Masuri ngồi bên cạnh Heo.",
+        "Heo mở sách ra, viết chữ Hán bằng cây bút chì mới.",
+        "Heo đã biết viết chữ Hán rồi, vui quá đi!"
+      ],
+      "vocab_highlights": [
+        "坐",
+        "书",
+        "写",
+        "汉字"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我用铅笔写汉字。",
+        "target_sentence_pinyin": "Wǒ yòng qiānbǐ xiě Hànzì.",
+        "shuffled_words": [
+          "写",
+          "铅笔",
+          "我",
+          "汉字",
+          "用"
+        ],
+        "hint_vi": "Heo viết chữ Hán bằng bút chì."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo biết viết chữ Hán",
+        "target_zh": "我会写汉字",
+        "target_pinyin": "Wǒ huì xiě Hànzì",
+        "hints": {
+          "verb": "写",
+          "noun": "汉字"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có chữ nào khó viết không? Hỏi Masuri nha 💕 Hoặc khoe với Masuri: “我会写汉字！” (Wǒ huì xiě Hànzì!) ✍️"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "坐",
+        "书",
+        "写",
+        "汉字"
+      ],
+      "sticker_kind": "pencil"
+    }
+  ]
+}

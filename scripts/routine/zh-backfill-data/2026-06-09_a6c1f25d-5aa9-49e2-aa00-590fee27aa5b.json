@@ -1,0 +1,135 @@
+{
+  "page_id": "a6c1f25d-5aa9-49e2-aa00-590fee27aa5b",
+  "title_zh": "Heo去海边！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo đi biển cuối tuần! 🇨🇳",
+      "subtitle_vi": "Hôm nay cùng học vài từ tiếng Trung về một chuyến đi biển thật vui nha 🏖️",
+      "pig_pose": "cheering"
+    },
+    {
+      "type": "word",
+      "word_zh": "海边",
+      "pinyin": "hǎibiān",
+      "word_vi": "bãi biển",
+      "han_viet": "hải biên",
+      "example_zh": "周末我想去海边。",
+      "example_pinyin": "Zhōumò wǒ xiǎng qù hǎibiān.",
+      "example_vi": "Cuối tuần này Heo muốn đi biển.",
+      "pos": "noun",
+      "image_emoji": "🏖️"
+    },
+    {
+      "type": "word",
+      "word_zh": "大海",
+      "pinyin": "dàhǎi",
+      "word_vi": "biển",
+      "han_viet": "đại hải",
+      "example_zh": "今天的大海很蓝。",
+      "example_pinyin": "Jīntiān de dàhǎi hěn lán.",
+      "example_vi": "Hôm nay biển xanh ơi là xanh.",
+      "pos": "noun",
+      "image_emoji": "🌊"
+    },
+    {
+      "type": "word",
+      "word_zh": "游泳",
+      "pinyin": "yóuyǒng",
+      "word_vi": "bơi",
+      "example_zh": "我和Masuri一起游泳。",
+      "example_pinyin": "Wǒ hé Masuri yìqǐ yóuyǒng.",
+      "example_vi": "Heo bơi cùng Masuri.",
+      "pos": "verb",
+      "image_emoji": "🏊"
+    },
+    {
+      "type": "word",
+      "word_zh": "沙子",
+      "pinyin": "shāzi",
+      "word_vi": "cát",
+      "example_zh": "沙子暖暖的，很舒服。",
+      "example_pinyin": "Shāzi nuǎnnuǎn de, hěn shūfu.",
+      "example_vi": "Cát âm ấm, dễ chịu lắm.",
+      "pos": "noun",
+      "image_emoji": "🏝️"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một ngày ở biển",
+      "sentences_zh": [
+        "周末去海边，我很兴奋！",
+        "我带了一个小包。",
+        "大海很蓝，沙子暖暖的。",
+        "我们一起游泳，很开心！"
+      ],
+      "sentences_pinyin": [
+        "Zhōumò qù hǎibiān, wǒ hěn xīngfèn!",
+        "Wǒ dài le yí ge xiǎo bāo.",
+        "Dàhǎi hěn lán, shāzi nuǎnnuǎn de.",
+        "Wǒmen yìqǐ yóuyǒng, hěn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Cuối tuần được đi biển, Heo hào hứng lắm!",
+        "Heo mang theo một cái túi nhỏ.",
+        "Biển xanh ngắt, cát thì âm ấm.",
+        "Heo và Masuri cùng bơi, vui ơi là vui!"
+      ],
+      "vocab_highlights": [
+        "海边",
+        "大海",
+        "沙子",
+        "游泳"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "今天的大海很蓝。",
+        "target_sentence_pinyin": "Jīntiān de dàhǎi hěn lán.",
+        "shuffled_words": [
+          "蓝",
+          "大海",
+          "今天",
+          "很",
+          "的"
+        ],
+        "hint_vi": "Hôm nay biển xanh ơi là xanh."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "带",
+          "了",
+          "一",
+          "只",
+          "小包"
+        ],
+        "imposter_word": "只",
+        "correct_word": "个",
+        "hint_vi": "只 dùng cho con vật — cái túi thì dùng lượng từ nào? 🎒"
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có từ nào khó không? Hỏi Masuri nha — hoặc thử rủ Masuri: “我们去海边吧！” (Wǒmen qù hǎibiān ba!) 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "海边",
+        "大海",
+        "游泳",
+        "沙子"
+      ],
+      "sticker_kind": "sun"
+    }
+  ]
+}

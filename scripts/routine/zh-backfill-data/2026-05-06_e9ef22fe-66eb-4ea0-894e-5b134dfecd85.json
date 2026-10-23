@@ -1,0 +1,128 @@
+{
+  "page_id": "e9ef22fe-66eb-4ea0-894e-5b134dfecd85",
+  "title_zh": "喝咖啡吧！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Cà phê buổi sáng ☕",
+      "subtitle_vi": "Heo học gọi đồ uống bằng tiếng Trung nào! 🇨🇳",
+      "pig_pose": "cheering"
+    },
+    {
+      "type": "word",
+      "word_zh": "咖啡",
+      "pinyin": "kāfēi",
+      "word_vi": "cà phê",
+      "example_zh": "我早上喝咖啡。",
+      "example_pinyin": "Wǒ zǎoshang hē kāfēi.",
+      "example_vi": "Buổi sáng Heo uống cà phê.",
+      "pos": "noun",
+      "image_emoji": "☕"
+    },
+    {
+      "type": "word",
+      "word_zh": "喝",
+      "pinyin": "hē",
+      "word_vi": "uống",
+      "example_zh": "你想喝什么？",
+      "example_pinyin": "Nǐ xiǎng hē shénme?",
+      "example_vi": "Masuri muốn uống gì?",
+      "pos": "verb",
+      "image_emoji": "🥤"
+    },
+    {
+      "type": "word",
+      "word_zh": "要",
+      "pinyin": "yào",
+      "word_vi": "muốn; gọi (món)",
+      "example_zh": "我要一杯咖啡。",
+      "example_pinyin": "Wǒ yào yì bēi kāfēi.",
+      "example_vi": "Cho Heo một ly cà phê nhé.",
+      "pos": "verb",
+      "image_emoji": "📋"
+    },
+    {
+      "type": "word",
+      "word_zh": "喜欢",
+      "pinyin": "xǐhuan",
+      "word_vi": "thích",
+      "example_zh": "Masuri喜欢喝茶。",
+      "example_pinyin": "Masuri xǐhuan hē chá.",
+      "example_vi": "Masuri thích uống trà.",
+      "pos": "verb",
+      "image_emoji": "💕"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Heo gọi đồ",
+      "sentences_zh": [
+        "Heo和Masuri在咖啡店。",
+        "Heo要一杯咖啡，不要太甜。",
+        "Masuri笑了，他想喝茶。",
+        "Heo很喜欢这样的早上！"
+      ],
+      "sentences_pinyin": [
+        "Heo hé Masuri zài kāfēidiàn.",
+        "Heo yào yì bēi kāfēi, bú yào tài tián.",
+        "Masuri xiào le, tā xiǎng hē chá.",
+        "Heo hěn xǐhuan zhèyàng de zǎoshang!"
+      ],
+      "sentences_vi": [
+        "Heo và Masuri ngồi ở quán cà phê.",
+        "Heo gọi một ly cà phê, không quá ngọt.",
+        "Masuri mỉm cười, muốn uống trà.",
+        "Heo thích những buổi sáng như thế này lắm!"
+      ],
+      "vocab_highlights": [
+        "咖啡",
+        "要",
+        "喝",
+        "喜欢"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我喜欢喝咖啡。",
+        "target_sentence_pinyin": "Wǒ xǐhuan hē kāfēi.",
+        "shuffled_words": [
+          "咖啡",
+          "喜欢",
+          "我",
+          "喝"
+        ],
+        "hint_vi": "Heo thích uống cà phê."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo muốn một ly cà phê ☕",
+        "target_zh": "我要一杯咖啡",
+        "target_pinyin": "Wǒ yào yì bēi kāfēi",
+        "hints": {
+          "verb": "要",
+          "noun": "咖啡"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri bằng tiếng Trung: “你早上喜欢喝什么？” — buổi sáng Masuri thích uống gì? ☕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "咖啡",
+        "喝",
+        "要",
+        "喜欢"
+      ],
+      "sticker_kind": "flower_rose"
+    }
+  ]
+}

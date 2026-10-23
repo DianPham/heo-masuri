@@ -1,0 +1,151 @@
+{
+  "page_id": "e1a2bb9a-9401-4c79-83e9-1bc2f5307016",
+  "title_zh": "去公园看花",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Heo đi công viên ngắm hoa! 🌸",
+      "subtitle_vi": "Thiên nhiên đẹp lắm — cùng Heo học vài từ tiếng Trung mới nào! 🌳",
+      "pig_pose": "heart-eyes"
+    },
+    {
+      "type": "word",
+      "word_zh": "公园",
+      "pinyin": "gōngyuán",
+      "word_vi": "công viên",
+      "han_viet": "công viên",
+      "example_zh": "今天我去公园。",
+      "example_pinyin": "Jīntiān wǒ qù gōngyuán.",
+      "example_vi": "Hôm nay Heo đi công viên.",
+      "pos": "noun",
+      "image_emoji": "🏞️"
+    },
+    {
+      "type": "word",
+      "word_zh": "树",
+      "pinyin": "shù",
+      "word_vi": "cái cây",
+      "han_viet": "thụ",
+      "example_zh": "公园里有一棵大树。",
+      "example_pinyin": "Gōngyuán lǐ yǒu yì kē dà shù.",
+      "example_vi": "Trong công viên có một cái cây to.",
+      "pos": "noun",
+      "image_emoji": "🌳"
+    },
+    {
+      "type": "word",
+      "word_zh": "花",
+      "pinyin": "huā",
+      "word_vi": "hoa / bông hoa",
+      "han_viet": "hoa",
+      "example_zh": "这朵花真漂亮！",
+      "example_pinyin": "Zhè duǒ huā zhēn piàoliang!",
+      "example_vi": "Bông hoa này đẹp quá!",
+      "pos": "noun",
+      "image_emoji": "🌸"
+    },
+    {
+      "type": "word",
+      "word_zh": "看",
+      "pinyin": "kàn",
+      "word_vi": "nhìn / ngắm / xem",
+      "han_viet": "khán",
+      "example_zh": "你看，那里有一只小鸟！",
+      "example_pinyin": "Nǐ kàn, nàlǐ yǒu yì zhī xiǎoniǎo!",
+      "example_vi": "Nhìn kìa, đằng kia có một chú chim nhỏ!",
+      "pos": "verb",
+      "image_emoji": "👀"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một ngày ở công viên",
+      "sentences_zh": [
+        "今天天气很好，我去公园。",
+        "我喜欢在大树下散步。",
+        "一只小鸟在树上唱歌。",
+        "我看花，也看小鸟，真开心！"
+      ],
+      "sentences_pinyin": [
+        "Jīntiān tiānqì hěn hǎo, wǒ qù gōngyuán.",
+        "Wǒ xǐhuan zài dà shù xià sànbù.",
+        "Yì zhī xiǎoniǎo zài shù shàng chànggē.",
+        "Wǒ kàn huā, yě kàn xiǎoniǎo, zhēn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Hôm nay trời đẹp, Heo đi công viên.",
+        "Heo thích đi dạo dưới gốc cây to.",
+        "Một chú chim nhỏ đang hót trên cây.",
+        "Heo ngắm hoa, ngắm cả chim nhỏ nữa, vui ghê!"
+      ],
+      "vocab_highlights": [
+        "公园",
+        "树",
+        "花",
+        "看"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我去公园看花。",
+        "target_sentence_pinyin": "Wǒ qù gōngyuán kàn huā.",
+        "shuffled_words": [
+          "看",
+          "公园",
+          "我",
+          "花",
+          "去"
+        ],
+        "hint_vi": "Heo đi công viên ngắm hoa."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "公园",
+          "里",
+          "有",
+          "一",
+          "只",
+          "大树"
+        ],
+        "imposter_word": "只",
+        "correct_word": "棵",
+        "hint_vi": "Có một từ kì kì trong câu này... Nhớ lại thẻ 树 xem, “một cái cây” nói thế nào nhỉ? 🌳"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo thích ngắm hoa. Nói bằng tiếng Trung nha 🌸",
+        "target_zh": "我喜欢看花",
+        "target_pinyin": "Wǒ xǐhuan kàn huā",
+        "hints": {
+          "verb": "看",
+          "noun": "花"
+        }
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có từ nào khó không? Hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "公园",
+        "树",
+        "花",
+        "看"
+      ],
+      "sticker_kind": "flower_daisy"
+    }
+  ]
+}

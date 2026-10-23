@@ -1,0 +1,162 @@
+{
+  "page_id": "2d59d096-95db-454f-9604-e3fe287fb94a",
+  "title_zh": "家里真舒服！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Chào buổi sáng, Heo! 🏠",
+      "subtitle_vi": "Hôm nay Heo học nói về nhà cửa bằng tiếng Trung nha — ấm cúng lắm!",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "家",
+      "pinyin": "jiā",
+      "word_vi": "nhà",
+      "han_viet": "gia",
+      "example_zh": "我喜欢在家。",
+      "example_pinyin": "Wǒ xǐhuan zài jiā.",
+      "example_vi": "Heo thích ở nhà.",
+      "pos": "noun",
+      "image_emoji": "🏠"
+    },
+    {
+      "type": "word",
+      "word_zh": "房间",
+      "pinyin": "fángjiān",
+      "word_vi": "phòng",
+      "han_viet": "phòng gian",
+      "example_zh": "我在房间里看书。",
+      "example_pinyin": "Wǒ zài fángjiān lǐ kàn shū.",
+      "example_vi": "Heo đọc sách trong phòng.",
+      "pos": "noun",
+      "image_emoji": "🛏️"
+    },
+    {
+      "type": "word",
+      "word_zh": "厨房",
+      "pinyin": "chúfáng",
+      "word_vi": "nhà bếp",
+      "example_zh": "我在厨房做饭。",
+      "example_pinyin": "Wǒ zài chúfáng zuòfàn.",
+      "example_vi": "Heo nấu ăn trong bếp.",
+      "pos": "noun",
+      "image_emoji": "🍳"
+    },
+    {
+      "type": "word",
+      "word_zh": "窗户",
+      "pinyin": "chuānghu",
+      "word_vi": "cửa sổ",
+      "example_zh": "我喜欢坐在窗户旁边。",
+      "example_pinyin": "Wǒ xǐhuan zuò zài chuānghu pángbiān.",
+      "example_vi": "Heo thích ngồi cạnh cửa sổ.",
+      "pos": "noun",
+      "image_emoji": "🪟"
+    },
+    {
+      "type": "word",
+      "word_zh": "舒服",
+      "pinyin": "shūfu",
+      "word_vi": "thoải mái / dễ chịu",
+      "example_zh": "我的房间很舒服。",
+      "example_pinyin": "Wǒ de fángjiān hěn shūfu.",
+      "example_vi": "Phòng của Heo rất thoải mái.",
+      "pos": "adjective",
+      "image_emoji": "🧸"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Ngôi nhà nhỏ của Heo",
+      "sentences_zh": [
+        "这是我的家。",
+        "我的房间不大，但是很舒服。",
+        "房间里有一个大窗户。",
+        "我也爱我的厨房，好香啊！",
+        "家里真舒服！"
+      ],
+      "sentences_pinyin": [
+        "Zhè shì wǒ de jiā.",
+        "Wǒ de fángjiān bú dà, dànshì hěn shūfu.",
+        "Fángjiān lǐ yǒu yí ge dà chuānghu.",
+        "Wǒ yě ài wǒ de chúfáng, hǎo xiāng a!",
+        "Jiā lǐ zhēn shūfu!"
+      ],
+      "sentences_vi": [
+        "Đây là nhà của Heo.",
+        "Phòng của Heo không rộng, nhưng thoải mái lắm.",
+        "Trong phòng có một cửa sổ lớn.",
+        "Heo cũng mê căn bếp lắm — thơm ghê!",
+        "Ở nhà thật là dễ chịu!"
+      ],
+      "vocab_highlights": [
+        "家",
+        "房间",
+        "窗户",
+        "厨房",
+        "舒服"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我的房间很舒服。",
+        "target_sentence_pinyin": "Wǒ de fángjiān hěn shūfu.",
+        "shuffled_words": [
+          "舒服",
+          "我",
+          "很",
+          "房间",
+          "的"
+        ],
+        "hint_vi": "Phòng của Heo rất thoải mái."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Cửa sổ rất to",
+        "target_zh": "窗户很大",
+        "target_pinyin": "Chuānghu hěn dà",
+        "hints": {
+          "noun": "窗户"
+        }
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "🪟",
+        "image_url": "https://images.unsplash.com/photo-1632900182533-c8ee9ba229f4?w=600&q=80",
+        "starter_words": [
+          "我",
+          "坐",
+          "窗户"
+        ],
+        "example_zh": "我喜欢坐在窗户旁边。",
+        "example_pinyin": "Wǒ xǐhuan zuò zài chuānghu pángbiān."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri: phòng của Masuri có rộng không? Thử hỏi bằng tiếng Trung: 你的房间大吗？ (Nǐ de fángjiān dà ma?) 🏠"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "家",
+        "房间",
+        "厨房",
+        "窗户",
+        "舒服"
+      ],
+      "sticker_kind": "book"
+    }
+  ]
+}

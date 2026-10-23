@@ -1,0 +1,121 @@
+{
+  "page_id": "a1c7fd86-2135-402e-a7dd-9ad79de982fe",
+  "title_zh": "你真棒！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Ôn tập nào! 🔁",
+      "subtitle_vi": "Heo đang giỏi lắm rồi nè! Hôm nay ôn lại một chút và học cách cổ vũ bằng tiếng Trung 🌸",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "中文",
+      "pinyin": "Zhōngwén",
+      "word_vi": "tiếng Trung",
+      "han_viet": "Trung văn",
+      "example_zh": "我在学中文。",
+      "example_pinyin": "Wǒ zài xué Zhōngwén.",
+      "example_vi": "Heo đang học tiếng Trung.",
+      "pos": "noun",
+      "image_emoji": "🇨🇳"
+    },
+    {
+      "type": "word",
+      "word_zh": "棒",
+      "pinyin": "bàng",
+      "word_vi": "giỏi / tuyệt vời",
+      "example_zh": "Heo真棒！",
+      "example_pinyin": "Heo zhēn bàng!",
+      "example_vi": "Heo giỏi quá!",
+      "pos": "adjective",
+      "image_emoji": "👍"
+    },
+    {
+      "type": "word",
+      "word_zh": "加油",
+      "pinyin": "jiāyóu",
+      "word_vi": "cố lên!",
+      "example_zh": "加油！你可以的！",
+      "example_pinyin": "Jiāyóu! Nǐ kěyǐ de!",
+      "example_vi": "Cố lên! Heo làm được mà!",
+      "pos": "phrase",
+      "image_emoji": "💪"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Một ngày tuyệt vời",
+      "sentences_zh": [
+        "早上好！今天我很开心。",
+        "咖啡很甜，很好喝。",
+        "我喜欢学中文。",
+        "Masuri说：“你真棒！加油！”",
+        "Masuri，我想你！"
+      ],
+      "sentences_pinyin": [
+        "Zǎoshang hǎo! Jīntiān wǒ hěn kāixīn.",
+        "Kāfēi hěn tián, hěn hǎohē.",
+        "Wǒ xǐhuan xué Zhōngwén.",
+        "Masuri shuō: “Nǐ zhēn bàng! Jiāyóu!”",
+        "Masuri, wǒ xiǎng nǐ!"
+      ],
+      "sentences_vi": [
+        "Chào buổi sáng! Hôm nay Heo rất vui.",
+        "Cà phê ngọt lắm, ngon ghê.",
+        "Heo thích học tiếng Trung.",
+        "Masuri nói: “Heo giỏi quá! Cố lên nha!”",
+        "Masuri ơi, Heo nhớ Masuri!"
+      ],
+      "vocab_highlights": [
+        "中文",
+        "棒",
+        "加油"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "sentence_remix",
+      "can_skip": false,
+      "data": {
+        "base_zh": "你的中文很好",
+        "base_pinyin": "Nǐ de Zhōngwén hěn hǎo",
+        "base_vi": "Tiếng Trung của Heo tốt lắm",
+        "instruction_vi": "Khen thật nhiệt tình nào: đổi 好 (tốt) thành 棒 (giỏi / tuyệt vời) nha ✨",
+        "target_zh": "你的中文很棒",
+        "target_pinyin": "Nǐ de Zhōngwén hěn bàng",
+        "hint_words": [
+          "棒"
+        ]
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "这杯",
+          "咖啡",
+          "是",
+          "甜"
+        ],
+        "imposter_word": "是",
+        "correct_word": "很",
+        "hint_vi": "Ly cà phê này ngọt lắm! Trước tính từ như 甜 (ngọt), tiếng Trung thường dùng 很 nha"
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có câu nào muốn hỏi không? Hỏi Masuri nha — hoặc gửi Masuri một câu 加油 (jiāyóu) 💪"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "中文",
+        "棒",
+        "加油"
+      ],
+      "sticker_kind": "ribbon"
+    }
+  ]
+}

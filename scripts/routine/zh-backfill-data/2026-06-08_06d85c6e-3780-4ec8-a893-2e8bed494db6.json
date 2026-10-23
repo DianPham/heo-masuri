@@ -1,0 +1,152 @@
+{
+  "page_id": "06d85c6e-3780-4ec8-a893-2e8bed494db6",
+  "title_zh": "Heo在努力学习！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Hôm nay Heo chăm chỉ học nè! 📚",
+      "subtitle_vi": "Heo cầm bút lên và bắt đầu học tiếng Trung thôi 📝",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "学习",
+      "pinyin": "xuéxí",
+      "word_vi": "học / học tập",
+      "han_viet": "học tập",
+      "example_zh": "我喜欢学习中文。",
+      "example_pinyin": "Wǒ xǐhuan xuéxí Zhōngwén.",
+      "example_vi": "Heo thích học tiếng Trung.",
+      "pos": "verb",
+      "image_emoji": "📚"
+    },
+    {
+      "type": "word",
+      "word_zh": "努力",
+      "pinyin": "nǔlì",
+      "word_vi": "cố gắng / chăm chỉ",
+      "han_viet": "nỗ lực",
+      "example_zh": "我在努力学习！",
+      "example_pinyin": "Wǒ zài nǔlì xuéxí!",
+      "example_vi": "Heo đang chăm chỉ học bài nè!",
+      "pos": "adjective",
+      "image_emoji": "💪"
+    },
+    {
+      "type": "word",
+      "word_zh": "本子",
+      "pinyin": "běnzi",
+      "word_vi": "quyển vở / sổ tay",
+      "example_zh": "我的本子很漂亮！",
+      "example_pinyin": "Wǒ de běnzi hěn piàoliang!",
+      "example_vi": "Quyển vở của Heo xinh lắm!",
+      "pos": "noun",
+      "image_emoji": "📓"
+    },
+    {
+      "type": "word",
+      "word_zh": "每天",
+      "pinyin": "měitiān",
+      "word_vi": "mỗi ngày",
+      "han_viet": "mỗi thiên",
+      "example_zh": "我每天都学新词。",
+      "example_pinyin": "Wǒ měitiān dōu xué xīn cí.",
+      "example_vi": "Ngày nào Heo cũng học từ mới.",
+      "pos": "noun",
+      "image_emoji": "📅"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Góc học tập của Heo",
+      "sentences_zh": [
+        "我打开本子，写新词。",
+        "在家学习很舒服。",
+        "我每天都很努力。",
+        "每天学一点儿，我很开心！"
+      ],
+      "sentences_pinyin": [
+        "Wǒ dǎkāi běnzi, xiě xīn cí.",
+        "Zài jiā xuéxí hěn shūfu.",
+        "Wǒ měitiān dōu hěn nǔlì.",
+        "Měitiān xué yìdiǎnr, wǒ hěn kāixīn!"
+      ],
+      "sentences_vi": [
+        "Heo mở quyển vở ra và viết từ mới.",
+        "Học ở nhà thoải mái lắm.",
+        "Ngày nào Heo cũng chăm chỉ.",
+        "Mỗi ngày học một chút, Heo thấy vui lắm!"
+      ],
+      "vocab_highlights": [
+        "本子",
+        "学习",
+        "每天",
+        "努力"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我在努力学习中文。",
+        "target_sentence_pinyin": "Wǒ zài nǔlì xuéxí Zhōngwén.",
+        "shuffled_words": [
+          "学习",
+          "我",
+          "中文",
+          "努力",
+          "在"
+        ],
+        "hint_vi": "Heo đang chăm chỉ học tiếng Trung."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "spot_imposter",
+      "can_skip": true,
+      "data": {
+        "sentence_tokens": [
+          "我",
+          "有",
+          "二",
+          "个",
+          "本子"
+        ],
+        "imposter_word": "二",
+        "correct_word": "两",
+        "hint_vi": "Có một từ kì kì trong câu này... Gợi ý: khi đếm đồ vật (trước 个), tiếng Trung không nói 二 cho “hai” đâu, mà có một từ riêng đó 🔍"
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "📓",
+        "image_url": "https://images.unsplash.com/photo-1501618669935-18b6ecb13d6d?w=600&q=80",
+        "starter_words": [
+          "我",
+          "喜欢",
+          "每天",
+          "学习"
+        ],
+        "example_zh": "我喜欢每天学习。",
+        "example_pinyin": "Wǒ xǐhuan měitiān xuéxí."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Có từ nào khó không? Hỏi Masuri nha 💕"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "学习",
+        "努力",
+        "本子",
+        "每天"
+      ],
+      "sticker_kind": "pencil"
+    }
+  ]
+}

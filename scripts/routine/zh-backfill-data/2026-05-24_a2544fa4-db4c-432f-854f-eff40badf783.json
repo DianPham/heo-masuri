@@ -1,0 +1,148 @@
+{
+  "page_id": "a2544fa4-db4c-432f-854f-eff40badf783",
+  "title_zh": "去旅行吧！",
+  "cards_zh": [
+    {
+      "type": "intro",
+      "title_vi": "Hôm nay học về du lịch nha! ✈️",
+      "subtitle_vi": "Mấy từ tiếng Trung thật đơn giản để Heo bỏ vào vali mang theo 🧳",
+      "pig_pose": "studying"
+    },
+    {
+      "type": "word",
+      "word_zh": "旅行",
+      "pinyin": "lǚxíng",
+      "word_vi": "du lịch / chuyến đi",
+      "han_viet": "lữ hành",
+      "example_zh": "我要去旅行了！",
+      "example_pinyin": "Wǒ yào qù lǚxíng le!",
+      "example_vi": "Heo sắp đi du lịch rồi! (要……了 = sắp … rồi)",
+      "pos": "verb",
+      "image_emoji": "🗺️"
+    },
+    {
+      "type": "word",
+      "word_zh": "飞机",
+      "pinyin": "fēijī",
+      "word_vi": "máy bay",
+      "han_viet": "phi cơ",
+      "example_zh": "飞机好大啊！",
+      "example_pinyin": "Fēijī hǎo dà a!",
+      "example_vi": "Máy bay to quá!",
+      "pos": "noun",
+      "image_emoji": "✈️"
+    },
+    {
+      "type": "word",
+      "word_zh": "行李",
+      "pinyin": "xíngli",
+      "word_vi": "hành lý / túi đồ",
+      "han_viet": "hành lý",
+      "example_zh": "我的行李很多！",
+      "example_pinyin": "Wǒ de xíngli hěn duō!",
+      "example_vi": "Hành lý của Heo nhiều ghê!",
+      "pos": "noun",
+      "image_emoji": "🧳"
+    },
+    {
+      "type": "word",
+      "word_zh": "准备",
+      "pinyin": "zhǔnbèi",
+      "word_vi": "chuẩn bị (准备好了 = sẵn sàng rồi)",
+      "han_viet": "chuẩn bị",
+      "example_zh": "我准备好了！",
+      "example_pinyin": "Wǒ zhǔnbèi hǎo le!",
+      "example_vi": "Heo sẵn sàng rồi!",
+      "pos": "verb",
+      "image_emoji": "🙌"
+    },
+    {
+      "type": "reading",
+      "title_vi": "Chuyến đi của Heo",
+      "sentences_zh": [
+        "Heo要去旅行了！",
+        "她的行李准备好了。",
+        "今天她坐飞机去。",
+        "Heo准备好了！"
+      ],
+      "sentences_pinyin": [
+        "Heo yào qù lǚxíng le!",
+        "Tā de xíngli zhǔnbèi hǎo le.",
+        "Jīntiān tā zuò fēijī qù.",
+        "Heo zhǔnbèi hǎo le!"
+      ],
+      "sentences_vi": [
+        "Heo sắp đi du lịch rồi!",
+        "Hành lý của Heo đã chuẩn bị xong.",
+        "Hôm nay Heo đi bằng máy bay.",
+        "Heo sẵn sàng rồi!"
+      ],
+      "vocab_highlights": [
+        "旅行",
+        "行李",
+        "飞机",
+        "准备"
+      ]
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "word_train",
+      "can_skip": true,
+      "data": {
+        "target_sentence_zh": "我准备好了。",
+        "target_sentence_pinyin": "Wǒ zhǔnbèi hǎo le.",
+        "shuffled_words": [
+          "好",
+          "准备",
+          "了",
+          "我"
+        ],
+        "hint_vi": "Heo đã sẵn sàng rồi."
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "pig_says",
+      "can_skip": true,
+      "data": {
+        "prompt_vi": "Heo muốn đi du lịch",
+        "target_zh": "我想去旅行",
+        "target_pinyin": "Wǒ xiǎng qù lǚxíng",
+        "hints": {
+          "verb": "想",
+          "noun": "旅行"
+        }
+      }
+    },
+    {
+      "type": "exercise",
+      "exercise_type": "caption_polaroid",
+      "can_skip": true,
+      "data": {
+        "image_emoji": "🧳",
+        "image_url": "https://images.unsplash.com/photo-1502301197179-65228ab57f78?w=600&q=80",
+        "starter_words": [
+          "我",
+          "准备",
+          "行李"
+        ],
+        "example_zh": "我在准备行李。",
+        "example_pinyin": "Wǒ zài zhǔnbèi xíngli."
+      }
+    },
+    {
+      "type": "ask_prompt",
+      "suggestion_vi": "Hỏi Masuri: Masuri muốn đi du lịch ở đâu? Thử hỏi bằng tiếng Trung: 你想去哪儿旅行？ (Nǐ xiǎng qù nǎr lǚxíng?) ✈️"
+    },
+    {
+      "type": "completion",
+      "vocab_to_save": [
+        "旅行",
+        "飞机",
+        "行李",
+        "准备"
+      ],
+      "sticker_kind": "cloud"
+    }
+  ]
+}

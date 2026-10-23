@@ -54,6 +54,32 @@ Vercel (+ redeploy), the cron-job.org pinger header
 (docs/PHASE2_CRON_PINGER.md), the lesson routine's cloud environment, and
 any Claude environment used for the backfill.
 
+## Current status (2026-10-23) — live on production
+
+- **Production** (`heo-masuri`, Supabase `ohbnudmlylcocczzglia`): migrations
+  021, 022 and 023 applied; code live (`67fbcbb`). All 31 lessons have a
+  Chinese track (uploaded from `scripts/routine/zh-backfill-data/`) and are
+  fully voiced — 754 stored clips, 0 failed.
+- **Staging** (`heo-masuri-staging`, Supabase `icujnosqjnbimuihxlgr`): same,
+  plus one bilingual test lesson ("How Do You Feel Today?", 2026-10-23),
+  verified end to end in a browser.
+- **Why lessons stopped in July:** Heo never finished the 2026-07-01 lesson;
+  publish-due holds new lessons until it's done, and the routine stops at 2
+  queued drafts (5 are waiting, all now bilingual). Finishing that lesson — in
+  either language — restarts the daily flow.
+- **Still to do by hand:** point the daily lesson routine at the new
+  `scripts/routine/ROUTINE_PROMPT.md` so future lessons arrive with both
+  tracks. Until then new lessons are English-only; run the backfill
+  (`ZH_BACKFILL_PROMPT.md` or a session) to add Chinese.
+
+### Autonomy setup (Claude cloud environment)
+
+Network secrets (never visible to the session): CRON_SECRET for
+`heo-masuri.vercel.app` and `heo-masuri-staging.vercel.app`; a Vercel token
+for `api.vercel.com` (deploy status, logs, env, rollbacks); a Supabase access
+token for `api.supabase.com` (SQL via the Management API — account-wide
+access).
+
 ## Verify
 
 - `/heo/notebook/today` shows the language picker for a lesson with `cards_zh`.
